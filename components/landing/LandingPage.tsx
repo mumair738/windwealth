@@ -149,7 +149,7 @@ const LandingPage: React.FC = () => {
                 </button>
 
                 <div className={styles.signupLink}>
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <a href="#" className={styles.link}>
                     Oh well...
                   </a>
