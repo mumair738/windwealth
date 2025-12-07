@@ -21,9 +21,14 @@ const NewsletterCard: React.FC = () => {
         
         <div className={styles.buttonWrapper}>
           <div className={styles.buttonBorder}>
-            <button className={styles.newsletterButton}>
+            <a 
+              href="https://mentalwealthacademy.net" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={styles.newsletterButton}
+            >
               <span className={styles.buttonText}>NEWSLETTER</span>
-            </button>
+            </a>
           </div>
         </div>
       </div>

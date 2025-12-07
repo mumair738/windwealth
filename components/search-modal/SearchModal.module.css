@@ -1,0 +1,210 @@
+.modal {
+  position: fixed;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  overflow: visible;
+}
+
+.modalOpen {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.modalContent {
+  background-color: rgb(244, 245, 254); /* #F4F5FE */
+  border: 2px solid white;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.resultItem {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  position: relative;
+  margin-right: -60px;
+}
+
+.buttonWrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 120px;
+  height: 40px;
+}
+
+.logomark {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logomarkImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.resultContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.resultTitle {
+  font-family: var(--font-primary);
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dark);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.resultDescription {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dark);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.resultButton {
+  width: 120px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+.buttonLight {
+  background-color: white;
+  color: var(--color-text-dark);
+}
+
+.buttonLight:hover {
+  transform: translateY(-2px);
+}
+
+.buttonDark {
+  background-color: var(--color-text-dark);
+  color: rgb(244, 245, 254);
+  border: 1.605px solid white;
+}
+
+.buttonDark:hover {
+  transform: translateY(-2px);
+}
+
+.buttonLabel {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: inherit;
+}
+
+.arrowIcon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.arrowIconImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.arrowIconBlack .arrowIconImage {
+  filter: brightness(0);
+}
+
+/* Responsive Design */
+
+@media (max-width: 1024px) {
+  .resultItem {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .resultButton {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .modal {
+    width: 95%;
+  }
+  
+  .modalContent {
+    padding: 24px;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .resultTitle {
+    font-size: 24px;
+  }
+  
+  .resultDescription {
+    font-size: 16px;
+  }
+  
+  .logomark {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logomarkImage {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .resultButton {
+    height: 48px;
+  }
+  
+  .buttonLabel {
+    font-size: 14px;
+  }
+  
+  .arrowIcon {
+    width: 20px;
+    height: 20px;
+  }
+}
+

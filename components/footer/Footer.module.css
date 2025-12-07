@@ -1,0 +1,274 @@
+.footer {
+  width: 100%;
+  background-color: rgb(244, 245, 254); /* #F4F5FE - matching the design */
+  padding: 48px 112px;
+  margin-top: auto;
+}
+
+.container {
+  max-width: 1171px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  gap: 80px;
+  align-items: flex-start;
+}
+
+.linkBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  flex: 1;
+}
+
+.logoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.logoContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 11px;
+}
+
+.logoIcon {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-family: var(--font-primary);
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dark);
+  line-height: 1;
+}
+
+.links {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  align-items: center;
+}
+
+.link {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dark);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.link:hover {
+  opacity: 0.7;
+}
+
+.newsletter {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 438px;
+}
+
+.newsletterText {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dark);
+  line-height: 1.5;
+}
+
+.newsletterText p {
+  margin: 0;
+}
+
+.newsletterForm {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.inputWrapper {
+  flex: 1;
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid rgb(64, 64, 64);
+  border-radius: 4px;
+  background-color: white;
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dark);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.input::placeholder {
+  color: rgb(115, 115, 115);
+}
+
+.subscribeButton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  height: 40px;
+  background-color: rgb(38, 38, 38);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 1px rgba(99, 193, 187, 0.2);
+  white-space: nowrap;
+}
+
+.subscribeButton:hover {
+  background-color: rgb(50, 50, 50);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(99, 193, 187, 0.3);
+}
+
+.subscribeButton:active {
+  transform: translateY(0);
+}
+
+.bottomSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-text-dark);
+  gap: 32px;
+}
+
+.socialIcons {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+}
+
+.socialIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-dark);
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.socialIcon:hover {
+  opacity: 0.7;
+}
+
+.socialIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.socialIconImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.legalLinks {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  align-items: center;
+}
+
+.legalLink {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dark);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.legalLink:hover {
+  opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .footer {
+    padding: 48px 64px;
+  }
+
+  .content {
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  .newsletter {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 32px 24px;
+  }
+
+  .container {
+    gap: 48px;
+  }
+
+  .content {
+    gap: 32px;
+  }
+
+  .bottomSection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .legalLinks {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .newsletterForm {
+    flex-direction: column;
+  }
+
+  .subscribeButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

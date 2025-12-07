@@ -3,6 +3,7 @@
 import React from 'react';
 import Navbar from '@/components/navbar/Navbar';
 import PromptCatalog from '@/components/prompt-catalog/PromptCatalog';
+import { Footer } from '@/components/footer/Footer';
 
 export default function Catalog() {
   return (
@@ -11,6 +12,7 @@ export default function Catalog() {
       <main>
         <PromptCatalog />
       </main>
+      <Footer />
     </>
   );
 }

@@ -3,9 +3,8 @@
 import React from 'react';
 import styles from './ForumPage.module.css';
 import { AnnouncementBanner } from './AnnouncementBanner';
-import { InviteBanner } from './InviteBanner';
 import { ForumCard } from './ForumCard';
-import { Footer } from './Footer';
+import { Footer } from '@/components/footer/Footer';
 import { PixelIcon } from './PixelIcon';
 
 export function ForumPage() {
@@ -21,14 +20,9 @@ export function ForumPage() {
               </h1>
             </div>
 
-            <button className={styles.viewToggle}>
-              Expressive View
-              <span className={styles.toggleIcon}>⇅</span>
-            </button>
           </div>
 
           <AnnouncementBanner />
-          <InviteBanner />
 
           <div className={styles.forumHeaders}>
             <div className={styles.headerLabel}>Threads</div>

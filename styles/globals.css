@@ -305,14 +305,17 @@ button,
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(81, 104, 255, 0.3) !important;
   padding: 24px !important;
-  min-width: 550px !important;
-  max-width: 750px !important;
+  min-width: 600px !important;
+  max-width: min(850px, calc(100vw - 40px)) !important;
   width: auto !important;
   font-family: var(--font-primary) !important;
   color: var(--color-text-dark) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  overflow: visible !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  position: fixed !important;
+  transition: min-width 0.2s ease, max-width 0.2s ease !important;
 }
 
 /* Tooltip Title */
@@ -335,7 +338,9 @@ button,
   padding: 0 !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Tooltip Buttons Container */
@@ -349,6 +354,9 @@ button,
   align-items: center !important;
   flex-wrap: wrap !important;
   gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 /* Tooltip Buttons */
@@ -406,6 +414,8 @@ button,
   margin: 0 !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+  overflow: visible !important;
+  max-width: 100% !important;
 }
 
 .introjs-skipbutton:hover {
@@ -517,7 +527,7 @@ button,
 @media (max-width: 768px) {
   .introjs-tooltip {
     min-width: auto !important;
-    max-width: 90% !important;
+    max-width: calc(100vw - 20px) !important;
     padding: 20px !important;
     margin: 10px !important;
   }

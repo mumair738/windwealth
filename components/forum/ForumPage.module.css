@@ -52,38 +52,10 @@
   font-size: 48px;
   font-weight: var(--font-weight-bold);
   line-height: 1.2;
-  color: rgb(39, 23, 49);
+  color: var(--color-text-dark);
   margin: 0;
 }
 
-.viewToggle {
-  padding: 12px 24px;
-  gap: 8px;
-  border: 1px solid var(--color-primary);
-  background: var(--gradient-futuristic-floss);
-  box-shadow: 0px 2px 6px 0px rgba(16, 24, 40, 0.06);
-  color: var(--color-text-dark);
-  font-size: 16px;
-  font-weight: var(--font-weight-medium);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: var(--font-primary);
-  display: flex;
-  align-items: center;
-  height: 48px;
-}
-
-.viewToggle:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.toggleIcon {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-}
 
 .forumHeaders {
   display: flex;
@@ -96,10 +68,7 @@
   font-family: var(--font-primary);
   font-size: 16px;
   font-weight: var(--font-weight-medium);
-  background: var(--gradient-futuristic-floss);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-primary);
 }
 
 .forumContent {
@@ -116,17 +85,15 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  border: 1px solid rgba(107, 114, 128, 0.5);
-  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+  border: 1px solid rgba(81, 104, 255, 0.3);
+  background: var(--gradient-futuristic-floss);
+  box-shadow: 0px 1px 4px 0px rgba(81, 104, 255, 0.15);
 }
 
 .categoryTitle {
   font-family: var(--font-primary);
   font-size: 16px;
-  font-weight: var(--font-weight-medium);
-  background: var(--gradient-futuristic-floss);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
 }
 

@@ -1,7 +1,7 @@
 .navbar {
   width: 100%;
   height: auto;
-  min-height: 180px;
+  min-height: 100px;
   background: #F4F5FE;
   border-bottom: 2px solid #000000;
   border-radius: 0;
@@ -9,7 +9,8 @@
   flex-direction: column;
   gap: 0;
   margin: 0;
-  overflow: hidden;
+  position: relative;
+  z-index: 100;
 }
 
 /* Top Section */
@@ -19,7 +20,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 40px;
-  gap: 60px;
+  gap: 24px;
   min-height: 100px;
 }
 
@@ -28,7 +29,7 @@
   flex-direction: row;
   align-items: center;
   gap: 37.04px;
-  flex: 1;
+  flex-shrink: 0;
 }
 
 .logoWrapper {
@@ -60,6 +61,7 @@
   flex-direction: row;
   align-items: center;
   gap: 24.69px;
+  flex-shrink: 0;
 }
 
 .linksContainer {
@@ -233,37 +235,19 @@
   mask-position: center;
 }
 
-/* Bottom Section - Search */
-.bottomSection {
-  padding: 16px 40px;
-  min-height: 70px;
-}
-
+/* Search Container in Top Section */
 .searchContainer {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  height: 100%;
-}
-
-.searchIconWrapper {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.menuAltIcon {
-  width: 32px;
-  height: 32px;
-  color: #000000;
+  flex: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
 }
 
 .searchInputContainer {
-  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;

@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SearchModal } from '@/components/search-modal/SearchModal';
 import styles from './Navbar.module.css';
 
 // Menu Icon Component
@@ -11,15 +12,6 @@ const MenuIcon: React.FC<{ size?: number }> = ({ size = 32 }) => {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.menuIcon}>
       <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-};
-
-// Menu Alt Icon Component (for search)
-const MenuAltIcon: React.FC<{ size?: number }> = ({ size = 32 }) => {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.menuAltIcon}>
-      <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 };
@@ -46,17 +38,10 @@ const NotificationIcon: React.FC<{ size?: number }> = ({ size = 36 }) => {
   );
 };
 
-// Filter Icon Component
-const FilterIcon: React.FC<{ size?: number }> = ({ size = 20 }) => {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.filterIcon}>
-      <path d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-};
-
 const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => {
     if (path === '/home') {
@@ -65,12 +50,43 @@ const Navbar: React.FC = () => {
     return pathname === path || pathname?.startsWith(path + '/');
   };
 
+  const handleSearchClick = () => {
+    setIsSearchModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsSearchModalOpen(false);
+  };
+
   return (
     <nav className={styles.navbar}>
       {/* Top Section */}
       <div className={styles.topSection}>
         <div className={styles.leftContent}>
           <h1 className={styles.academyName}>Mental Wealth Academy</h1>
+        </div>
+
+        {/* Search Bar */}
+        <div className={styles.searchContainer} ref={searchContainerRef}>
+          <div className={styles.searchInputContainer}>
+            <div className={styles.searchInputWrapper}>
+              <div className={styles.searchIconLeft}>
+                <SearchIcon size={20} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search with Daemon Model"
+                className={styles.searchInput}
+                onClick={handleSearchClick}
+                readOnly
+              />
+            </div>
+          </div>
+          <SearchModal 
+            isOpen={isSearchModalOpen} 
+            onClose={handleCloseModal}
+            searchContainerRef={searchContainerRef}
+          />
         </div>
 
         <div className={styles.rightContent}>
@@ -130,38 +146,6 @@ const Navbar: React.FC = () => {
                 <span className={styles.notificationDot}></span>
               </div>
             </button>
-
-            <button className={styles.hamburgerButton} title="Menu">
-              <div className={styles.hamburgerIcon}></div>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Section - Search */}
-      <div className={styles.bottomSection}>
-        <div className={styles.searchContainer}>
-          <div className={styles.searchIconWrapper}>
-            <MenuAltIcon size={32} />
-          </div>
-
-          <div className={styles.searchInputContainer}>
-            <div className={styles.searchInputWrapper}>
-              <div className={styles.searchIconLeft}>
-                <SearchIcon size={20} />
-              </div>
-              <input
-                type="text"
-                placeholder="Search with daemon agent"
-                className={styles.searchInput}
-              />
-              <div className={styles.searchRightContent}>
-                <span className={styles.searchRightText}>Filter</span>
-                <div className={styles.searchRightIcon}>
-                  <FilterIcon size={20} />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Mental Wealth Academy',
   description: 'A pedagogical educational toolbox for small IRL communities looking to safely digitize their community and assets.',
   icons: {
-    icon: '/icons/ethlogo.svg',
+    icon: '/icons/favicon.png',
   },
 };
 

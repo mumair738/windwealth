@@ -6,10 +6,7 @@ export function AnnouncementBanner() {
     <div className={styles.banner}>
       <h3 className={styles.title}>Announcement</h3>
       <p className={styles.text}>
-        Welcome to the Mental Wealth Academy Message Board! If this is your first time
-        visiting the forums, make sure to read the forum rules before posting.
-        Also check out the FAQ. Note that you have to register an account before
-        you are able to post.
+        Welcome to the Mental Wealth Academy Message Board. For first-time visitors, we strongly encourage you to familiarize yourself with our community guidelines and forum rules prior to engaging in discussions. Additionally, please consult our Frequently Asked Questions section for comprehensive information regarding platform policies and procedures. Please note that account registration is a prerequisite for participation in forum discussions and content submission.
       </p>
     </div>
   );

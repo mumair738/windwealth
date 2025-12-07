@@ -26,8 +26,8 @@ const getTourSteps = () => [
   },
   {
     title: 'IPFS Library',
-    intro: 'Browse educational content stored on IPFS. Explore books and resources in the library.',
-    element: '[data-intro="library-card"]',
+    intro: 'Browse educational content stored on IPFS. Explore books and resources in the library. You can find this in the side navigation.',
+    element: '[data-intro="side-navigation"]',
   },
   {
     title: 'Active Quests',
@@ -65,7 +65,21 @@ export const startOnboardingTour = async () => {
     doneLabel: 'Got it!',
   });
 
-  // Set wider tooltip for first and last steps (body elements)
+  // Set initial tooltip width to prevent abrupt changes
+  intro.onbeforechange(() => {
+    const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
+    if (tooltip) {
+      const viewportWidth = window.innerWidth;
+      const maxTooltipWidth = Math.min(850, viewportWidth - 40);
+      const minTooltipWidth = Math.min(600, viewportWidth - 40);
+      tooltip.style.minWidth = `${Math.max(600, minTooltipWidth)}px`;
+      tooltip.style.maxWidth = `${maxTooltipWidth}px`;
+      tooltip.style.width = 'auto';
+      tooltip.style.boxSizing = 'border-box';
+    }
+  });
+
+  // Set consistent tooltip width and ensure it stays within viewport
   intro.onafterchange(() => {
     setTimeout(() => {
       const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
@@ -74,13 +88,30 @@ export const startOnboardingTour = async () => {
         const steps = getTourSteps();
         const step = steps[currentStep];
         
-        // Make first and last steps (body elements) wider
+        // Calculate max width based on viewport to prevent overflow
+        const viewportWidth = window.innerWidth;
+        const maxTooltipWidth = Math.min(850, viewportWidth - 40);
+        const minTooltipWidth = Math.min(600, viewportWidth - 40);
+        
+        // Make first and last steps (body elements) wider, but respect viewport
         if (step && step.element === 'body') {
-          tooltip.style.minWidth = '650px';
-          tooltip.style.maxWidth = '850px';
+          tooltip.style.minWidth = `${Math.max(600, minTooltipWidth)}px`;
+          tooltip.style.maxWidth = `${maxTooltipWidth}px`;
         } else {
-          tooltip.style.minWidth = '550px';
-          tooltip.style.maxWidth = '750px';
+          tooltip.style.minWidth = `${Math.max(600, minTooltipWidth)}px`;
+          tooltip.style.maxWidth = `${maxTooltipWidth}px`;
+        }
+        
+        // Ensure tooltip doesn't extend beyond viewport
+        tooltip.style.width = 'auto';
+        tooltip.style.boxSizing = 'border-box';
+        
+        // Ensure buttons container doesn't overflow
+        const buttonsContainer = tooltip.querySelector('.introjs-tooltipbuttons') as HTMLElement;
+        if (buttonsContainer) {
+          buttonsContainer.style.width = '100%';
+          buttonsContainer.style.boxSizing = 'border-box';
+          buttonsContainer.style.overflow = 'hidden';
         }
       }
     }, 10);
