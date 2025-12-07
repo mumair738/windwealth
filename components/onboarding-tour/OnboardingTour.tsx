@@ -63,6 +63,9 @@ export const startOnboardingTour = async () => {
   const introJs = (await import('intro.js')).default;
   const intro = introJs();
   
+  // Track positioning to prevent jumping
+  let isPositioning = false;
+  
   intro.setOptions({
     steps: getTourSteps(),
     showProgress: true,
@@ -165,59 +168,90 @@ export const startOnboardingTour = async () => {
         
         // Position tooltip relative to highlighted element, staying within viewport
         if (step && step.element !== 'body') {
-          // Try multiple selectors to find the highlighted element
-          let highlightedElement = document.querySelector('.introjs-showElement') as HTMLElement;
-          if (!highlightedElement) {
-            highlightedElement = document.querySelector('.introjs-relativePosition') as HTMLElement;
-          }
-          if (!highlightedElement && step.element.startsWith('[')) {
+          // Find the highlighted element - try the actual element selector first
+          let highlightedElement: HTMLElement | null = null;
+          
+          if (step.element.startsWith('[')) {
             highlightedElement = document.querySelector(step.element) as HTMLElement;
           }
           
-          if (highlightedElement) {
-            // Scroll element into view if needed
-            highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          // Fallback to intro.js's highlighted element
+          if (!highlightedElement) {
+            highlightedElement = document.querySelector('.introjs-showElement') as HTMLElement;
+          }
+          if (!highlightedElement) {
+            highlightedElement = document.querySelector('.introjs-relativePosition') as HTMLElement;
+          }
+          
+          if (highlightedElement && !isPositioning) {
+            isPositioning = true;
             
-            // Wait a moment for scroll to complete, then position
-            setTimeout(() => {
-              const elementRect = highlightedElement.getBoundingClientRect();
-              const tooltipRect = tooltip.getBoundingClientRect();
+            // Get element position without scrolling (to avoid jumping)
+            const elementRect = highlightedElement.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            
+            // Only scroll if element is not visible
+            const isElementVisible = 
+              elementRect.top >= 0 &&
+              elementRect.left >= 0 &&
+              elementRect.bottom <= viewportHeight &&
+              elementRect.right <= viewportWidth;
+            
+            // Position tooltip function
+            const positionTooltip = () => {
+              const currentElementRect = highlightedElement!.getBoundingClientRect();
+              const currentTooltipRect = tooltip.getBoundingClientRect();
               
               // Calculate preferred position (right side of element, vertically centered)
-              let preferredLeft = elementRect.right + 20;
-              let preferredTop = elementRect.top + (elementRect.height / 2) - (tooltipRect.height / 2);
-            
-            // If tooltip would go off right edge, position it on the left side
-            if (preferredLeft + tooltipRect.width > viewportWidth - 20) {
-              preferredLeft = elementRect.left - tooltipRect.width - 20;
-            }
-            
-            // If tooltip would go off left edge, position it on the right side
-            if (preferredLeft < 20) {
-              preferredLeft = elementRect.right + 20;
-            }
-            
-            // If tooltip would go off bottom, align to bottom of element
-            if (preferredTop + tooltipRect.height > viewportHeight - 20) {
-              preferredTop = viewportHeight - tooltipRect.height - 20;
-            }
-            
-            // If tooltip would go off top, align to top of element
-            if (preferredTop < 20) {
-              preferredTop = elementRect.top;
-            }
-            
-            // Ensure tooltip stays within viewport bounds
-            preferredLeft = Math.max(20, Math.min(preferredLeft, viewportWidth - tooltipRect.width - 20));
-            preferredTop = Math.max(20, Math.min(preferredTop, viewportHeight - tooltipRect.height - 20));
-            
+              let preferredLeft = currentElementRect.right + 20;
+              let preferredTop = currentElementRect.top + (currentElementRect.height / 2) - (currentTooltipRect.height / 2);
+              
+              // If tooltip would go off right edge, position it on the left side
+              if (preferredLeft + currentTooltipRect.width > viewportWidth - 20) {
+                preferredLeft = currentElementRect.left - currentTooltipRect.width - 20;
+              }
+              
+              // If tooltip would go off left edge, position it on the right side
+              if (preferredLeft < 20) {
+                preferredLeft = currentElementRect.right + 20;
+                // If still off, center it
+                if (preferredLeft + currentTooltipRect.width > viewportWidth - 20) {
+                  preferredLeft = (viewportWidth - currentTooltipRect.width) / 2;
+                }
+              }
+              
+              // If tooltip would go off bottom, align to bottom of element
+              if (preferredTop + currentTooltipRect.height > viewportHeight - 20) {
+                preferredTop = currentElementRect.bottom - currentTooltipRect.height - 20;
+              }
+              
+              // If tooltip would go off top, align to top of element
+              if (preferredTop < 20) {
+                preferredTop = currentElementRect.top;
+              }
+              
+              // Ensure tooltip stays within viewport bounds
+              preferredLeft = Math.max(20, Math.min(preferredLeft, viewportWidth - currentTooltipRect.width - 20));
+              preferredTop = Math.max(20, Math.min(preferredTop, viewportHeight - currentTooltipRect.height - 20));
+              
               // Apply positioning
               tooltip.style.position = 'fixed';
               tooltip.style.left = `${preferredLeft}px`;
               tooltip.style.top = `${preferredTop}px`;
               tooltip.style.margin = '0';
               tooltip.style.transform = 'none';
-            }, 100);
+              
+              isPositioning = false;
+            };
+            
+            // Position immediately
+            positionTooltip();
+            
+            // If element not visible, scroll and reposition
+            if (!isElementVisible) {
+              highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+              setTimeout(positionTooltip, 400);
+            }
           }
         } else {
           // For body elements, just ensure it stays within viewport
@@ -257,46 +291,42 @@ export const startOnboardingTour = async () => {
         if (buttonsContainer) {
           buttonsContainer.style.width = '100%';
           buttonsContainer.style.boxSizing = 'border-box';
-          buttonsContainer.style.overflow = 'hidden';
+          buttonsContainer.style.overflow = 'visible';
           buttonsContainer.style.marginTop = '16px';
           buttonsContainer.style.paddingTop = '16px';
           buttonsContainer.style.borderTop = '1px solid #4a4a4a';
           buttonsContainer.style.display = 'flex';
           buttonsContainer.style.justifyContent = 'space-between';
           buttonsContainer.style.alignItems = 'center';
+          buttonsContainer.style.position = 'relative';
           buttonsContainer.style.gap = '8px';
           
-          // Reorder buttons: Previous, Skip (middle), Next
+          // Get buttons
           const prevButton = tooltip.querySelector('.introjs-prevbutton') as HTMLElement;
           const skipButton = tooltip.querySelector('.introjs-skipbutton') as HTMLElement;
           const nextButton = tooltip.querySelector('.introjs-nextbutton') as HTMLElement;
           
-          if (prevButton && skipButton && nextButton) {
-            // Create a wrapper structure: [Prev] [Skip centered] [Next]
-            // Use flexbox with a spacer to center the skip button
-            const leftGroup = document.createElement('div');
-            leftGroup.style.display = 'flex';
-            leftGroup.appendChild(prevButton);
-            
-            const centerGroup = document.createElement('div');
-            centerGroup.style.display = 'flex';
-            centerGroup.style.flex = '1';
-            centerGroup.style.justifyContent = 'center';
-            centerGroup.appendChild(skipButton);
-            
-            const rightGroup = document.createElement('div');
-            rightGroup.style.display = 'flex';
-            rightGroup.appendChild(nextButton);
-            
-            // Clear and rebuild container
-            buttonsContainer.innerHTML = '';
-            buttonsContainer.appendChild(leftGroup);
-            buttonsContainer.appendChild(centerGroup);
-            buttonsContainer.appendChild(rightGroup);
+          // Position buttons: Previous (left), Skip (absolute center), Next (right)
+          if (prevButton) {
+            prevButton.style.order = '1';
+            prevButton.style.marginRight = 'auto';
+          }
+          
+          if (skipButton) {
+            skipButton.style.order = '2';
+            skipButton.style.position = 'absolute';
+            skipButton.style.left = '50%';
+            skipButton.style.transform = 'translateX(-50%)';
+            skipButton.style.zIndex = '10';
+          }
+          
+          if (nextButton) {
+            nextButton.style.order = '3';
+            nextButton.style.marginLeft = 'auto';
           }
         }
         
-        // Style buttons for better readability
+        // Style buttons for better readability and prevent clipping
         const buttons = tooltip.querySelectorAll('.introjs-button') as NodeListOf<HTMLElement>;
         buttons.forEach((button) => {
           button.style.color = '#ffffff';
@@ -306,13 +336,31 @@ export const startOnboardingTour = async () => {
           button.style.padding = '8px 16px';
           button.style.cursor = 'pointer';
           button.style.transition = 'all 0.2s';
+          button.style.whiteSpace = 'nowrap';
+          button.style.overflow = 'visible';
+          button.style.textOverflow = 'clip';
         });
+        
+        const prevButton = tooltip.querySelector('.introjs-prevbutton') as HTMLElement;
+        if (prevButton) {
+          prevButton.style.overflow = 'visible';
+        }
+        
+        const skipButton = tooltip.querySelector('.introjs-skipbutton') as HTMLElement;
+        if (skipButton) {
+          skipButton.style.overflow = 'visible';
+          skipButton.style.whiteSpace = 'nowrap';
+        }
         
         const nextButton = tooltip.querySelector('.introjs-nextbutton') as HTMLElement;
         if (nextButton) {
           nextButton.style.backgroundColor = '#0066cc';
           nextButton.style.borderColor = '#0080ff';
+          nextButton.style.overflow = 'visible';
         }
+        
+        // Ensure tooltip itself doesn't clip content
+        tooltip.style.overflow = 'visible';
       }
       
       // Improve highlight overlay readability
