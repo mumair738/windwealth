@@ -68,7 +68,11 @@ const LandingPage: React.FC = () => {
           <div className={styles.cardContent}>
 
                         {/* Logo */}
-                        <div className={styles.companyHeader}>
+                        <div 
+                          className={styles.companyHeader}
+                          onClick={() => router.push('/home')}
+                          style={{ cursor: 'pointer' }}
+                        >
               <Image
                 src="/icons/spacey2klogo.png"
                 alt="Logo"
