@@ -18,16 +18,40 @@ const LandingPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setMessage(null);
     
-    // Simulate login process
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsLoading(false);
-    router.push('/home');
+    try {
+      // Subscribe email to Mailchimp
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: data.message || 'Successfully signed up for beta!' });
+        // Clear form
+        setEmail('');
+        setPassword('');
+        // Stay on landing page - no redirect
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to sign up. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      setMessage({ type: 'error', text: 'An error occurred. Please try again later.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Memoize Scene to prevent re-renders when form state changes
@@ -57,6 +81,11 @@ const LandingPage: React.FC = () => {
 
             {/* Form */}
             <form className={styles.loginForm} onSubmit={handleLogin}>
+              {message && (
+                <div className={message.type === 'success' ? styles.successMessage : styles.errorMessage}>
+                  {message.text}
+                </div>
+              )}
               <div className={styles.inputForm}>
                 <div className={styles.formGroup}>
                   <label htmlFor="email" className={styles.label}>
