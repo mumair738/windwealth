@@ -141,6 +141,17 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className={styles.leftIcons}>
+            <div className={styles.shardsCounter}>
+              <Image
+                src="/icons/shard.svg"
+                alt="Shards"
+                width={20}
+                height={20}
+                className={styles.shardIcon}
+              />
+              <span className={styles.shardsLabel}>Shards:</span>
+              <span className={styles.shardsValue}>000</span>
+            </div>
             <button className={styles.messageButton} title="Messages">
               <div className={styles.messageIcon}>
                 <span className={styles.notificationDot}></span>

@@ -162,6 +162,37 @@
   gap: 12px;
 }
 
+.shardsCounter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  border-radius: 12px;
+  font-family: var(--font-primary);
+}
+
+.shardIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.shardsLabel {
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  color: #000000;
+}
+
+.shardsValue {
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
 .messageButton {
   display: flex;
   width: 37px;

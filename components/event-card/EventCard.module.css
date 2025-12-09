@@ -1,44 +1,36 @@
-.eventCard {
+.container {
   width: 100%;
   max-width: 600px;
-  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  width: 100%;
   background-color: rgb(244, 245, 254); /* #F4F5FE */
   border: 2px solid white;
   border-radius: 16px;
-  padding: 24px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  position: relative;
   transition: all 0.3s ease;
-  gap: 0;
-  cursor: pointer;
 }
 
-.eventCard:hover {
-  transform: translateY(-2px);
+.card:hover {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
-.wrapper {
-  flex: 1;
-  background: transparent;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  gap: 0;
-}
-
-.imageContainer {
+.imageBox {
   width: 100%;
-  height: 216px;
+  height: 450px;
   position: relative;
-  flex-shrink: 0;
   overflow: hidden;
-  border-radius: 12px 12px 0 0;
-  border-bottom: 2px solid rgba(81, 104, 255, 0.1);
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .image {
@@ -47,23 +39,11 @@
   object-fit: cover;
 }
 
-.content {
-  flex: 1;
+.contentBox {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-height: 0;
-  position: relative;
-}
-
-.textSection {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .heading {
@@ -74,127 +54,130 @@
   margin: 0;
   line-height: 1.3;
   letter-spacing: 0.02em;
-  flex: 1;
-  min-width: 0;
 }
 
-.badgesContainer {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background-color: #FFFFFF;
-  border: 1.17px solid #A4A4A4;
-  border-radius: 24px;
-  height: 28px;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.badge:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 4px rgba(81, 104, 255, 0.1);
-}
-
-.badgeIcon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  color: #000000;
-}
-
-.badgeText {
-  font-family: var(--font-button);
+.secondaryText {
+  font-family: var(--font-primary);
   font-size: 14px;
-  font-weight: var(--font-weight-regular);
-  color: #000000;
-  white-space: nowrap;
-}
-
-.badgeSquare {
-  width: 16px;
-  height: 16px;
-  background-color: #ECECEC;
-  border: 1px solid #A4A4A4;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.authorSection {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(164, 164, 164, 0.3);
-}
-
-.avatarContainer {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  position: relative;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #A4A4A4;
-  object-fit: cover;
-}
-
-.authorText {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  flex: 1;
-  min-width: 0;
-}
-
-.authorName {
-  font-family: var(--font-secondary);
-  font-size: 16px;
-  font-weight: 700;
-  color: #000000;
-  line-height: 1.25;
-  height: 20px;
-  display: flex;
-  align-items: center;
+  font-weight: var(--font-weight-medium);
+  color: #666666;
+  margin: 0;
+  text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.authorRole {
+.description {
   font-family: var(--font-primary);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: var(--font-weight-regular);
-  color: #666666;
-  line-height: 1.25;
-  height: 20px;
+  color: #000000;
+  margin: 0;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.actionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.registerButton {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-button);
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  height: 44px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.registerButton:hover {
+  background-color: #3d52e6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(81, 104, 255, 0.3);
+}
+
+.registerButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton {
+  width: 100%;
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-button);
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondaryButton:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(81, 104, 255, 0.3);
+}
+
+.secondaryButton:active {
+  transform: translateY(0);
+}
+
+.eventIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: currentColor;
 }
 
 @media (max-width: 768px) {
-  .eventCard {
+  .container {
     max-width: 100%;
-    height: auto;
-    min-height: 400px;
   }
 
-  .imageContainer {
-    height: 200px;
+  .imageBox {
+    height: 300px;
   }
 
   .heading {
     font-size: 1.5rem;
   }
-}
 
+  .description {
+    font-size: 14px;
+  }
+
+  .registerButton,
+  .secondaryButton {
+    font-size: 14px;
+    height: 40px;
+    padding: 10px 16px;
+  }
+
+  .eventIcon {
+    width: 18px;
+    height: 18px;
+  }
+}

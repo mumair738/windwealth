@@ -13,7 +13,7 @@ const SideNavigation: React.FC = () => {
     <div className={styles.sideNavigation}>
       <div className={styles.membershipImage}>
         <Image 
-          src="https://i.imgur.com/875phfv.png" 
+          src="https://i.imgur.com/HtwiiXs.png" 
           alt="Membership" 
           fill
           className={styles.membershipImg}

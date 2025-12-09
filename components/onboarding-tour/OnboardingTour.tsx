@@ -5,266 +5,220 @@ import 'intro.js/introjs.css';
 
 const getTourSteps = () => [
   {
-    title: 'Welcome to Mental Wealth Academy! 👋',
+    title: 'Welcome to Mental Wealth Academy!',
     intro: 'Welcome to Mental Wealth Academy - a modular learning management framework designed to help you achieve your educational goals. Let\'s take a quick tour to explore all the features and get you started!',
     element: 'body',
   },
   {
-    title: 'AI Learning Paths',
-    intro: 'Discover personalized learning paths recommended by Rubi AI. Click "Daily Faucet" to get AI-powered recommendations tailored to your goals!',
-    element: '[data-intro="banner-card"]',
-  },
-  {
-    title: 'Messageboard',
-    intro: 'Jump into the messageboard to connect with the community, share knowledge, and collaborate on learning projects.',
-    element: '[data-intro="messageboard-card"]',
-  },
-  {
     title: 'Active Quests',
-    intro: 'Complete quests to earn USDC rewards! View all available quests to start your journey and track your progress.',
+    intro: 'Complete quests to earn shards! View all available quests to start your journey and track your progress.',
     element: '[data-intro="quests"]',
   },
   {
-    title: 'You\'re All Set! 🎉',
+    title: 'Discover Your Learning Path',
+    intro: 'Find personalized learning paths and hand-picked digital classes tailored to your goals. Click "Daily Faucet" to get started!',
+    element: '[data-intro="banner-card"]',
+  },
+  {
+    title: 'Events',
+    intro: 'Join workshops and events to expand your knowledge and connect with like-minded learners. Register for upcoming sessions to continue your growth journey.',
+    element: '[data-intro="events"] h1',
+  },
+  {
+    title: 'Messageboard',
+    intro: 'Connect with the community through the messageboard to share ideas, ask questions, and collaborate on learning projects with fellow members.',
+    element: '[data-intro="messageboard-card"]',
+  },
+  {
+    title: 'You\'re All Set!',
     intro: 'You\'re ready to start your learning journey! You can access this tour again from your profile settings. Happy learning!',
     element: 'body',
   },
 ];
 
+const applyStyles = () => {
+  const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
+  if (!tooltip) return;
+
+  // Inject style tag to override intro.js defaults
+  let styleTag = document.getElementById('introjs-custom-styles');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'introjs-custom-styles';
+    document.head.appendChild(styleTag);
+    styleTag.textContent = `
+      .introjs-overlay {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+      }
+      .introjs-tooltip {
+        background-color: rgb(244, 245, 254) !important;
+        border: 2px solid white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+        padding: 32px !important;
+        overflow: hidden !important;
+        min-width: 700px !important;
+        max-width: 900px !important;
+        width: auto !important;
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+      }
+      .introjs-tooltiptitle {
+        font-family: var(--font-primary), Poppins, sans-serif !important;
+        font-weight: var(--font-weight-bold) !important;
+        font-size: 2.5rem !important;
+        color: var(--color-text-dark) !important;
+        margin-bottom: 20px !important;
+        line-height: 1.2 !important;
+      }
+      .introjs-tooltipcontent {
+        font-family: var(--font-secondary), "Space Grotesk", sans-serif !important;
+        font-weight: var(--font-weight-regular) !important;
+        font-size: 1.25rem !important;
+        color: var(--color-text-dark) !important;
+        line-height: 1.7 !important;
+      }
+      .introjs-tooltipbuttons {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 8px !important;
+        border-top: 1px solid rgba(81, 104, 255, 0.2) !important;
+        padding-top: 16px !important;
+        margin-top: 16px !important;
+      }
+      .introjs-button {
+        font-family: var(--font-button), "IBM Plex Mono", monospace !important;
+        font-weight: var(--font-weight-semibold) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        padding: 12px 24px !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        border: 2px solid !important;
+      }
+      .introjs-prevbutton {
+        background-color: transparent !important;
+        color: var(--color-text-dark) !important;
+        border-color: var(--color-text-dark) !important;
+        margin-right: auto !important;
+        margin-left: 0 !important;
+      }
+      .introjs-prevbutton:hover {
+        background-color: var(--color-text-dark) !important;
+        color: var(--color-text-light) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+      }
+      .introjs-nextbutton {
+        background-color: var(--color-primary) !important;
+        color: var(--color-text-light) !important;
+        border-color: var(--color-primary) !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+      }
+      .introjs-nextbutton:hover {
+        background-color: #3d52e6 !important;
+        border-color: #3d52e6 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(81, 104, 255, 0.4) !important;
+      }
+      .introjs-donebutton {
+        background-color: var(--color-secondary) !important;
+        color: var(--color-text-light) !important;
+        border-color: var(--color-secondary) !important;
+      }
+      .introjs-donebutton:hover {
+        background-color: #4fa87a !important;
+        border-color: #4fa87a !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(98, 190, 143, 0.4) !important;
+      }
+      .introjs-skipbutton {
+        white-space: nowrap !important;
+        font-family: var(--font-button), "IBM Plex Mono", monospace !important;
+        font-size: 0.875rem !important;
+        background: transparent !important;
+        border: none !important;
+        text-decoration: underline !important;
+        cursor: pointer !important;
+        color: var(--color-text-dark) !important;
+        position: absolute !important;
+        right: 24px !important;
+        top: 24px !important;
+        margin: 0 !important;
+      }
+      .introjs-skipbutton:hover {
+        color: var(--color-primary) !important;
+      }
+      .introjs-bullets {
+        display: none !important;
+      }
+      .introjs-progress {
+        background-color: rgba(81, 104, 255, 0.2) !important;
+        border-radius: 10px !important;
+        height: 6px !important;
+        margin-bottom: 16px !important;
+      }
+      .introjs-progressbar {
+        background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)) !important;
+        height: 100% !important;
+        border-radius: 10px !important;
+        transition: width 0.3s ease !important;
+      }
+    `;
+  }
+
+  // Hide bullets to fix duplicate progress bars
+  const bullets = tooltip.querySelector('.introjs-bullets') as HTMLElement;
+  if (bullets) {
+    bullets.style.display = 'none';
+  }
+};
+
 export const startOnboardingTour = async () => {
-  // Dynamically import intro.js only on client side
   if (typeof window === 'undefined') return;
   
   const introJs = (await import('intro.js')).default;
-  const intro = introJs();
-  
-  // Track positioning to prevent jumping
-  let isPositioning = false;
+  const intro = introJs.tour();
   
   intro.setOptions({
     steps: getTourSteps(),
     showProgress: true,
-    showBullets: true,
+    showBullets: false,
     exitOnOverlayClick: false,
     exitOnEsc: true,
     nextLabel: 'Next →',
     prevLabel: '← Previous',
     skipLabel: 'Skip Tour',
     doneLabel: 'Got it!',
-    tooltipClass: 'customTooltip',
-    highlightClass: 'customHighlight',
     overlayOpacity: 0.5,
   });
 
-  // Set initial tooltip width to prevent abrupt changes and improve readability
   intro.onbeforechange(() => {
-    const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
-    if (tooltip) {
-      const viewportWidth = window.innerWidth;
-      const maxTooltipWidth = Math.min(400, viewportWidth - 80);
-      const minTooltipWidth = Math.min(320, viewportWidth - 80);
-      
-      // Better sizing for readability
-      tooltip.style.minWidth = `${Math.max(320, minTooltipWidth)}px`;
-      tooltip.style.maxWidth = `${maxTooltipWidth}px`;
-      tooltip.style.width = 'auto';
-      tooltip.style.boxSizing = 'border-box';
-      
-      // Improve text readability
-      tooltip.style.color = '#ffffff';
-      tooltip.style.backgroundColor = '#1a1a1a';
-      tooltip.style.border = '2px solid #4a4a4a';
-      tooltip.style.borderRadius = '8px';
-      tooltip.style.padding = '20px';
-      tooltip.style.fontSize = '14px';
-      tooltip.style.lineHeight = '1.6';
-      tooltip.style.zIndex = '999999';
-      
-      // Ensure tooltip text is readable
-      const titleElement = tooltip.querySelector('.introjs-tooltiptitle') as HTMLElement;
-      if (titleElement) {
-        titleElement.style.color = '#ffffff';
-        titleElement.style.fontSize = '18px';
-        titleElement.style.fontWeight = '600';
-        titleElement.style.marginBottom = '12px';
-      }
-      
-      const contentElement = tooltip.querySelector('.introjs-tooltipcontent') as HTMLElement;
-      if (contentElement) {
-        contentElement.style.color = '#e0e0e0';
-        contentElement.style.fontSize = '14px';
-        contentElement.style.lineHeight = '1.6';
-      }
-    }
+    setTimeout(applyStyles, 10);
     return true;
   });
 
-  // Set consistent tooltip width and ensure it stays within viewport with improved readability
   intro.onafterchange(() => {
-    // Use requestAnimationFrame for better timing with DOM updates
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-      const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
-      if (tooltip) {
-        const currentStep = (intro as any)._currentStep;
-        const steps = getTourSteps();
-        const step = steps[currentStep];
-        
-        // Calculate max width based on viewport to prevent overflow
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // Better sizing - smaller for individual components, larger for body elements
-        let maxTooltipWidth: number;
-        let minTooltipWidth: number;
-        
-        if (step && step.element === 'body') {
-          maxTooltipWidth = Math.min(500, viewportWidth - 80);
-          minTooltipWidth = Math.min(400, viewportWidth - 80);
-        } else {
-          maxTooltipWidth = Math.min(400, viewportWidth - 80);
-          minTooltipWidth = Math.min(320, viewportWidth - 80);
-        }
-        
-        tooltip.style.minWidth = `${Math.max(320, minTooltipWidth)}px`;
-        tooltip.style.maxWidth = `${maxTooltipWidth}px`;
-        tooltip.style.width = 'auto';
-        tooltip.style.boxSizing = 'border-box';
-        
-        // Improve readability with better styling
-        tooltip.style.color = '#ffffff';
-        tooltip.style.backgroundColor = '#1a1a1a';
-        tooltip.style.border = '2px solid #4a4a4a';
-        tooltip.style.borderRadius = '8px';
-        tooltip.style.padding = '20px';
-        tooltip.style.fontSize = '14px';
-        tooltip.style.lineHeight = '1.6';
-        tooltip.style.zIndex = '999999';
-        tooltip.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.5)';
-        
-        // Center tooltip in the viewport to avoid edge shifting
-        const tooltipRect = tooltip.getBoundingClientRect();
-        const centeredLeft = (viewportWidth - tooltipRect.width) / 2;
-        const centeredTop = (viewportHeight - tooltipRect.height) / 2;
-        tooltip.style.position = 'fixed';
-        tooltip.style.left = `${Math.max(20, centeredLeft)}px`;
-        tooltip.style.top = `${Math.max(20, centeredTop)}px`;
-        tooltip.style.margin = '0';
-        tooltip.style.transform = 'none';
-        
-        // Ensure tooltip text is readable
-        const titleElement = tooltip.querySelector('.introjs-tooltiptitle') as HTMLElement;
-        if (titleElement) {
-          titleElement.style.color = '#ffffff';
-          titleElement.style.fontSize = '18px';
-          titleElement.style.fontWeight = '600';
-          titleElement.style.marginBottom = '12px';
-        }
-        
-        const contentElement = tooltip.querySelector('.introjs-tooltipcontent') as HTMLElement;
-        if (contentElement) {
-          contentElement.style.color = '#e0e0e0';
-          contentElement.style.fontSize = '14px';
-          contentElement.style.lineHeight = '1.6';
-        }
-        
-        // Ensure buttons container doesn't overflow and is readable
-        const buttonsContainer = tooltip.querySelector('.introjs-tooltipbuttons') as HTMLElement;
-        if (buttonsContainer) {
-          buttonsContainer.style.width = '100%';
-          buttonsContainer.style.boxSizing = 'border-box';
-          buttonsContainer.style.overflow = 'visible';
-          buttonsContainer.style.marginTop = '16px';
-          buttonsContainer.style.paddingTop = '16px';
-          buttonsContainer.style.borderTop = '1px solid #4a4a4a';
-          buttonsContainer.style.display = 'flex';
-          buttonsContainer.style.justifyContent = 'space-between';
-          buttonsContainer.style.alignItems = 'center';
-          buttonsContainer.style.gap = '12px';
-          buttonsContainer.style.position = 'relative';
-          
-          // Get buttons
-          const prevButton = tooltip.querySelector('.introjs-prevbutton') as HTMLElement;
-          const skipButton = tooltip.querySelector('.introjs-skipbutton') as HTMLElement;
-          const nextButton = tooltip.querySelector('.introjs-nextbutton') as HTMLElement;
-          
-          // Position buttons: Previous (left), Skip (center), Next (right)
-          if (prevButton) {
-            prevButton.style.order = '1';
-            prevButton.style.marginRight = 'auto';
-          }
-          
-          if (skipButton) {
-            skipButton.style.order = '2';
-            skipButton.style.position = 'relative';
-            skipButton.style.left = '0';
-            skipButton.style.transform = 'none';
-            skipButton.style.margin = '0 auto';
-            skipButton.style.flex = '0 0 auto';
-          }
-          
-          if (nextButton) {
-            nextButton.style.order = '3';
-            nextButton.style.marginLeft = 'auto';
-          }
-        }
-        
-        // Style buttons for better readability and prevent clipping
-        const buttons = tooltip.querySelectorAll('.introjs-button') as NodeListOf<HTMLElement>;
-        buttons.forEach((button) => {
-          button.style.color = '#ffffff';
-          button.style.backgroundColor = '#4a4a4a';
-          button.style.border = '1px solid #6a6a6a';
-          button.style.borderRadius = '4px';
-          button.style.padding = '8px 16px';
-          button.style.cursor = 'pointer';
-          button.style.transition = 'all 0.2s';
-          button.style.whiteSpace = 'nowrap';
-          button.style.overflow = 'visible';
-          button.style.textOverflow = 'clip';
-        });
-        
-        const prevButton = tooltip.querySelector('.introjs-prevbutton') as HTMLElement;
-        if (prevButton) {
-          prevButton.style.overflow = 'visible';
-        }
-        
-        const skipButton = tooltip.querySelector('.introjs-skipbutton') as HTMLElement;
-        if (skipButton) {
-          skipButton.style.overflow = 'visible';
-          skipButton.style.whiteSpace = 'nowrap';
-        }
-        
-        const nextButton = tooltip.querySelector('.introjs-nextbutton') as HTMLElement;
-        if (nextButton) {
-          nextButton.style.backgroundColor = '#0066cc';
-          nextButton.style.borderColor = '#0080ff';
-          nextButton.style.overflow = 'visible';
-        }
-        
-        // Ensure tooltip itself doesn't clip content
-        tooltip.style.overflow = 'visible';
-      }
-      
-      // Improve highlight overlay readability
-      const overlay = document.querySelector('.introjs-overlay') as HTMLElement;
-      if (overlay) {
-        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-      }
-      
-      const highlight = document.querySelector('.introjs-helperLayer') as HTMLElement;
-      if (highlight) {
-        highlight.style.border = '3px solid #0066cc';
-        highlight.style.borderRadius = '8px';
-        highlight.style.boxShadow = '0 0 0 9999px rgba(0, 0, 0, 0.7)';
-      }
-      }, 50);
-    });
+    setTimeout(applyStyles, 10);
+    setTimeout(applyStyles, 100);
+    
+    // Ensure overlay is visible
+    const overlay = document.querySelector('.introjs-overlay') as HTMLElement;
+    if (overlay) {
+      overlay.style.display = 'block';
+      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    }
   });
 
   intro.start();
   
-  // Mark tour as seen when it's completed or skipped
   intro.oncomplete(() => {
     localStorage.setItem('hasSeenOnboardingTour', 'true');
   });
@@ -276,14 +230,11 @@ export const startOnboardingTour = async () => {
 
 const OnboardingTour: React.FC = () => {
   useEffect(() => {
-    // Only run on client side
     if (typeof window === 'undefined') return;
     
-    // Check if user has already seen the tour
     const hasSeenTour = localStorage.getItem('hasSeenOnboardingTour');
     
     if (!hasSeenTour) {
-      // Small delay to ensure DOM is fully rendered
       const timer = setTimeout(() => {
         startOnboardingTour();
       }, 500);
@@ -296,4 +247,3 @@ const OnboardingTour: React.FC = () => {
 };
 
 export default OnboardingTour;
-

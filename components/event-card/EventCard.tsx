@@ -10,104 +10,94 @@ interface EventCardProps {
   authorName?: string;
   authorRole?: string;
   authorAvatar?: string;
-  onClick?: () => void;
+  description?: string;
+  secondaryText?: string;
+  onRegister?: () => void;
+  onSecondaryAction?: () => void;
+  secondaryButtonText?: string;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
-  imageUrl = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=400&fit=crop',
-  heading = 'Blog Post Title',
+  imageUrl = 'https://i.pinimg.com/originals/f4/7a/82/f47a82a4efc8091a7026305e31b9dc54.gif',
+  heading = 'Event Title',
   badge1Text = 'Category',
   badge2Text = 'Date',
   authorName = 'Author Name',
-  authorRole = 'Author Role',
-  authorAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=75&h=75&fit=crop&crop=face',
-  onClick,
+  authorRole = 'Event Curator',
+  description = 'Join us for an exciting event filled with learning and networking opportunities.',
+  secondaryText,
+  onRegister,
+  onSecondaryAction,
+  secondaryButtonText = 'Learn More',
 }) => {
+  // Use secondaryText if provided, otherwise combine badge1Text and badge2Text
+  const displaySecondaryText = secondaryText || `${badge1Text} • ${badge2Text}`;
+
   return (
-    <div className={styles.eventCard} onClick={onClick}>
-      <div className={styles.wrapper}>
-        <div className={styles.imageContainer}>
+    <div className={styles.container}>
+      <div className={styles.card}>
+        {/* Image Space */}
+        <div className={styles.imageBox}>
           <Image
             src={imageUrl}
             alt={heading}
             fill
             className={styles.image}
             style={{ objectFit: 'cover' }}
+            unoptimized
           />
         </div>
-        <div className={styles.content}>
-        <div className={styles.textSection}>
-          <h3 className={styles.heading}>{heading}</h3>
-          <div className={styles.badgesContainer}>
-            <div className={styles.badge}>
+
+        {/* Content Box */}
+        <div className={styles.contentBox}>
+          {/* Card Title */}
+          <h2 className={styles.heading}>{heading}</h2>
+
+          {/* Secondary Text */}
+          <div className={styles.secondaryText}>{displaySecondaryText}</div>
+
+          {/* Description */}
+          <p className={styles.description}>{description}</p>
+
+          {/* Action Buttons */}
+          <div className={styles.actionsContainer}>
+            <button className={styles.secondaryButton} onClick={onSecondaryAction}>
+              {secondaryButtonText}
+            </button>
+            <button className={styles.registerButton} onClick={onRegister}>
               <svg
-                className={styles.badgeIcon}
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
+                className={styles.eventIcon}
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M2.67 2.67H13.33V13.33H2.67V2.67Z"
+                  d="M15.8333 3.33333H4.16667C3.24619 3.33333 2.5 4.07952 2.5 4.99999V16.6667C2.5 17.5871 3.24619 18.3333 4.16667 18.3333H15.8333C16.7538 18.3333 17.5 17.5871 17.5 16.6667V4.99999C17.5 4.07952 16.7538 3.33333 15.8333 3.33333Z"
                   stroke="currentColor"
-                  strokeWidth="1.2"
+                  strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
                 <path
-                  d="M5.33 2.67V13.33M10.67 2.67V13.33M2.67 8H13.33"
+                  d="M13.3333 1.66666V4.99999M6.66667 1.66666V4.99999M2.5 8.33333H17.5"
                   stroke="currentColor"
-                  strokeWidth="1.2"
+                  strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
                 <path
-                  d="M6.67 5.33H9.33M6.67 10.67H9.33"
+                  d="M8.33333 12.5H11.6667M8.33333 15H13.3333"
                   stroke="currentColor"
                   strokeWidth="1.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
-              <span className={styles.badgeText}>{badge1Text}</span>
-            </div>
-            <div className={styles.badge}>
-              <svg
-                className={styles.badgeIcon}
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect x="2.67" y="2.67" width="10.67" height="10.67" rx="1" fill="currentColor" />
-                <path
-                  d="M5.33 1.33V4M10.67 1.33V4M2.67 6.67H13.33M2.67 10.67H13.33"
-                  stroke="white"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className={styles.badgeText}>{badge2Text}</span>
-            </div>
+              Register
+            </button>
           </div>
-        </div>
-        <div className={styles.authorSection}>
-          <div className={styles.avatarContainer}>
-            <Image
-              src={authorAvatar}
-              alt={authorName}
-              width={40}
-              height={40}
-              className={styles.avatar}
-            />
-          </div>
-          <div className={styles.authorText}>
-            <div className={styles.authorName}>{authorName}</div>
-            <div className={styles.authorRole}>{authorRole}</div>
-          </div>
-        </div>
         </div>
       </div>
     </div>

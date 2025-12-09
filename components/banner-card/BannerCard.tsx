@@ -7,7 +7,7 @@ const BannerCard: React.FC = () => {
     <div className={styles.bannerCard} data-intro="banner-card">
       <div className={styles.content}>
         <div className={styles.textSection}>
-          <h2 className={styles.title}>DAEMON:// Recommend Me Learning Paths!</h2>
+          <h2 className={styles.title}>Discover Your Learning Path</h2>
           <p className={styles.subtitle}>Reach your learning goals by finding hand-picked Digital Classes.</p>
         </div>
         <button className={styles.actionButton}>

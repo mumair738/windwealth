@@ -32,20 +32,19 @@ export default function Home() {
             <BannerCard />
           </div>
           <div className={styles.eventsAndPromptRow}>
-          <div className={styles.eventsSection}>
+          <div className={styles.eventsSection} data-intro="events">
             <h1 className={styles.sectionTitle}>Events</h1>
             <EventCard
-              imageUrl="https://i.imgur.com/CBTfcoP.jpeg"
-              heading="Xmas Party"
+              heading="Week 1: Self-Mastery"
               badge1Text="Workshop"
               badge2Text="Dec 15"
-              authorName="Alex Rivera"
-              authorRole="Event Curator"
-              authorAvatar="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
+              description="Join us for an immersive workshop focused on self-mastery and personal development. Learn essential skills and connect with like-minded individuals."
+              onRegister={() => console.log('Register clicked')}
+              onSecondaryAction={() => console.log('Learn more clicked')}
             />
           </div>
           <div className={styles.promptSection}>
-              <h1 className={styles.sectionTitle}>Forum</h1>
+              <h1 className={styles.sectionTitle}>Messageboard</h1>
               <PromptLibraryCard />
               <div data-intro="farcaster-friends">
                 <BookCard />
