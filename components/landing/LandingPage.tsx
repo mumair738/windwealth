@@ -50,7 +50,7 @@ const LandingPage: React.FC = () => {
       console.error('Subscription error:', error);
       setMessage({ type: 'error', text: 'An error occurred. Please try again later.' });
     } finally {
-      setIsLoading(false);
+    setIsLoading(false);
     }
   };
 

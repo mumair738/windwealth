@@ -29,7 +29,7 @@ Mental Wealth Academy is designed to help small real-world communities transitio
 - **Agentic Daemon Helpers**: AI-powered assistants to provide customizability and easy onboarding
 - **Forum System**: Community discussion boards for knowledge sharing and collaboration
 - **Quest System**: Interactive learning paths and community challenges
-- **Catalog**: Organized library of community resources and assets
+- **Library**: Organized library of community resources and assets
 
 ## Tech Stack
 

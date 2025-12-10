@@ -76,8 +76,8 @@ export function Footer() {
               <Link href="/quests" className={styles.link}>
                 Quests
               </Link>
-              <Link href="/catalog" className={styles.link}>
-                Catalog
+              <Link href="/library" className={styles.link}>
+                Library
               </Link>
             </div>
           </div>

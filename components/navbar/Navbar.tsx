@@ -106,7 +106,7 @@ const Navbar: React.FC = () => {
             {/* Forum Button */}
             <Link href="/forum" className={`${styles.navButton} ${isActive('/forum') ? styles.navButtonActive : ''}`}>
               <Image
-                src="/icons/forum.svg"
+                src="/icons/Survey.svg"
                 alt="Forum"
                 width={20}
                 height={20}
@@ -118,7 +118,7 @@ const Navbar: React.FC = () => {
             {/* Quests Button */}
             <Link href="/quests" className={`${styles.navButton} ${isActive('/quests') ? styles.navButtonActive : ''}`}>
               <Image
-                src="/icons/Venetian carnival.svg"
+                src="/icons/Teleport.svg"
                 alt="Quests"
                 width={20}
                 height={20}
@@ -127,16 +127,16 @@ const Navbar: React.FC = () => {
               <span className={isActive('/quests') ? styles.buttonLabelActive : styles.buttonLabel}>Quests</span>
             </Link>
 
-            {/* Catalog Button */}
-            <Link href="/catalog" className={`${styles.navButton} ${isActive('/catalog') ? styles.navButtonActive : ''}`}>
+          {/* Library Button */}
+          <Link href="/library" className={`${styles.navButton} ${isActive('/library') ? styles.navButtonActive : ''}`}>
               <Image
-                src="/icons/catalog.svg"
-                alt="Catalog"
+                src="/icons/bookicon.svg"
+                alt="Library"
                 width={20}
                 height={20}
                 className={styles.questIcon}
               />
-              <span className={isActive('/catalog') ? styles.buttonLabelActive : styles.buttonLabel}>Catalog</span>
+            <span className={isActive('/library') ? styles.buttonLabelActive : styles.buttonLabel}>Library</span>
             </Link>
           </div>
 
