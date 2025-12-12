@@ -67,7 +67,7 @@ const Navbar: React.FC = () => {
           <Link href="/home" className={styles.brandLink} aria-label="Mental Wealth Academy">
             <div className={styles.logoWrapper}>
               <Image
-                src="/uploads/NEWLOGO.png"
+                src="https://i.imgur.com/G5kFo1Q.png"
                 alt="Mental Wealth Academy"
                 fill
                 priority
