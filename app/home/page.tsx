@@ -11,7 +11,6 @@ import OnboardingTour from '@/components/onboarding-tour/OnboardingTour';
 import Navbar from '@/components/navbar/Navbar';
 import { Footer } from '@/components/footer/Footer';
 import EventCard from '@/components/event-card/EventCard';
-import { DaemonTerminal } from '@/components/daemon/DaemonTerminal';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -25,9 +24,6 @@ export default function Home() {
           <SideNavigation />
         </div>
         <div className={styles.middleSection}>
-          <div className={styles.daemonTerminalWrap}>
-            <DaemonTerminal />
-          </div>
           <div data-intro="quests">
             <Quests />
           </div>

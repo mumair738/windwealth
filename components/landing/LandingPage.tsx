@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -19,6 +19,7 @@ const LandingPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +57,23 @@ const LandingPage: React.FC = () => {
 
   // Memoize Scene to prevent re-renders when form state changes
   const memoizedScene = useMemo(() => <Scene />, []);
+
+  useEffect(() => {
+    if (!isDemoOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsDemoOpen(false);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isDemoOpen]);
 
   return (
     <div className={styles.container}>
@@ -148,6 +166,14 @@ const LandingPage: React.FC = () => {
               {/* Actions */}
               <div className={styles.actions}>
                 <button
+                  type="button"
+                  className={styles.demoButton}
+                  onClick={() => setIsDemoOpen(true)}
+                >
+                  Demo
+                </button>
+
+                <button
                   type="submit"
                   className={styles.loginButton}
                   disabled={isLoading}
@@ -195,6 +221,40 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {isDemoOpen && (
+        <div
+          className={styles.demoOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Demo video"
+          onClick={() => setIsDemoOpen(false)}
+        >
+          <div
+            className={styles.demoModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className={styles.demoCloseButton}
+              aria-label="Close demo"
+              onClick={() => setIsDemoOpen(false)}
+            >
+              ×
+            </button>
+
+            <div className={styles.demoVideoWrapper}>
+              <iframe
+                className={styles.demoIframe}
+                src="https://www.youtube.com/embed/1VR2xP-gmlk?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+                title="Mental Wealth Academy Demo"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

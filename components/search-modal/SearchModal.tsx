@@ -69,10 +69,25 @@ export function SearchModal({ isOpen, onClose, searchContainerRef }: SearchModal
     const updatePosition = () => {
       if (searchContainerRef.current) {
         const rect = searchContainerRef.current.getBoundingClientRect();
+        const MODAL_WIDTH = 720; // fixed dropdown width (prevents "squish" when search bar resizes)
+        const VIEWPORT_PADDING = 16;
+
+        const maxWidth = window.innerWidth - VIEWPORT_PADDING * 2;
+        const width = Math.min(MODAL_WIDTH, Math.max(320, maxWidth));
+
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
+
+        // Align to search bar left edge, but clamp into viewport
+        const desiredLeft = rect.left + scrollX;
+        const minLeft = scrollX + VIEWPORT_PADDING;
+        const maxLeft = scrollX + window.innerWidth - width - VIEWPORT_PADDING;
+        const left = Math.max(minLeft, Math.min(desiredLeft, maxLeft));
+
         setPosition({
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.left + window.scrollX,
-          width: rect.width,
+          top: rect.bottom + scrollY + 8,
+          left,
+          width,
         });
       }
     };

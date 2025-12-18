@@ -125,6 +125,14 @@ export function Footer() {
             </a>
           </div>
           <div className={styles.legalLinks}>
+            <a
+              href="https://app.gitbook.com/o/3CvYIzSdbGYzrVfWEaKq/s/EBjSZb2HEhDar6AGYUxE/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.legalLink}
+            >
+              Docs
+            </a>
             <Link href="/terms" className={styles.legalLink}>
               Terms of Service
             </Link>

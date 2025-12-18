@@ -30,20 +30,20 @@
 }
 
 .resultItem {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 80px 1fr 120px;
+  align-items: center;
+  column-gap: 20px;
   width: 100%;
   position: relative;
-  margin-right: -60px;
 }
 
 .buttonWrapper {
-  position: relative;
-  flex-shrink: 0;
   width: 120px;
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .logomark {
@@ -101,10 +101,6 @@
   flex-shrink: 0;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  position: absolute;
-  right: 0;
-  top: 0;
-  z-index: 10;
 }
 
 .buttonLight {
@@ -150,61 +146,5 @@
 
 .arrowIconBlack .arrowIconImage {
   filter: brightness(0);
-}
-
-/* Responsive Design */
-
-@media (max-width: 1024px) {
-  .resultItem {
-    flex-direction: column;
-    gap: 24px;
-  }
-  
-  .resultButton {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .modal {
-    width: 95%;
-  }
-  
-  .modalContent {
-    padding: 24px;
-    gap: 32px;
-  }
-}
-
-@media (max-width: 768px) {
-  .resultTitle {
-    font-size: 24px;
-  }
-  
-  .resultDescription {
-    font-size: 16px;
-  }
-  
-  .logomark {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .logomarkImage {
-    width: 64px;
-    height: 64px;
-  }
-  
-  .resultButton {
-    height: 48px;
-  }
-  
-  .buttonLabel {
-    font-size: 14px;
-  }
-  
-  .arrowIcon {
-    width: 20px;
-    height: 20px;
-  }
 }
 

@@ -147,6 +147,7 @@
   max-width: 1180px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 20px;
 }
 
 /* Main Large Card - Crypto Reserve Card */
@@ -394,215 +395,15 @@
   flex-shrink: 0;
 }
 
-/* Voting Cards Container */
-.votingCardsContainer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  width: 100%;
-}
-
-/* Voting Card */
-.votingCard {
-  background: rgb(244, 245, 254);
-  border: 2px solid rgb(165, 165, 165);
-  border-radius: 24px;
-  padding: 16px;
-  width: 100%;
-}
-
-.votingCardContent {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.featuredBadge {
-  background: linear-gradient(180deg, rgb(34, 34, 36) 0%, rgb(21, 21, 27) 100%);
-  border-radius: 20px;
-  padding: 6px 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-}
-
-.featuredText {
-  font-family: var(--font-primary);
-  font-size: 11px;
-  font-weight: var(--font-weight-medium);
-  color: rgb(255, 255, 255);
-  line-height: 1;
-}
-
-.votingCardHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.votingCardTitle {
-  font-family: var(--font-primary);
-  font-size: 14px;
-  font-weight: var(--font-weight-bold);
-  color: rgb(0, 0, 0);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.votingCardDescription {
-  font-family: var(--font-primary);
-  font-size: 11px;
-  font-weight: var(--font-weight-regular);
-  color: rgb(56, 56, 56);
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.votingCardPublisher {
-  font-family: var(--font-primary);
-  font-size: 11px;
-  font-weight: var(--font-weight-regular);
-  color: rgb(0, 0, 0);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.votesSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.votesTitle {
-  font-family: var(--font-primary);
-  font-size: 12px;
-  font-weight: var(--font-weight-bold);
-  color: rgb(0, 0, 0);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.voteOption {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  position: relative;
-}
-
-.voteOptionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.voteNumber {
-  font-family: var(--font-primary);
-  font-size: 12px;
-  font-weight: var(--font-weight-bold);
-  color: rgb(0, 0, 0);
-  line-height: 1;
-}
-
-.votePercentage {
-  font-family: var(--font-primary);
-  font-size: 12px;
-  font-weight: var(--font-weight-bold);
-  color: rgb(0, 0, 0);
-  line-height: 1;
-}
-
-.voteProgressBar {
-  position: relative;
-  width: 100%;
-  height: 6px;
-}
-
-.voteProgressBarBg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 6px;
-  background: rgb(217, 217, 217);
-  border-radius: 12px;
-}
-
-.voteProgressBarFill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 6px;
-  background: rgb(13, 13, 13);
-  border-radius: 12px;
-  z-index: 1;
-}
-
-.voteCount {
-  font-family: var(--font-primary);
-  font-size: 11px;
-  font-weight: var(--font-weight-regular);
-  color: rgb(0, 0, 0);
-  line-height: 1;
-}
-
-.voteButtons {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.voteButtonYes {
-  flex: 1;
-  background: linear-gradient(135deg, rgb(77, 42, 255) 0%, rgb(77, 44, 169) 32%, rgb(39, 20, 132) 74%, rgb(31, 31, 230) 100%);
-  border: 1px solid rgb(255, 255, 255);
-  border-radius: 8px;
-  padding: 8px 0;
-  font-family: var(--font-primary);
-  font-size: 12px;
-  font-weight: var(--font-weight-medium);
-  color: rgb(255, 255, 255);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: inset 0 -2px 1px rgba(255, 255, 255, 0.25);
-}
-
-.voteButtonYes:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.voteButtonNo {
-  flex: 1;
-  background: rgb(81, 104, 255);
-  border: 1px solid rgb(255, 255, 255);
-  border-radius: 8px;
-  padding: 8px 0;
-  font-family: var(--font-primary);
-  font-size: 12px;
-  font-weight: var(--font-weight-medium);
-  color: rgb(255, 255, 255);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: inset 0 -2px 1px rgba(255, 255, 255, 0.25);
-}
-
-.voteButtonNo:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
 /* Quests Section */
 .questsSection {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 /* Right Section */
@@ -1151,68 +952,6 @@
   .questAlertButtonIcon {
     width: 16px;
     height: 16px;
-  }
-
-  .votingCardsContainer {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .votingCard {
-    padding: 16px;
-    border-radius: 16px;
-  }
-
-  .votingCardContent {
-    gap: 10px;
-  }
-
-  .featuredBadge {
-    padding: 4px 10px;
-  }
-
-  .featuredText {
-    font-size: 10px;
-  }
-
-  .votingCardTitle {
-    font-size: 14px;
-  }
-
-  .votingCardDescription {
-    font-size: 11px;
-  }
-
-  .votingCardPublisher {
-    font-size: 10px;
-  }
-
-  .votesSection {
-    gap: 10px;
-  }
-
-  .votesTitle {
-    font-size: 12px;
-  }
-
-  .voteNumber,
-  .votePercentage {
-    font-size: 12px;
-  }
-
-  .voteCount {
-    font-size: 10px;
-  }
-
-  .voteButtons {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .voteButtonYes,
-  .voteButtonNo {
-    padding: 8px 0;
-    font-size: 11px;
   }
 
   .pageTitle {
