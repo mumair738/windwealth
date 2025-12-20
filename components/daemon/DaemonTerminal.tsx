@@ -223,7 +223,15 @@ export function DaemonTerminal() {
                   onClick={runDaemon}
                   disabled={loading}
                 >
-                  {loading ? 'Generating…' : 'Generate'}
+                  <Image
+                    src="/icons/shard.svg"
+                    alt="Shard"
+                    width={16}
+                    height={16}
+                    className={styles.shardIcon}
+                  />
+                  <span>{loading ? 'Generating…' : 'Generate'}</span>
+                  <span className={styles.rewardText}>(+30)</span>
                 </button>
               </div>
 

@@ -1,9 +1,12 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/navbar/Navbar';
+import { AccountBanner } from '@/components/forum/AccountBanner';
 import styles from './page.module.css';
 
 type MeResponse = { user: { id: string; username: string; avatarUrl: string | null } | null };
@@ -125,91 +128,100 @@ export default function ForumThreadPage({
             )}
           </div>
           <Link className={`${styles.button} ${styles.buttonSecondary}`} href={`/forum/${categorySlug}`}>
-            Back
+            Back to Category
           </Link>
+        </div>
+
+        <div className={styles.bannerWrapper}>
+          <AccountBanner />
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <div className={styles.panel}>
-          {loading && <div style={{ opacity: 0.7 }}>Loading…</div>}
-
-          {!loading && data && (
-            <div className={styles.postList}>
-              {data.posts.map((p) => (
-                <div key={p.id} className={styles.post}>
-                  <div className={styles.postHeader}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {p.author.avatarUrl ? (
-                        <Image
-                          src={p.author.avatarUrl}
-                          alt={p.author.username}
-                          width={22}
-                          height={22}
-                          style={{ borderRadius: 999 }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 999,
-                            background: 'rgba(81, 104, 255, 0.2)',
-                          }}
-                        />
-                      )}
-                      <span>{p.author.username}</span>
-                    </div>
-                    <div>{new Date(p.createdAt).toLocaleString()}</div>
-                  </div>
-
-                  <div className={styles.postBody}>{p.body}</div>
-
-                  {p.attachmentUrl && (
-                    <div className={styles.attachment}>
-                      <Image
-                        src={p.attachmentUrl}
-                        alt="Attachment"
-                        width={1000}
-                        height={600}
-                        style={{ width: '100%', height: 'auto', display: 'block' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+        <div className={styles.chatboxArea}>
+          {loading && (
+            <div className={styles.chatboxLoading}>
+              <div>Loading thread…</div>
             </div>
           )}
-        </div>
 
-        {me ? (
-          <div className={styles.panel} style={{ marginTop: 14 }}>
-            <div style={{ fontWeight: 700 }}>Reply as {me.username}</div>
-            <div className={styles.formRow}>
-              <textarea
-                className={styles.textarea}
-                value={replyBody}
-                onChange={(e) => setReplyBody(e.target.value)}
-                placeholder="Write a reply…"
-              />
-              <input
-                className={styles.input}
-                type="file"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                onChange={(e) => setReplyAttachment(e.target.files?.[0] || null)}
-              />
-              <div className={styles.actions}>
-                <button className={styles.button} type="button" onClick={handleReply}>
-                  Post reply
-                </button>
+          {!loading && data && (
+            <>
+              <div className={styles.chatboxHeader}>
+                <div>
+                  <h2 className={styles.chatboxTitle}>{data.thread.title}</h2>
+                  <div className={styles.chatboxMeta}>
+                    Started by {data.thread.author.username} •{' '}
+                    {new Date(data.thread.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ) : (
-          <div className={styles.panel} style={{ marginTop: 14, opacity: 0.8 }}>
-            Create an account (Home page) to reply.
-          </div>
-        )}
+
+              <div className={styles.messagesContainer}>
+                {data.posts.map((p) => (
+                  <div key={p.id} className={styles.message}>
+                    <div className={styles.messageHeader}>
+                      <div className={styles.messageAuthor}>
+                        {p.author.avatarUrl ? (
+                          <img
+                            src={p.author.avatarUrl}
+                            alt={p.author.username}
+                            className={styles.messageAvatar}
+                          />
+                        ) : (
+                          <div className={styles.messageAvatarPlaceholder} />
+                        )}
+                        <span className={styles.messageUsername}>{p.author.username}</span>
+                      </div>
+                      <div className={styles.messageTime}>
+                        {new Date(p.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className={styles.messageBody}>{p.body}</div>
+                    {p.attachmentUrl && (
+                      <div className={styles.messageAttachment}>
+                        <Image
+                          src={p.attachmentUrl}
+                          alt="Attachment"
+                          width={600}
+                          height={400}
+                          className={styles.messageImage}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {me ? (
+                <div className={styles.replyBox}>
+                  <div className={styles.replyHeader}>Reply as {me.username}</div>
+                  <textarea
+                    className={styles.replyTextarea}
+                    value={replyBody}
+                    onChange={(e) => setReplyBody(e.target.value)}
+                    placeholder="Write a reply…"
+                  />
+                  <input
+                    className={styles.replyInput}
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    onChange={(e) => setReplyAttachment(e.target.files?.[0] || null)}
+                  />
+                  <div className={styles.replyActions}>
+                    <button className={styles.replyButton} type="button" onClick={handleReply}>
+                      Post reply
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.replyBox}>
+                  <div className={styles.replyGuest}>Create an account to reply.</div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </>
   );

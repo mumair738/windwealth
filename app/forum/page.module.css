@@ -3,8 +3,7 @@
   margin: 0 auto;
   padding: 16px 20px 16px;
   background: var(--color-background);
-  height: calc(100vh - 70px);
-  min-height: 0;
+  min-height: calc(100vh - 70px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -48,15 +47,6 @@
 .button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(81, 104, 255, 0.25);
-}
-
-.buttonSecondary {
-  background: #fff;
-  color: var(--color-primary);
-}
-
-.buttonSecondary:hover {
-  background: rgba(81, 104, 255, 0.08);
 }
 
 /* Account Banner wrapper */
@@ -121,6 +111,40 @@
 .newThreadButton:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(81, 104, 255, 0.3);
+}
+
+.categoryFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(81, 104, 255, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.categoryFilterButton {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(81, 104, 255, 0.25);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-dark);
+  cursor: pointer;
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s ease;
+}
+
+.categoryFilterButton:hover {
+  background: rgba(81, 104, 255, 0.1);
+  border-color: rgba(81, 104, 255, 0.4);
+}
+
+.categoryFilterButtonActive {
+  background: rgba(81, 104, 255, 0.15);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .sidebarLoading,
@@ -197,6 +221,11 @@
   opacity: 0.7;
   font-size: 13px;
   color: var(--color-text-dark);
+}
+
+.threadCategory {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
 }
 
 /* Right Side - Chatbox */
@@ -346,6 +375,7 @@
   padding: 20px 24px;
   border-top: 2px solid rgba(81, 104, 255, 0.15);
   background: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
 }
 
 .replyHeader {
@@ -499,7 +529,7 @@
 /* Responsive */
 @media (max-width: 968px) {
   .container {
-    height: 100vh;
+    height: calc(100vh - 70px);
     padding: 16px 16px 16px;
   }
 
@@ -510,7 +540,7 @@
 
   .threadSidebar {
     width: 100%;
-    max-height: 200px;
+    max-height: 300px;
     flex-shrink: 0;
   }
 
@@ -523,3 +553,4 @@
     max-width: 90%;
   }
 }
+

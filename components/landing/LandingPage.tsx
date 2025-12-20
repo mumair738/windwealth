@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import styles from './LandingPage.module.css';
@@ -13,7 +12,6 @@ const Scene = dynamic(() => import('./Scene'), {
 });
 
 const LandingPage: React.FC = () => {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -88,8 +86,6 @@ const LandingPage: React.FC = () => {
                         {/* Logo */}
                         <div 
                           className={styles.companyHeader}
-                          onClick={() => router.push('/home')}
-                          style={{ cursor: 'pointer' }}
                         >
               <Image
                 src="/icons/spacey2klogo.png"
@@ -198,9 +194,6 @@ const LandingPage: React.FC = () => {
                 <button
                   type="button"
                   className={styles.walletButton}
-                  onClick={() => {
-                    router.push('/home');
-                  }}
                 >
                   <svg className={styles.socialIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>

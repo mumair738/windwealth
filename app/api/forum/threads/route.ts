@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ensureForumSchema } from '@/lib/ensureForumSchema';
 import { getCurrentUserFromRequestCookie } from '@/lib/auth';
 import { getPool, isDbConfigured, sqlQuery } from '@/lib/db';
-import { demoThreadsForCategory } from '@/lib/forumDemo';
+import { demoThreadsForCategory, demoThreads, demoCategories } from '@/lib/forumDemo';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,21 +12,23 @@ export async function GET(request: Request) {
   if (!isDbConfigured()) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
-    if (!category) {
-      return NextResponse.json({ error: 'Missing category.' }, { status: 400 });
-    }
+    
+    const demoThreadsList = category 
+      ? demoThreadsForCategory(category)
+      : demoThreads;
 
     return NextResponse.json(
       {
         dbConfigured: false,
         demo: true,
-        threads: demoThreadsForCategory(category).map((t) => ({
+        threads: demoThreadsList.map((t) => ({
           id: t.id,
           title: t.title,
           createdAt: t.createdAt,
           updatedAt: t.updatedAt,
           author: t.author,
           posts: t.posts.length,
+          category: { slug: t.categorySlug, name: demoCategories.find(c => c.slug === t.categorySlug)?.name || t.categorySlug },
         })),
       },
       { status: 200 }
@@ -36,9 +38,6 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
-  if (!category) {
-    return NextResponse.json({ error: 'Missing category.' }, { status: 400 });
-  }
 
   const threads = await sqlQuery<
     Array<{
@@ -49,23 +48,43 @@ export async function GET(request: Request) {
       author_username: string;
       author_avatar_url: string | null;
       posts: number;
+      category_slug: string;
+      category_name: string;
     }>
   >(
-    `SELECT t.id,
-            t.title,
-            t.created_at,
-            t.updated_at,
-            u.username AS author_username,
-            u.avatar_url AS author_avatar_url,
-            COUNT(p.id) AS posts
-     FROM forum_threads t
-     JOIN forum_categories c ON c.id = t.category_id
-     JOIN users u ON u.id = t.author_user_id
-     LEFT JOIN forum_posts p ON p.thread_id = t.id
-     WHERE c.slug = :slug
-     GROUP BY t.id
-     ORDER BY t.updated_at DESC`,
-    { slug: category }
+    category
+      ? `SELECT t.id,
+                 t.title,
+                 t.created_at,
+                 t.updated_at,
+                 u.username AS author_username,
+                 u.avatar_url AS author_avatar_url,
+                 c.slug AS category_slug,
+                 c.name AS category_name,
+                 COUNT(p.id) AS posts
+          FROM forum_threads t
+          JOIN forum_categories c ON c.id = t.category_id
+          JOIN users u ON u.id = t.author_user_id
+          LEFT JOIN forum_posts p ON p.thread_id = t.id
+          WHERE c.slug = :slug
+          GROUP BY t.id
+          ORDER BY t.updated_at DESC`
+      : `SELECT t.id,
+                 t.title,
+                 t.created_at,
+                 t.updated_at,
+                 u.username AS author_username,
+                 u.avatar_url AS author_avatar_url,
+                 c.slug AS category_slug,
+                 c.name AS category_name,
+                 COUNT(p.id) AS posts
+          FROM forum_threads t
+          JOIN forum_categories c ON c.id = t.category_id
+          JOIN users u ON u.id = t.author_user_id
+          LEFT JOIN forum_posts p ON p.thread_id = t.id
+          GROUP BY t.id
+          ORDER BY t.updated_at DESC`,
+    category ? { slug: category } : {}
   );
 
   return NextResponse.json({
@@ -79,6 +98,7 @@ export async function GET(request: Request) {
         avatarUrl: t.author_avatar_url,
       },
       posts: Number(t.posts || 0),
+      category: { slug: t.category_slug, name: t.category_name },
     })),
   });
 }

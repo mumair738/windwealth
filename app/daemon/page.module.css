@@ -5,9 +5,32 @@
 }
 
 .shell {
-  max-width: 1180px;
+  max-width: 1400px;
   margin: 24px auto 80px;
   padding: 0 20px;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: var(--font-primary);
+  font-size: 28px;
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 8px 0;
+  color: var(--color-text-dark);
+}
+
+.subtitle {
+  opacity: 0.75;
+  font-size: 16px;
+  margin: 0;
+  color: var(--color-text-dark);
+}
+
+.bannerWrapper {
+  margin-bottom: 24px;
 }
 
 .hero {

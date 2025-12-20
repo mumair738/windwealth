@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import styles from './QuestPage.module.css';
 import { AccountBanner } from '@/components/forum/AccountBanner';
+import QuestDetailSidebar from './QuestDetailSidebar';
 
 // Shard Icon Component
 const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
@@ -48,6 +49,7 @@ interface QuestCardProps {
   questName: string;
   usdcBonded: string;
   usdcReward: string;
+  onClick?: () => void;
 }
 
 const QuestCard: React.FC<QuestCardProps> = ({
@@ -58,9 +60,10 @@ const QuestCard: React.FC<QuestCardProps> = ({
   questName,
   usdcBonded,
   usdcReward,
+  onClick,
 }) => {
   return (
-    <div className={styles.questCard}>
+    <div className={styles.questCard} onClick={onClick}>
       <div className={styles.questCardContent}>
         <div className={styles.questImageWrapper}>
           <Image
@@ -115,6 +118,8 @@ interface QuestData {
   usdcBonded: string;
   usdcReward: string;
   status: 'active' | 'available' | 'ending';
+  questType?: 'proof-required' | 'no-proof' | 'follow-and-own';
+  description?: string;
 }
 
 type TabType = 'active' | 'available' | 'ending';
@@ -122,123 +127,52 @@ type TabType = 'active' | 'available' | 'ending';
 const QuestPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedQuest, setSelectedQuest] = useState<QuestData | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Filter quests based on active tab and search query
   const filteredQuests = useMemo(() => {
-    // Mock quest data - moved inside useMemo to prevent dependency issues
+    // Quest data aligned with goals
     const allQuests: QuestData[] = [
       // Active Quests
       {
         id: '1',
-        title: 'Your First Quest',
-        academy: 'Mental Wealth Academy',
+        title: 'Azura Marketing',
+        academy: 'Marketing Academy',
         date: '03/16/2025',
         time: '12:33 PM',
-        questName: 'Academy V3 Oracle',
-        usdcBonded: '700',
-        usdcReward: '5',
+        questName: 'Create Marketing Videos',
+        usdcBonded: '850',
+        usdcReward: '142',
         status: 'active',
+        questType: 'proof-required',
+        description: 'Create marketing videos using CapCut and AI to generate videos of Azura for marketing purposes.',
       },
       {
         id: '2',
         title: 'Community Builder',
-        academy: 'Digital Skills Academy',
+        academy: 'Community Academy',
         date: '03/17/2025',
         time: '10:15 AM',
-        questName: 'Build Community Hub',
+        questName: 'Event Registration',
         usdcBonded: '1,200',
-        usdcReward: '15',
+        usdcReward: '200',
         status: 'active',
+        questType: 'no-proof',
+        description: 'Register for the event on the homepage. No proof required for this quest.',
       },
       {
         id: '3',
-        title: 'Content Creator',
-        academy: 'Creative Arts Academy',
+        title: 'Academic Angel',
+        academy: 'Social Academy',
         date: '03/18/2025',
         time: '2:45 PM',
-        questName: 'Create Tutorial Series',
+        questName: 'Follow & Own',
         usdcBonded: '850',
-        usdcReward: '8',
+        usdcReward: '142',
         status: 'active',
-      },
-      // Available Quests
-      {
-        id: '4',
-        title: 'Blockchain Explorer',
-        academy: 'Tech Innovation Academy',
-        date: '03/20/2025',
-        time: '9:00 AM',
-        questName: 'Learn Blockchain Basics',
-        usdcBonded: '500',
-        usdcReward: '10',
-        status: 'available',
-      },
-      {
-        id: '5',
-        title: 'Design Master',
-        academy: 'Visual Design Academy',
-        date: '03/21/2025',
-        time: '11:30 AM',
-        questName: 'UI/UX Design Challenge',
-        usdcBonded: '600',
-        usdcReward: '12',
-        status: 'available',
-      },
-      {
-        id: '6',
-        title: 'Code Warrior',
-        academy: 'Programming Academy',
-        date: '03/22/2025',
-        time: '1:00 PM',
-        questName: 'Build Full Stack App',
-        usdcBonded: '1,500',
-        usdcReward: '20',
-        status: 'available',
-      },
-      {
-        id: '7',
-        title: 'Marketing Guru',
-        academy: 'Business Academy',
-        date: '03/23/2025',
-        time: '3:15 PM',
-        questName: 'Social Media Campaign',
-        usdcBonded: '900',
-        usdcReward: '18',
-        status: 'available',
-      },
-      // Ending Quests
-      {
-        id: '8',
-        title: 'Early Adopter',
-        academy: 'Innovation Academy',
-        date: '03/19/2025',
-        time: '4:00 PM',
-        questName: 'Beta Testing Program',
-        usdcBonded: '400',
-        usdcReward: '6',
-        status: 'ending',
-      },
-      {
-        id: '9',
-        title: 'Research Pioneer',
-        academy: 'Science Academy',
-        date: '03/19/2025',
-        time: '5:30 PM',
-        questName: 'Research Paper Review',
-        usdcBonded: '750',
-        usdcReward: '9',
-        status: 'ending',
-      },
-      {
-        id: '10',
-        title: 'Mentor Program',
-        academy: 'Leadership Academy',
-        date: '03/19/2025',
-        time: '6:00 PM',
-        questName: 'Mentor New Students',
-        usdcBonded: '1,000',
-        usdcReward: '25',
-        status: 'ending',
+        questType: 'follow-and-own',
+        description: 'Follow the Farcaster account @daemonagent and own an Academic Angel.',
       },
     ];
 
@@ -293,6 +227,10 @@ const QuestPage: React.FC = () => {
                 questName={quest.questName}
                 usdcBonded={quest.usdcBonded}
                 usdcReward={quest.usdcReward}
+                onClick={() => {
+                  setSelectedQuest(quest);
+                  setIsSidebarOpen(true);
+                }}
               />
             ))
           ) : (
@@ -302,6 +240,16 @@ const QuestPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Quest Detail Sidebar */}
+      <QuestDetailSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => {
+          setIsSidebarOpen(false);
+          setSelectedQuest(null);
+        }}
+        quest={selectedQuest}
+      />
 
       <div className={styles.leftSection}>
         <div className={styles.mainCard}>

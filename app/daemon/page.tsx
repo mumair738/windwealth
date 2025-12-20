@@ -1,7 +1,9 @@
 'use client';
 
 import Navbar from '@/components/navbar/Navbar';
+import { AccountBanner } from '@/components/forum/AccountBanner';
 import { DaemonTerminal } from '@/components/daemon/DaemonTerminal';
+import { Footer } from '@/components/footer/Footer';
 import styles from './page.module.css';
 
 export default function DaemonPage() {
@@ -10,19 +12,23 @@ export default function DaemonPage() {
       <Navbar />
       <main className={styles.page}>
         <section className={styles.shell}>
-          <section className={styles.hero}>
-            <div className={styles.heroContent}>
-              <h1 className={styles.heroTitle}>Daemon</h1>
-              <p className={styles.heroSubtitle}>
-                Pick a tool. Paste text. Generate.
+          <div className={styles.header}>
+            <div>
+              <h1 className={styles.title}>Daemon AI v.2</h1>
+              <p className={styles.subtitle}>
+                Integrate the agentic daemon model in your research and workflow
               </p>
             </div>
-            <div className={styles.heroGlow} />
-          </section>
+          </div>
+
+          <div className={styles.bannerWrapper}>
+            <AccountBanner />
+          </div>
 
           <DaemonTerminal />
         </section>
       </main>
+      <Footer />
     </>
   );
 }
