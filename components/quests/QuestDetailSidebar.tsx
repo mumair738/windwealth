@@ -229,7 +229,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                     </svg>
                   </div>
                   <p className={styles.actionText}>
-                    Visit the homepage and click "Register" on the event card to complete this quest.
+                    Visit the homepage and click &quot;Register&quot; on the event card to complete this quest.
                   </p>
                 </div>
 
