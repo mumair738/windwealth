@@ -308,6 +308,38 @@
   transform: translateY(0);
 }
 
+.adminVotingButton {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 14px 18px;
+  background: #d03660;
+  color: #ffffff;
+  border: 1px solid rgba(208, 54, 96, 0.45);
+  border-radius: 12px;
+  font-family: var(--font-button);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.adminVotingButton:hover {
+  transform: translateY(-2px);
+  background: #b62f54;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22);
+}
+
+.adminVotingButton:active {
+  transform: translateY(0);
+}
+
 /* Description Box */
 .descriptionBox {
   margin-bottom: 20px;
@@ -416,6 +448,284 @@
   .topSection,
   .bottomSection {
     padding: 24px 16px;
+  }
+}
+
+/* Admin Voting Mock */
+.adminVoting {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(91, 141, 239, 0.08), rgba(255, 255, 255, 0.9));
+  border: 1px solid rgba(81, 104, 255, 0.18);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.votingHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.livePill {
+  padding: 6px 12px;
+  background: rgba(255, 86, 134, 0.12);
+  color: #ff5676;
+  border: 1px solid rgba(255, 86, 134, 0.35);
+  border-radius: 999px;
+  font-family: var(--font-button);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.votingGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
+}
+
+.azuraCard,
+.communityCard {
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid rgba(81, 104, 255, 0.16);
+  background: #0f132b;
+  color: #e9edff;
+  position: relative;
+  overflow: hidden;
+}
+
+.azuraCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(106, 217, 255, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(159, 140, 255, 0.16), transparent 40%);
+  pointer-events: none;
+}
+
+.communityCard {
+  background: #ffffff;
+  color: var(--color-text-dark);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.cardEyebrow {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(233, 237, 255, 0.75);
+}
+
+.communityCard .cardEyebrow {
+  color: rgba(26, 29, 51, 0.55);
+}
+
+.cardTitle {
+  margin: 2px 0 0;
+  font-family: var(--font-primary);
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+}
+
+.cardSubtext {
+  margin: 6px 0 0;
+  font-family: var(--font-primary);
+  font-size: 13px;
+  color: rgba(26, 29, 51, 0.72);
+  max-width: 360px;
+}
+
+.cardText {
+  margin: 10px 0 0;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(233, 237, 255, 0.92);
+  position: relative;
+  z-index: 1;
+}
+
+.communityCard .cardText {
+  color: rgba(26, 29, 51, 0.8);
+}
+
+.cardSub {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  color: rgba(26, 29, 51, 0.65);
+}
+
+.autoVoteChip {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(106, 217, 255, 0.16);
+  color: #6ad9ff;
+  font-family: var(--font-button);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  border: 1px solid rgba(106, 217, 255, 0.3);
+}
+
+.tokenRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.tokenStat {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(233, 237, 255, 0.18);
+  border-radius: 12px;
+}
+
+.statLabel {
+  display: block;
+  font-size: 12px;
+  color: rgba(233, 237, 255, 0.7);
+  margin-bottom: 4px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.statValue {
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: #ffffff;
+}
+
+.communityCard .tokenStat {
+  background: rgba(81, 104, 255, 0.06);
+  border-color: rgba(81, 104, 255, 0.18);
+}
+
+.communityCard .statLabel {
+  color: rgba(26, 29, 51, 0.6);
+}
+
+.communityCard .statValue {
+  color: var(--color-text-dark);
+}
+
+.communityHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.avatarCluster {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f132b;
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-bold);
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  margin-left: -10px;
+  text-transform: uppercase;
+}
+
+.voteChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 10px;
+}
+
+.voteChip {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(26, 29, 51, 0.12);
+  background: #f7f8ff;
+  color: var(--color-text-dark);
+  font-family: var(--font-button);
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voteChip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.voteChipApprove {
+  background: rgba(83, 207, 111, 0.16);
+  border-color: rgba(83, 207, 111, 0.4);
+  color: #1f9d4a;
+}
+
+.voteChipReject {
+  background: rgba(255, 86, 134, 0.16);
+  border-color: rgba(255, 86, 134, 0.4);
+  color: #d03660;
+}
+
+.discussionBox {
+  margin-top: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(81, 104, 255, 0.08);
+  border: 1px dashed rgba(81, 104, 255, 0.3);
+}
+
+.discussionPill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #5168ff;
+  color: #ffffff;
+  font-family: var(--font-button);
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .votingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .avatar {
+    margin-left: -8px;
   }
 }
 

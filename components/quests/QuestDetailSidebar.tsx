@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import styles from './QuestDetailSidebar.module.css';
 
 // Shard Icon Component
@@ -210,6 +211,10 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                 <button className={styles.submitButton} type="button">
                   Submit Proof
                 </button>
+
+                <Link href="/mwa/quests/admin" className={styles.adminVotingButton}>
+                  ADMIN VOTING
+                </Link>
               </>
             )}
 
@@ -348,6 +353,10 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                 <button className={styles.submitButton} type="button">
                   Submit Proof
                 </button>
+
+                <Link href="/mwa/quests/admin" className={styles.adminVotingButton}>
+                  ADMIN VOTING
+                </Link>
               </>
             )}
           </div>
