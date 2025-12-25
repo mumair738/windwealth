@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const privyUserId = privyUser.id;
+  const privyUserId = (privyUser as any).userId || (privyUser as any).id;
 
   try {
     // Check if user already exists

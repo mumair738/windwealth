@@ -74,7 +74,7 @@ export async function getCurrentUserFromRequestCookie(): Promise<CurrentUser | n
          FROM users u
          WHERE u.privy_user_id = :privyUserId
          LIMIT 1`,
-        { privyUserId: privyUser.id }
+        { privyUserId: (privyUser as any).userId || (privyUser as any).id }
       );
 
       const user = rows[0];

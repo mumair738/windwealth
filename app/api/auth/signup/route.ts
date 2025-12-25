@@ -119,18 +119,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const privyUserId = privyUser.id;
+  const privyUserId = (privyUser as any).userId || (privyUser as any).id;
   const id = uuidv4();
 
+  // Check if user already exists with this Privy ID
+  let existingUser: Array<{ id: string }> = [];
+  let finalUserId = id;
+
   try {
-    // Check if user already exists with this Privy ID
-    const existingUser = await sqlQuery<Array<{ id: string }>>(
+    existingUser = await sqlQuery<Array<{ id: string }>>(
       `SELECT id FROM users WHERE privy_user_id = :privyUserId LIMIT 1`,
       { privyUserId }
     );
 
     if (existingUser.length > 0) {
       // User already exists, update their profile
+      finalUserId = existingUser[0].id;
       await sqlQuery(
         `UPDATE users 
          SET username = :username, 
@@ -198,7 +202,6 @@ export async function POST(request: Request) {
   }
 
   // Create session for backward compatibility (optional, since we're using Privy)
-  const finalUserId = existingUser.length > 0 ? existingUser[0].id : id;
   const session = await createSessionForUser(finalUserId);
   const response = NextResponse.json({ ok: true });
   setSessionCookie(response, session.token);
