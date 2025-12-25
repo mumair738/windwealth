@@ -165,7 +165,7 @@ const LandingPage: React.FC = () => {
                   className={styles.loginButton}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Logging in...' : 'Login'}
+                  {isLoading ? 'Submitting...' : 'Request Beta Access'}
                 </button>
 
                 <SignInButton />

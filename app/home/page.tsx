@@ -69,7 +69,7 @@ export default function Home() {
           <div className={styles.eventsSection} data-intro="events">
             <h1 className={styles.sectionTitle}>Events</h1>
             <EventCard
-              imageUrl="/uploads/task_01kd2j4dbvebba56djx7072mtz_1766391492_img_0.webp"
+              imageUrl="/uploads/task_01kd2j4dbvebba56djx7072mtz_1766391492_img_0 2.png"
               heading="Week 1: Self-Mastery"
               badge1Text="Workshop"
               badge2Text="Dec 15"
