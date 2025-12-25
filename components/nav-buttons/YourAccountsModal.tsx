@@ -99,44 +99,37 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
 
         <div className={`${styles.modalBody} ${styles.bgPluses} ${styles.connectionsModal}`}>
           <div className={styles.connectionsContainer}>
-            {/* Connected Wallets Section */}
+            {/* Connected Ethereum Accounts Section */}
             <div>
-              <p className={`${styles.strokedText} ${styles.large}`}>Connected Wallets</p>
+              <p className={`${styles.strokedText} ${styles.large}`}>Connected Ethereum Accounts</p>
               <div className={styles.walletsContainer}>
-                {wallets.length > 0 ? (
-                  wallets.map((wallet, index) => (
-                    <div key={index} className={`${styles.wallet} ${styles.shadowInnerGlow}`}>
-                      <div>
-                        <svg
-                          stroke="currentColor"
-                          fill="currentColor"
-                          strokeWidth="0"
-                          viewBox="0 0 320 512"
-                          height="1em"
-                          width="1em"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d="M311.9 260.8L160 353.6 8 260.8 160 0l151.9 260.8zM160 383.4L8 290.6 160 512l152-221.4-152 92.8z"></path>
-                        </svg>
-                        <span>{formatAddress(wallet)}</span>
-                      </div>
-                      <button
-                        className={`${styles.animatedButton} ${styles.animatedButtonDisconnect} ${styles.walletDisconnectButton}`}
-                        onClick={() => handleWalletDisconnect(wallet)}
+                {wallets.length > 0 && wallets.map((wallet, index) => (
+                  <div key={index} className={`${styles.wallet} ${styles.shadowInnerGlow}`}>
+                    <div>
+                      <svg
+                        stroke="currentColor"
+                        fill="currentColor"
+                        strokeWidth="0"
+                        viewBox="0 0 320 512"
+                        height="1em"
+                        width="1em"
+                        xmlns="http://www.w3.org/2000/svg"
                       >
-                        <div className={styles.animatedButtonTextContainer}>
-                          <div className={styles.animatedButtonText}>UNLINK</div>
-                          <div className={`${styles.animatedButtonText} ${styles.animatedButtonTextClone}`}>UNLINK</div>
-                        </div>
-                      </button>
+                        <path d="M311.9 260.8L160 353.6 8 260.8 160 0l151.9 260.8zM160 383.4L8 290.6 160 512l152-221.4-152 92.8z"></path>
+                      </svg>
+                      <span>{formatAddress(wallet)}</span>
                     </div>
-                  ))
-                ) : (
-                  <div className={`${styles.emptyContainer} ${styles.tall} ${styles.gap}`}>
-                    <span>No wallets connected yet</span>
-                    <span>Connect a wallet to get started</span>
+                    <button
+                      className={`${styles.animatedButton} ${styles.animatedButtonDisconnect} ${styles.walletDisconnectButton}`}
+                      onClick={() => handleWalletDisconnect(wallet)}
+                    >
+                      <div className={styles.animatedButtonTextContainer}>
+                        <div className={styles.animatedButtonText}>UNLINK</div>
+                        <div className={`${styles.animatedButtonText} ${styles.animatedButtonTextClone}`}>UNLINK</div>
+                      </div>
+                    </button>
                   </div>
-                )}
+                ))}
                 <button className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}>
                   <div className={styles.socialConnectTextContainer}>
                     <div className={styles.socialConnectText}>Link Ethereum Wallet</div>
@@ -150,50 +143,22 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
             <div>
               <p className={`${styles.strokedText} ${styles.large}`}>Social Accounts</p>
               <div className={styles.socialsContainer}>
-                {/* Example connected social - Twitter/X */}
-                <div className={styles.social}>
-                  <div className={styles.iconPair}>
-                    <span className={styles.icon}>
-                      <svg
-                        stroke="currentColor"
-                        fill="currentColor"
-                        strokeWidth="0"
-                        viewBox="0 0 512 512"
-                        height="1em"
-                        width="1em"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
-                      </svg>
-                    </span>
-                    <span>KillMurderRape</span>
-                  </div>
-                  <button
-                    className={`${styles.animatedButton} ${styles.animatedButtonDisconnect} ${styles.socialDisconnectButton}`}
-                    onClick={() => handleSocialDisconnect('twitter')}
-                  >
-                    <div className={styles.animatedButtonTextContainer}>
-                      <div className={styles.animatedButtonText}>UNLINK</div>
-                      <div className={`${styles.animatedButtonText} ${styles.animatedButtonTextClone}`}>UNLINK</div>
-                    </div>
-                  </button>
-                </div>
                 <button
-                  className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}
-                  onClick={() => handleSocialConnect('github')}
+                  className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton} ${styles.linkedinButton}`}
+                  onClick={() => handleSocialConnect('linkedin')}
                 >
                   <div className={styles.socialConnectTextContainer}>
-                    <div className={styles.socialConnectText}>Connect Github</div>
-                    <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Connect Github</div>
+                    <div className={styles.socialConnectText}>Connect LinkedIn</div>
+                    <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Connect LinkedIn</div>
                   </div>
                 </button>
                 <button
-                  className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}
-                  onClick={() => handleSocialConnect('discord')}
+                  className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton} ${styles.whatsappButton}`}
+                  onClick={() => handleSocialConnect('whatsapp')}
                 >
                   <div className={styles.socialConnectTextContainer}>
-                    <div className={styles.socialConnectText}>Connect Discord</div>
-                    <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Connect Discord</div>
+                    <div className={styles.socialConnectText}>Connect WhatsApp</div>
+                    <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Connect WhatsApp</div>
                   </div>
                 </button>
               </div>

@@ -346,13 +346,21 @@
   transform: translateY(0);
 }
 
-/* Specific button colors from example */
-.socialConnectButton:nth-of-type(2) {
-  background-color: rgb(168, 168, 168) !important;
+/* Professional button colors for social accounts */
+.linkedinButton {
+  background-color: #0077B5 !important; /* LinkedIn blue */
 }
 
-.socialConnectButton:nth-of-type(3) {
-  background-color: rgb(147, 148, 194) !important;
+.linkedinButton:hover {
+  background-color: #005885 !important;
+}
+
+.whatsappButton {
+  background-color: #25D366 !important; /* WhatsApp green */
+}
+
+.whatsappButton:hover {
+  background-color: #1DA851 !important;
 }
 
 @media (max-width: 768px) {
