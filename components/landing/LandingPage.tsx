@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import SignInButton from '@/components/nav-buttons/SignInButton';
 import styles from './LandingPage.module.css';
 
 // Dynamically import Scene to avoid SSR issues with Three.js
@@ -14,11 +15,9 @@ const Scene = dynamic(() => import('./Scene'), {
 const LandingPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [isDemoOpen, setIsDemoOpen] = useState(false);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -56,47 +55,42 @@ const LandingPage: React.FC = () => {
   // Memoize Scene to prevent re-renders when form state changes
   const memoizedScene = useMemo(() => <Scene />, []);
 
-  useEffect(() => {
-    if (!isDemoOpen) return;
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsDemoOpen(false);
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [isDemoOpen]);
-
   return (
     <div className={styles.container}>
       <div className={styles.canvas}>
         {memoizedScene}
       </div>
       
-      <div className={styles.loginContainer}>
+      {/* Logo in top left */}
+      <div className={styles.topLeftLogo}>
+        <Image
+          src="/icons/spacey2klogo.png"
+          alt="Logo"
+          width={150}
+          height={138}
+          className={styles.topLeftLogoImage}
+          priority
+        />
+      </div>
+      
+      {/* Cards Container */}
+      <div className={styles.cardsContainer}>
+        {/* Promotional Card */}
+        <div className={styles.promoCard}>
+          <div className={styles.promoContent}>
+            <div className={styles.promoText}>
+              <h2 className={styles.promoTitle}>JOIN THE GREATEST ONCHAIN ACADEMIA <br /> IN THE WORLD</h2>
+              <p className={styles.promoDescription}>
+                Explore the latest academic research, access agentic daemon tools, and connect with dedicated peers and mentors inside of MWAs Next Gen Learning Lab.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Login Card */}
         <div className={styles.loginCard}>
           <div className={styles.cardContent}>
-
-                        {/* Logo */}
-                        <div 
-                          className={styles.companyHeader}
-                        >
-              <Image
-                src="/icons/spacey2klogo.png"
-                alt="Logo"
-                width={300}
-                height={275}
-                className={styles.companyLogo}
-                priority
-              />
-            </div>
-
+            <h1 className={styles.loginTitle}>Log In</h1>
             {/* Form */}
             <form className={styles.loginForm} onSubmit={handleLogin}>
               {message && (
@@ -146,108 +140,50 @@ const LandingPage: React.FC = () => {
                 </div>
 
                 <div className={styles.checkboxGroup}>
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    className={styles.checkbox}
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  <label htmlFor="rememberMe" className={styles.checkboxLabel}>
-                    Remember me for 7 days?
-                  </label>
+                  <div className={styles.checkboxWrapper}>
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      className={styles.checkbox}
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <label htmlFor="rememberMe" className={styles.checkboxLabel}>
+                      Keep me logged in
+                    </label>
+                  </div>
+                  <a href="#" className={styles.forgotLink}>
+                    Forgot username or password?
+                  </a>
                 </div>
               </div>
 
               {/* Actions */}
               <div className={styles.actions}>
                 <button
-                  type="button"
-                  className={styles.demoButton}
-                  onClick={() => setIsDemoOpen(true)}
-                >
-                  Demo
-                </button>
-
-                <button
                   type="submit"
                   className={styles.loginButton}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Logging in...' : 'Sign up for beta'}
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </button>
 
-                <button
-                  type="button"
-                  className={styles.linkedinButton}
-                  onClick={() => {
-                    // Handle LinkedIn login
-                    console.log('LinkedIn login');
-                  }}
-                >
-                  <svg className={styles.socialIcon} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                  LinkedIn
-                </button>
-
-                <button
-                  type="button"
-                  className={styles.walletButton}
-                >
-                  <svg className={styles.socialIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
-                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
-                    <path d="M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
-                  </svg>
-                  Connect Wallet
-                </button>
+                <SignInButton />
 
                 <div className={styles.signupLink}>
-                  Don&apos;t have an account?{' '}
-                  <a href="#" className={styles.link}>
-                    Oh well...
-                  </a>
+                  Become a MWA Researcher, <span className={styles.highlight}>Join Mental Wealth Academy</span>
+                </div>
+                
+                <div className={styles.termsText}>
+                  By logging in, you agree to our{' '}
+                  <a href="#" className={styles.link}>terms and services</a>,{' '}
+                  <a href="#" className={styles.link}>privacy policy</a>, and to receive email updates from Mental Wealth Academy.
                 </div>
               </div>
             </form>
           </div>
         </div>
       </div>
-
-      {isDemoOpen && (
-        <div
-          className={styles.demoOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Demo video"
-          onClick={() => setIsDemoOpen(false)}
-        >
-          <div
-            className={styles.demoModal}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className={styles.demoCloseButton}
-              aria-label="Close demo"
-              onClick={() => setIsDemoOpen(false)}
-            >
-              ×
-            </button>
-
-            <div className={styles.demoVideoWrapper}>
-              <iframe
-                className={styles.demoIframe}
-                src="https://www.youtube.com/embed/1VR2xP-gmlk?autoplay=1&rel=0&modestbranding=1&playsinline=1"
-                title="Mental Wealth Academy Demo"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

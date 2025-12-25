@@ -1,7 +1,8 @@
-import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { sqlQuery } from './db';
+import { getPrivyUserFromRequest } from './privy-auth';
 
 const SESSION_COOKIE_NAME = 'mwa_session';
 const SESSION_DAYS = 30;
@@ -11,10 +12,14 @@ export type CurrentUser = {
   username: string;
   avatarUrl: string | null;
   createdAt: string;
+  email: string | null;
+  walletAddress: string;
 };
 
-export function getSessionTokenFromCookies() {
-  return cookies().get(SESSION_COOKIE_NAME)?.value || null;
+export async function getSessionTokenFromCookies() {
+  // Legacy session support - kept for backward compatibility
+  const cookieStore = await import('next/headers').then(m => m.cookies());
+  return cookieStore.get(SESSION_COOKIE_NAME)?.value || null;
 }
 
 export function setSessionCookie(response: NextResponse, token: string) {
@@ -45,14 +50,65 @@ export async function createSessionForUser(userId: string) {
   return { token, expiresAt };
 }
 
+/**
+ * Gets the current user from the request, using Privy authentication.
+ * Falls back to legacy session-based auth for backward compatibility.
+ */
 export async function getCurrentUserFromRequestCookie(): Promise<CurrentUser | null> {
-  const token = getSessionTokenFromCookies();
+  // First, try to get user from Privy token
+  try {
+    const privyUser = await getPrivyUserFromRequest();
+    if (privyUser) {
+      // Look up our internal user record by Privy user ID
+      const rows = await sqlQuery<
+        Array<{ 
+          id: string; 
+          username: string; 
+          avatar_url: string | null; 
+          created_at: string;
+          email: string | null;
+          wallet_address: string;
+        }>
+      >(
+        `SELECT u.id, u.username, u.avatar_url, u.created_at, u.email, u.wallet_address
+         FROM users u
+         WHERE u.privy_user_id = :privyUserId
+         LIMIT 1`,
+        { privyUserId: privyUser.id }
+      );
+
+      const user = rows[0];
+      if (user) {
+        return { 
+          id: user.id, 
+          username: user.username, 
+          avatarUrl: user.avatar_url, 
+          createdAt: user.created_at,
+          email: user.email,
+          walletAddress: user.wallet_address,
+        };
+      }
+    }
+  } catch (error) {
+    // If Privy auth fails, fall back to legacy session auth
+    console.warn('Privy auth failed, falling back to session auth:', error);
+  }
+
+  // Fallback to legacy session-based auth
+  const token = await getSessionTokenFromCookies();
   if (!token) return null;
 
   const rows = await sqlQuery<
-    Array<{ id: string; username: string; avatar_url: string | null; created_at: string }>
+    Array<{ 
+      id: string; 
+      username: string; 
+      avatar_url: string | null; 
+      created_at: string;
+      email: string | null;
+      wallet_address: string;
+    }>
   >(
-    `SELECT u.id, u.username, u.avatar_url, u.created_at
+    `SELECT u.id, u.username, u.avatar_url, u.created_at, u.email, u.wallet_address
      FROM sessions s
      JOIN users u ON u.id = s.user_id
      WHERE s.token = :token AND s.expires_at > NOW()
@@ -63,5 +119,12 @@ export async function getCurrentUserFromRequestCookie(): Promise<CurrentUser | n
   const user = rows[0];
   if (!user) return null;
 
-  return { id: user.id, username: user.username, avatarUrl: user.avatar_url, createdAt: user.created_at };
+  return { 
+    id: user.id, 
+    username: user.username, 
+    avatarUrl: user.avatar_url, 
+    createdAt: user.created_at,
+    email: user.email,
+    walletAddress: user.wallet_address,
+  };
 }

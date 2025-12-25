@@ -164,6 +164,46 @@
   filter: brightness(0) invert(1);
 }
 
+.navButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.navButtonDisabled:hover {
+  background: transparent;
+}
+
+.navButtonDisabled:hover .buttonLabelDisabled {
+  color: rgba(163, 163, 163, 0.5);
+}
+
+.navButtonDisabled:hover .questIcon {
+  filter: none;
+  opacity: 0.5;
+}
+
+.navButtonDisabled .buttonLabelDisabled {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  color: rgba(163, 163, 163, 0.5);
+  white-space: nowrap;
+}
+
+.navButtonDisabled .questIcon {
+  opacity: 0.5;
+}
+
+.mobileNavButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobileNavButtonDisabled:hover {
+  background: transparent;
+  color: rgba(163, 163, 163, 0.5);
+}
+
 .filterIcon {
   width: 20px;
   height: 20px;

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 import { SearchModal } from '@/components/search-modal/SearchModal';
 import styles from './Navbar.module.css';
 
@@ -40,9 +41,34 @@ const NotificationIcon: React.FC<{ size?: number }> = ({ size = 36 }) => {
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const { authenticated, ready } = usePrivy();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [shardCount, setShardCount] = useState<number | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch user shards only when authenticated
+  useEffect(() => {
+    if (!ready || !authenticated) {
+      setShardCount(null);
+      return;
+    }
+
+    const fetchShards = async () => {
+      try {
+        const response = await fetch('/api/me', { cache: 'no-store' });
+        const data = await response.json();
+        if (data?.user?.shardCount !== undefined) {
+          setShardCount(data.user.shardCount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch shards:', error);
+        setShardCount(0);
+      }
+    };
+
+    fetchShards();
+  }, [authenticated, ready]);
 
   const isActive = (path: string) => {
     if (path === '/home') {
@@ -116,30 +142,6 @@ const Navbar: React.FC = () => {
               <span className={isActive('/home') ? styles.buttonLabelActive : styles.buttonLabel}>Home</span>
             </Link>
 
-            {/* Daemon Button */}
-            <Link href="/daemon" className={`${styles.navButton} ${isActive('/daemon') ? styles.navButtonActive : ''}`}>
-              <Image
-                src="/icons/daemon.svg"
-                alt="Daemon"
-                width={20}
-                height={20}
-                className={styles.questIcon}
-              />
-              <span className={isActive('/daemon') ? styles.buttonLabelActive : styles.buttonLabel}>Daemon</span>
-            </Link>
-
-            {/* Forum Button */}
-            <Link href="/forum" className={`${styles.navButton} ${isActive('/forum') ? styles.navButtonActive : ''}`}>
-              <Image
-                src="/icons/Survey.svg"
-                alt="Forum"
-                width={20}
-                height={20}
-                className={styles.questIcon}
-              />
-              <span className={isActive('/forum') ? styles.buttonLabelActive : styles.buttonLabel}>Forum</span>
-            </Link>
-
             {/* Quests Button */}
             <Link href="/quests" className={`${styles.navButton} ${isActive('/quests') ? styles.navButtonActive : ''}`}>
               <Image
@@ -152,8 +154,32 @@ const Navbar: React.FC = () => {
               <span className={isActive('/quests') ? styles.buttonLabelActive : styles.buttonLabel}>Quests</span>
             </Link>
 
-          {/* Library Button */}
-          <Link href="/library" className={`${styles.navButton} ${isActive('/library') ? styles.navButtonActive : ''}`}>
+            {/* Daemon Button - Disabled */}
+            <div className={`${styles.navButton} ${styles.navButtonDisabled}`} title="Coming soon">
+              <Image
+                src="/icons/daemon.svg"
+                alt="Daemon"
+                width={20}
+                height={20}
+                className={styles.questIcon}
+              />
+              <span className={styles.buttonLabelDisabled}>Daemon</span>
+            </div>
+
+            {/* Forum Button - Disabled */}
+            <div className={`${styles.navButton} ${styles.navButtonDisabled}`} title="Coming soon">
+              <Image
+                src="/icons/Survey.svg"
+                alt="Forum"
+                width={20}
+                height={20}
+                className={styles.questIcon}
+              />
+              <span className={styles.buttonLabelDisabled}>Forum</span>
+            </div>
+
+            {/* Library Button - Disabled */}
+            <div className={`${styles.navButton} ${styles.navButtonDisabled}`} title="Coming soon">
               <Image
                 src="/icons/bookicon.svg"
                 alt="Library"
@@ -161,8 +187,8 @@ const Navbar: React.FC = () => {
                 height={20}
                 className={styles.questIcon}
               />
-            <span className={isActive('/library') ? styles.buttonLabelActive : styles.buttonLabel}>Library</span>
-            </Link>
+              <span className={styles.buttonLabelDisabled}>Library</span>
+            </div>
           </div>
 
           {/* Right Icons */}
@@ -176,7 +202,9 @@ const Navbar: React.FC = () => {
                 className={styles.shardIcon}
               />
               <span className={styles.shardsLabel}>Shards:</span>
-              <span className={styles.shardsValue}>000</span>
+              <span className={styles.shardsValue}>
+                {shardCount !== null ? String(shardCount).padStart(3, '0') : '000'}
+              </span>
             </div>
             <button className={styles.messageButton} title="Messages">
               <div className={styles.messageIcon}>
@@ -213,34 +241,6 @@ const Navbar: React.FC = () => {
             <span>Home</span>
           </Link>
           <Link 
-            href="/daemon" 
-            className={`${styles.mobileNavButton} ${isActive('/daemon') ? styles.mobileNavButtonActive : ''}`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <Image
-              src="/icons/daemon.svg"
-              alt="Daemon"
-              width={20}
-              height={20}
-              className={styles.questIcon}
-            />
-            <span>Daemon</span>
-          </Link>
-          <Link 
-            href="/forum" 
-            className={`${styles.mobileNavButton} ${isActive('/forum') ? styles.mobileNavButtonActive : ''}`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <Image
-              src="/icons/Survey.svg"
-              alt="Forum"
-              width={20}
-              height={20}
-              className={styles.questIcon}
-            />
-            <span>Forum</span>
-          </Link>
-          <Link 
             href="/quests" 
             className={`${styles.mobileNavButton} ${isActive('/quests') ? styles.mobileNavButtonActive : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
@@ -254,9 +254,37 @@ const Navbar: React.FC = () => {
             />
             <span>Quests</span>
           </Link>
-          <Link 
-            href="/library" 
-            className={`${styles.mobileNavButton} ${isActive('/library') ? styles.mobileNavButtonActive : ''}`}
+          <div 
+            className={`${styles.mobileNavButton} ${styles.mobileNavButtonDisabled}`}
+            title="Coming soon"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Image
+              src="/icons/daemon.svg"
+              alt="Daemon"
+              width={20}
+              height={20}
+              className={styles.questIcon}
+            />
+            <span>Daemon</span>
+          </div>
+          <div 
+            className={`${styles.mobileNavButton} ${styles.mobileNavButtonDisabled}`}
+            title="Coming soon"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Image
+              src="/icons/Survey.svg"
+              alt="Forum"
+              width={20}
+              height={20}
+              className={styles.questIcon}
+            />
+            <span>Forum</span>
+          </div>
+          <div 
+            className={`${styles.mobileNavButton} ${styles.mobileNavButtonDisabled}`}
+            title="Coming soon"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <Image
@@ -267,7 +295,7 @@ const Navbar: React.FC = () => {
               className={styles.questIcon}
             />
             <span>Library</span>
-          </Link>
+          </div>
         </div>
       </div>
     </nav>

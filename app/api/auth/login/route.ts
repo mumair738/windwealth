@@ -1,19 +1,12 @@
 import { NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 import { ensureForumSchema } from '@/lib/ensureForumSchema';
 import { createSessionForUser, setSessionCookie } from '@/lib/auth';
 import { isDbConfigured, sqlQuery } from '@/lib/db';
 import { getPrivyUserFromRequest } from '@/lib/privy-auth';
+import { v4 as uuidv4 } from 'uuid';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-function isValidUsername(username: unknown): username is string {
-  if (typeof username !== 'string') return false;
-  const trimmed = username.trim();
-  if (trimmed.length < 3 || trimmed.length > 32) return false;
-  return /^[a-zA-Z0-9_]+$/.test(trimmed);
-}
 
 function isValidEmail(email: unknown): email is string {
   if (typeof email !== 'string') return false;
@@ -23,10 +16,16 @@ function isValidEmail(email: unknown): email is string {
 
 function isValidWalletAddress(address: unknown): address is string {
   if (typeof address !== 'string') return false;
-  // Basic Ethereum address validation (0x followed by 40 hex characters)
   return /^0x[a-fA-F0-9]{40}$/.test(address.trim());
 }
 
+/**
+ * Login/sync endpoint.
+ * This endpoint is called after a user authenticates with Privy to:
+ * 1. Verify the Privy token
+ * 2. Create or update the user record in our database
+ * 3. Create a session for backward compatibility
+ */
 export async function POST(request: Request) {
   if (!isDbConfigured()) {
     return NextResponse.json(
@@ -79,7 +78,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Get email from Privy user (optional but preferred)
+  // Get email from Privy user (optional)
   let email: string | null = null;
   
   // Try linkedAccounts first
@@ -105,49 +104,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json().catch(() => ({}));
-  const username = body?.username;
-  const avatarUrl = typeof body?.avatarUrl === 'string' ? body.avatarUrl : null;
-
-  if (!isValidUsername(username)) {
-    return NextResponse.json(
-      {
-        error:
-          'Invalid username. Use 3-32 chars, letters/numbers/underscore only.',
-      },
-      { status: 400 }
-    );
-  }
-
   const privyUserId = privyUser.id;
-  const id = uuidv4();
 
   try {
-    // Check if user already exists with this Privy ID
-    const existingUser = await sqlQuery<Array<{ id: string }>>(
-      `SELECT id FROM users WHERE privy_user_id = :privyUserId LIMIT 1`,
+    // Check if user already exists
+    const existingUser = await sqlQuery<Array<{ id: string; username: string }>>(
+      `SELECT id, username FROM users WHERE privy_user_id = :privyUserId LIMIT 1`,
       { privyUserId }
     );
 
+    let userId: string;
+
     if (existingUser.length > 0) {
-      // User already exists, update their profile
+      // User exists, update their wallet/email if needed
+      userId = existingUser[0].id;
       await sqlQuery(
         `UPDATE users 
-         SET username = :username, 
-             avatar_url = COALESCE(:avatarUrl, avatar_url),
-             email = COALESCE(:email, email),
+         SET email = COALESCE(:email, email),
              wallet_address = :walletAddress
          WHERE privy_user_id = :privyUserId`,
-        { 
-          privyUserId, 
-          username: username.trim(), 
-          avatarUrl,
-          email,
-          walletAddress
-        }
+        { privyUserId, email, walletAddress }
       );
     } else {
-      // Check for duplicate email
+      // Create new user with a temporary username (user can set it later)
+      userId = uuidv4();
+      const tempUsername = `user_${privyUserId.substring(0, 8)}`;
+      
+      // Check for duplicate email/wallet
       if (email) {
         const emailCheck = await sqlQuery<Array<{ id: string }>>(
           `SELECT id FROM users WHERE email = :email LIMIT 1`,
@@ -161,7 +144,6 @@ export async function POST(request: Request) {
         }
       }
 
-      // Check for duplicate wallet
       const walletCheck = await sqlQuery<Array<{ id: string }>>(
         `SELECT id FROM users WHERE wallet_address = :walletAddress LIMIT 1`,
         { walletAddress }
@@ -173,34 +155,26 @@ export async function POST(request: Request) {
         );
       }
 
-      // Create new user
       await sqlQuery(
-        `INSERT INTO users (id, privy_user_id, email, wallet_address, username, avatar_url)
-         VALUES (:id, :privyUserId, :email, :walletAddress, :username, :avatarUrl)`,
-        { id, privyUserId, email, walletAddress, username: username.trim(), avatarUrl }
+        `INSERT INTO users (id, privy_user_id, email, wallet_address, username)
+         VALUES (:id, :privyUserId, :email, :walletAddress, :username)`,
+        { id: userId, privyUserId, email, walletAddress, username: tempUsername }
       );
     }
+
+    // Create session for backward compatibility
+    const session = await createSessionForUser(userId);
+    const response = NextResponse.json({ ok: true, userId });
+    setSessionCookie(response, session.token);
+    return response;
   } catch (err: any) {
-    // Duplicate username or other constraint violation
     if (err?.code === 'ER_DUP_ENTRY') {
-      if (err?.message?.includes('username')) {
-        return NextResponse.json({ error: 'Username already taken.' }, { status: 409 });
-      }
-      if (err?.message?.includes('email')) {
-        return NextResponse.json({ error: 'Email already taken.' }, { status: 409 });
-      }
-      if (err?.message?.includes('wallet_address')) {
-        return NextResponse.json({ error: 'Wallet already linked to another account.' }, { status: 409 });
-      }
-      return NextResponse.json({ error: 'Account creation failed due to duplicate data.' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'Account creation failed due to duplicate data.' },
+        { status: 409 }
+      );
     }
     throw err;
   }
-
-  // Create session for backward compatibility (optional, since we're using Privy)
-  const finalUserId = existingUser.length > 0 ? existingUser[0].id : id;
-  const session = await createSessionForUser(finalUserId);
-  const response = NextResponse.json({ ok: true });
-  setSessionCookie(response, session.token);
-  return response;
 }
+

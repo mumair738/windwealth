@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '../styles/globals.css';
+import { PrivyProvider } from '@/components/privy/PrivyProvider';
 
 export const metadata: Metadata = {
   title: 'Mental Wealth Academy',
@@ -38,7 +39,9 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body>{children}</body>
+      <body>
+        <PrivyProvider>{children}</PrivyProvider>
+      </body>
     </html>
   );
 }

@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { usePrivy } from '@privy-io/react-auth';
 import styles from './CreateAccountButton.module.css';
 
 type MeResponse = { user: { id: string; username: string; avatarUrl: string | null } | null };
@@ -17,6 +20,7 @@ async function uploadIfPresent(file: File | null) {
 }
 
 const CreateAccountButton: React.FC = () => {
+  const { authenticated, user: privyUser, getAccessToken, logout, login } = usePrivy();
   const [me, setMe] = useState<MeResponse['user']>(null);
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -35,16 +39,51 @@ const CreateAccountButton: React.FC = () => {
     refreshMe().catch(() => {});
   }, []);
 
+  // Sync with Privy when authenticated
+  useEffect(() => {
+    if (authenticated && privyUser) {
+      // Call login endpoint to sync Privy user with our database
+      getAccessToken().then((token) => {
+        if (token) {
+          fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }).catch(() => {
+            // Ignore errors - user might already be synced
+          });
+        }
+      }).catch(() => {});
+      refreshMe().catch(() => {});
+    }
+  }, [authenticated, privyUser, getAccessToken]);
+
   async function handleSave() {
+    if (!authenticated) {
+      setError('Please sign in first');
+      return;
+    }
+
     setError(null);
     setSaving(true);
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Authentication token not available');
+      }
+
       const uploaded = await uploadIfPresent(avatarFile);
 
       if (!me) {
+        // New account creation
         const res = await fetch('/api/auth/signup', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
           body: JSON.stringify({
             username,
             avatarUrl: uploaded?.url ?? null,
@@ -53,9 +92,13 @@ const CreateAccountButton: React.FC = () => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data?.error || 'Signup failed');
       } else {
+        // Profile update
         const res = await fetch('/api/me', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
           body: JSON.stringify({
             username,
             avatarUrl: uploaded?.url ?? me.avatarUrl,
@@ -76,6 +119,9 @@ const CreateAccountButton: React.FC = () => {
   }
 
   async function handleLogout() {
+    // Logout from Privy
+    logout();
+    // Also clear our session
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setMe(null);
     setUsername('');
@@ -83,12 +129,21 @@ const CreateAccountButton: React.FC = () => {
     setOpen(false);
   }
 
+  const handleOpen = () => {
+    if (!authenticated) {
+      // Trigger Privy login if not authenticated
+      login();
+      return;
+    }
+    setOpen(true);
+  }
+
   return (
     <>
       <button
         className={styles.createAccountButton}
         data-intro="create-account"
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         type="button"
       >
         <span className={styles.buttonText}>{me ? `Welcome ${me.username}!` : 'Create Account'}</span>

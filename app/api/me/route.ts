@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ensureForumSchema } from '@/lib/ensureForumSchema';
 import { getCurrentUserFromRequestCookie } from '@/lib/auth';
 import { isDbConfigured, sqlQuery } from '@/lib/db';
+import { getPrivyUserFromRequest } from '@/lib/privy-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,9 @@ export async function GET() {
   return NextResponse.json({
     user: user
       ? {
-          ...user,
+          id: user.id,
+          username: user.username,
+          avatarUrl: user.avatarUrl,
           shardCount: 0,
         }
       : null,
@@ -40,9 +43,16 @@ export async function PUT(request: Request) {
   }
   await ensureForumSchema();
 
+  // Verify Privy authentication
+  const privyUser = await getPrivyUserFromRequest();
+  if (!privyUser) {
+    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+  }
+
+  // Get our internal user record
   const user = await getCurrentUserFromRequestCookie();
   if (!user) {
-    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+    return NextResponse.json({ error: 'User account not found. Please complete signup.' }, { status: 404 });
   }
 
   const body = await request.json().catch(() => ({}));

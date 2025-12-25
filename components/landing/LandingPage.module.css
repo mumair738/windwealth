@@ -5,6 +5,23 @@
   overflow: hidden;
 }
 
+.topLeftLogo {
+  position: fixed;
+  top: 20px;
+  left: 40px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.topLeftLogoImage {
+  width: 150px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
 .canvas {
   position: absolute;
   top: 0;
@@ -12,7 +29,96 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  background: var(--color-background);
+  background: var(--color-secondary);
+}
+
+.cardsContainer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.promoCard {
+  background: linear-gradient(135deg, rgba(92, 92, 92, 0.736) 0%, rgba(118, 99, 197, 0.95) 100%);
+  border: 2px solid white;
+  border-radius: 28px 0 0 28px;
+  width: 520px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.814);
+  animation: fadeInUp 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.promoCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/uploads/d70b69d4-862f-4a74-8936-5a9262bd9243.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(0px);
+  opacity: 0.65;
+  z-index: 1;
+}
+
+.promoCard::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-primary);
+  mix-blend-mode: multiply;
+  opacity: 0.995;
+  z-index: 2;
+}
+
+.promoContent {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  color: white;
+  position: relative;
+  z-index: 3;
+}
+
+.promoText {
+  max-width: 100%;
+}
+
+.promoTitle {
+  font-size: 36px;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-primary);
+  line-height: 1.2;
+  margin: 0 0 24px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.promoDescription {
+  font-size: 16px;
+  font-family: var(--font-primary);
+  line-height: 1.6;
+  margin: 0;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .canvas::after {
@@ -83,23 +189,13 @@
   opacity: 0.8;
 }
 
-.loginContainer {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-  width: 100%;
-  max-width: 520px;
-  padding: 0 20px;
-}
 
 .loginCard {
-  background-color: rgba(244, 245, 254, 0.89); /* #F4F5FE - matches search modal */
+  background-color: rgba(244, 245, 254, 0.95);
   border: 2px solid white;
-  border-radius: 28px; /* Squircle-like rounding (iOS style) */
-  width: 100%;
-  min-height: 600px;
+  border-radius: 0 28px 28px 0;
+  border-left: none;
+  width: 520px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   animation: fadeInUp 0.6s ease-out;
   display: flex;
@@ -107,10 +203,19 @@
 }
 
 .cardContent {
-  padding: 24px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.loginTitle {
+  color: var(--color-text-dark);
+  font-family: var(--font-primary);
+  font-size: 28px;
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 8px 0;
+  text-align: left;
 }
 
 .companyHeader {
@@ -242,7 +347,29 @@
 .checkboxGroup {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.checkboxWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.forgotLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-family: var(--font-primary);
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.forgotLink:hover {
+  color: #3d52e6;
+  text-decoration: underline;
 }
 
 .checkbox {
@@ -388,8 +515,62 @@
   cursor: not-allowed;
 }
 
-.linkedinButton,
-.walletButton {
+.googleButton {
+  width: 100%;
+  background-color: #ffffff;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-button);
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  text-transform: none;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.googleButton:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.appleButton {
+  width: 100%;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-button);
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  text-transform: none;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.appleButton:hover {
+  background-color: #1a1a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.linkedinButton {
   width: 100%;
   background-color: rgba(0, 103, 178, 1);
   color: var(--color-text-light);
@@ -416,17 +597,6 @@
   box-shadow: 0 4px 12px rgba(0, 103, 178, 0.3);
 }
 
-.walletButton {
-  background-color: rgba(18, 18, 18, 0.95);
-  border: 1px solid rgba(28, 28, 28, 1);
-}
-
-.walletButton:hover {
-  background-color: rgba(10, 10, 10, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-
 .socialIcon {
   width: 20px;
   height: 20px;
@@ -434,11 +604,30 @@
 }
 
 .signupLink {
-  text-align: center;
+  text-align: left;
+  color: var(--color-text-dark);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-primary);
+  margin-top: 24px;
+  margin-bottom: 24px;
+  white-space: nowrap;
+}
+
+.highlight {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.termsText {
+  text-align: left;
   color: var(--color-text-dark);
   opacity: 0.7;
-  font-size: 14px;
+  font-size: 11px;
   font-family: var(--font-primary);
+  line-height: 1.5;
+  margin-top: 24px;
+  max-width: 100%;
 }
 
 .link {
@@ -454,13 +643,53 @@
 }
 
 @media (max-width: 768px) {
-  .loginContainer {
-    max-width: 90vw;
-    padding: 0 16px;
+  .cardsContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+    width: 90vw;
+    max-width: 520px;
+  }
+
+  .promoCard {
+    width: 100%;
+    border-radius: 28px 28px 0 0;
+    border-bottom: none;
+  }
+
+  .loginCard {
+    width: 100%;
+    border-radius: 0 0 28px 28px;
+    border-left: 2px solid white;
+  }
+
+  .promoContent {
+    padding: 28px 20px;
+  }
+
+  .promoTitle {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+
+  .promoDescription {
+    font-size: 14px;
+  }
+
+  .topLeftLogo {
+    top: 20px;
+    left: 20px;
+  }
+
+  .topLeftLogoImage {
+    width: 120px;
   }
 
   .cardContent {
-    padding: 16px 1.5rem 24px 1.5rem;
+    padding: 28px 20px;
     gap: 28px;
   }
 
@@ -489,9 +718,9 @@
   }
 
   .loginButton,
-  .demoButton,
-  .linkedinButton,
-  .walletButton {
+  .googleButton,
+  .appleButton,
+  .linkedinButton {
     padding: 12px 16px;
     font-size: 14px;
     height: 40px;

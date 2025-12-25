@@ -56,10 +56,15 @@ export async function ensureForumSchema() {
   await sqlQuery(`
     CREATE TABLE IF NOT EXISTS users (
       id CHAR(36) PRIMARY KEY,
+      privy_user_id VARCHAR(255) NOT NULL UNIQUE,
+      email VARCHAR(255) NULL UNIQUE,
+      wallet_address VARCHAR(255) NOT NULL,
       username VARCHAR(32) NOT NULL UNIQUE,
       avatar_url VARCHAR(1024) NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_users_privy_user_id (privy_user_id),
+      INDEX idx_users_wallet_address (wallet_address)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 

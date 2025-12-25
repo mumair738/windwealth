@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 import Hero from '@/components/hero/Hero';
 import Banner from '@/components/banner/Banner';
 import SideNavigation from '@/components/side-navigation/SideNavigation';
@@ -14,6 +17,38 @@ import EventCard from '@/components/event-card/EventCard';
 import styles from './page.module.css';
 
 export default function Home() {
+  const { authenticated, ready } = usePrivy();
+  const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    // Wait for Privy to be ready before checking authentication
+    // Add a small delay to ensure authentication state is stable
+    if (ready && !authenticated && !isRedirecting) {
+      const timer = setTimeout(() => {
+        setIsRedirecting(true);
+        router.push('/');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [authenticated, ready, router, isRedirecting]);
+
+  // Show loading state while checking authentication
+  if (!ready) {
+    return (
+      <main className={styles.main}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <div>Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
+  // Redirect if not authenticated (this will be handled by useEffect)
+  if (!authenticated) {
+    return null;
+  }
+
   return (
     <main className={styles.main}>
       <OnboardingTour />
@@ -34,6 +69,7 @@ export default function Home() {
           <div className={styles.eventsSection} data-intro="events">
             <h1 className={styles.sectionTitle}>Events</h1>
             <EventCard
+              imageUrl="/uploads/task_01kd2j4dbvebba56djx7072mtz_1766391492_img_0.webp"
               heading="Week 1: Self-Mastery"
               badge1Text="Workshop"
               badge2Text="Dec 15"

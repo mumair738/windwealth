@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import SignInButton from '@/components/nav-buttons/SignInButton';
+import ProfileButton from '@/components/nav-buttons/ProfileButton';
 import ExploreQuestsButton from '@/components/nav-buttons/ExploreQuestsButton';
 import NewsletterCard from '@/components/newsletter-card/NewsletterCard';
 import FarcasterFriends from '@/components/farcaster-friends/FarcasterFriends';
@@ -19,7 +19,7 @@ const SideNavigation: React.FC = () => {
           style={{ objectFit: 'contain' }}
         />
       </div>
-      <SignInButton />
+      <ProfileButton />
       <ExploreQuestsButton />
       <FarcasterFriends />
       <LibraryCard />

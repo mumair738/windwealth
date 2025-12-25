@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Enable static page generation and prefetching
+  experimental: {
+    optimizePackageImports: ['@privy-io/react-auth'],
+  },
   images: {
     domains: [
       'i.imgur.com',
