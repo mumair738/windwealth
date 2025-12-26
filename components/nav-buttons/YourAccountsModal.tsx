@@ -19,6 +19,7 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
   const [xAccount, setXAccount] = useState<XAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -44,6 +45,20 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
     const fetchXAccount = async () => {
       try {
         const response = await fetch('/api/x-auth/status', { cache: 'no-store' });
+        
+        // Handle 503 (database not configured) gracefully
+        if (response.status === 503) {
+          setServiceUnavailable(true);
+          setXAccount(null);
+          return;
+        }
+        
+        // Handle other non-OK responses
+        if (!response.ok) {
+          setXAccount(null);
+          return;
+        }
+        
         const data = await response.json();
         if (data.connected && data.xAccount) {
           setXAccount(data.xAccount);
@@ -51,7 +66,9 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
           setXAccount(null);
         }
       } catch (error) {
+        // Network errors - likely service unavailable
         console.error('Failed to fetch X account:', error);
+        setServiceUnavailable(true);
         setXAccount(null);
       } finally {
         setIsLoading(false);
@@ -94,10 +111,21 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
   // Handle social connect
   const handleSocialConnect = async (platform: string) => {
     if (platform === 'twitter' || platform === 'x') {
+      if (serviceUnavailable) {
+        return; // Don't attempt if service is unavailable
+      }
       setIsConnecting(true);
       try {
         // Initiate X OAuth flow
         const response = await fetch('/api/x-auth/initiate');
+        
+        // Handle 503 (database not configured) gracefully
+        if (response.status === 503) {
+          setServiceUnavailable(true);
+          setIsConnecting(false);
+          return;
+        }
+        
         const data = await response.json();
         
         if (data.authUrl) {
@@ -109,6 +137,7 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
         }
       } catch (error) {
         console.error('Failed to connect X account:', error);
+        setServiceUnavailable(true);
         setIsConnecting(false);
       }
     } else {
@@ -172,18 +201,33 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
                     </button>
                   </div>
                 ))}
-                <button className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}>
-                  <div className={styles.socialConnectTextContainer}>
-                    <div className={styles.socialConnectText}>Link Ethereum Wallet</div>
-                    <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Link Ethereum Wallet</div>
+                {serviceUnavailable ? (
+                  <div className={`${styles.emptyContainer} ${styles.gap}`} style={{ opacity: 0.7 }}>
+                    <span style={{ color: '#ff9800' }}>⚠ Wallet linking unavailable</span>
+                    <span style={{ fontSize: '12px' }}>Please try again later</span>
                   </div>
-                </button>
+                ) : (
+                  <button className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}>
+                    <div className={styles.socialConnectTextContainer}>
+                      <div className={styles.socialConnectText}>Link Ethereum Wallet</div>
+                      <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Link Ethereum Wallet</div>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Social Accounts Section */}
             <div>
               <p className={`${styles.strokedText} ${styles.large}`}>Social Accounts</p>
+              
+              {/* Service Unavailable Notice */}
+              {serviceUnavailable && (
+                <div className={`${styles.emptyContainer} ${styles.gap}`} style={{ marginBottom: '16px', opacity: 0.7 }}>
+                  <span style={{ color: '#ff9800' }}>⚠ Connection services temporarily unavailable</span>
+                  <span style={{ fontSize: '12px' }}>Please try again later</span>
+                </div>
+              )}
               
               {/* Connected X Account */}
               {!isLoading && xAccount && (
@@ -218,7 +262,7 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
 
               <div className={styles.socialsContainer}>
                 {/* Connect X Account Button - Always show alongside LinkedIn and WhatsApp */}
-                {!xAccount && (
+                {!xAccount && !serviceUnavailable && (
                   <button
                     className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}
                     onClick={() => handleSocialConnect('twitter')}
