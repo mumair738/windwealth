@@ -13,7 +13,7 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
     <PrivyProviderBase
       appId={appId || ''}
       config={{
-        loginMethods: ['wallet', 'email'],
+        loginMethods: ['wallet', 'email', 'twitter'],
         appearance: {
           theme: 'light',
           accentColor: '#676FFF',

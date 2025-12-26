@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './Quests.module.css';
+import QuestDetailSidebar from './QuestDetailSidebar';
 
 // Shard Icon Component
 const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
@@ -30,6 +31,7 @@ const ArrowRightCircleIcon: React.FC<{ size?: number }> = ({ size = 24 }) => {
 
 // Quest Card Component
 interface QuestCardProps {
+  id?: string;
   title: string;
   academy: string;
   date: string;
@@ -37,6 +39,9 @@ interface QuestCardProps {
   questName: string;
   usdcBonded: string;
   usdcReward: string;
+  questType?: string;
+  description?: string;
+  onClick?: () => void;
 }
 
 const QuestCard: React.FC<QuestCardProps> = ({
@@ -47,20 +52,11 @@ const QuestCard: React.FC<QuestCardProps> = ({
   questName,
   usdcBonded,
   usdcReward,
+  onClick,
 }) => {
   return (
-    <div className={styles.questCard}>
+    <div className={styles.questCard} onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
       <div className={styles.questCardContent}>
-        <div className={styles.questImageWrapper}>
-          <Image
-            src="/icons/questbadge.png"
-            alt="Quest Badge"
-            width={44}
-            height={44}
-            className={styles.questImage}
-          />
-        </div>
-        
         <div className={styles.questDetailsSection}>
           <div className={styles.questCardTitle}>{title}</div>
           <div className={styles.descriptionWrapper}>
@@ -95,40 +91,62 @@ const QuestCard: React.FC<QuestCardProps> = ({
 
 const Quests: React.FC = () => {
   const router = useRouter();
+  const [selectedQuest, setSelectedQuest] = useState<any>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Sample quest data - replace with actual data later
   const quests = [
     {
-      title: 'Your First Quest',
+      id: 'twitter-follow-quest',
+      title: 'Follow Mental Wealth DAO',
       academy: 'Mental Wealth Academy',
-      date: '03/16/2025',
-      time: '12:33 PM',
-      questName: 'Academy V3 Oracle',
-      usdcBonded: '700',
-      usdcReward: '5',
+      date: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      questName: 'Automatic',
+      usdcBonded: '100',
+      usdcReward: '10',
+      questType: 'twitter-follow' as const,
+      description: 'Connect your X (Twitter) account and follow @MentalWealthDAO to earn your first shards!',
     },
   ];
 
   return (
-    <div className={styles.questsContainer} data-intro="quests">
-      <div className={styles.questsWrapper}>
-        <div className={styles.header}>
-          <h1 className={styles.title}>Active Quests</h1>
-          <button 
-            className={styles.viewAllButton}
-            onClick={() => router.push('/quests')}
-          >
-            View All Quests
-          </button>
-        </div>
+    <>
+      <div className={styles.questsContainer} data-intro="quests">
+        <div className={styles.questsWrapper}>
+          <div className={styles.header}>
+            <h1 className={styles.title}>Active Quests</h1>
+            <button 
+              className={styles.viewAllButton}
+              onClick={() => router.push('/quests')}
+            >
+              View All Quests
+            </button>
+          </div>
 
-        <div className={styles.questsList}>
-          {quests.map((quest, index) => (
-            <QuestCard key={index} {...quest} />
-          ))}
+          <div className={styles.questsList}>
+            {quests.map((quest, index) => (
+              <QuestCard 
+                key={quest.id || index} 
+                {...quest}
+                onClick={() => {
+                  setSelectedQuest(quest);
+                  setIsSidebarOpen(true);
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      <QuestDetailSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => {
+          setIsSidebarOpen(false);
+          setSelectedQuest(null);
+        }}
+        quest={selectedQuest}
+      />
+    </>
   );
 };
 

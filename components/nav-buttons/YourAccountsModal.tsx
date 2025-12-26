@@ -143,9 +143,6 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
                 <span>No 2FA setup yet</span>
                 <span>Add 2FA to protect your account</span>
               </div>
-              <a href="/api/authenticator/add">
-                <button className={`${styles.btn} ${styles.wide}`}>add authenticator</button>
-              </a>
             </div>
           </div>
         </div>

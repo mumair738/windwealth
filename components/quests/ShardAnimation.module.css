@@ -1,0 +1,103 @@
+.shardAnimation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  pointer-events: none;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+.shardBubble {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 32px;
+  background: linear-gradient(135deg, #5168FF 0%, #676FFF 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(81, 104, 255, 0.4);
+  animation: bounceIn 0.5s ease-out, float 2s ease-in-out 0.5s;
+}
+
+.shardIcon {
+  width: 32px;
+  height: 32px;
+  animation: spin 1s ease-in-out;
+  filter: brightness(0) invert(1);
+}
+
+.shardText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shardLabel {
+  font-family: var(--font-primary);
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.shardSubtext {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.2;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg) scale(0.5);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+

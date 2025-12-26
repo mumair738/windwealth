@@ -65,16 +65,6 @@ const QuestCard: React.FC<QuestCardProps> = ({
   return (
     <div className={styles.questCard} onClick={onClick}>
       <div className={styles.questCardContent}>
-        <div className={styles.questImageWrapper}>
-          <Image
-            src="/icons/questbadge.png"
-            alt="Quest Badge"
-            width={44}
-            height={44}
-            className={styles.questImage}
-          />
-        </div>
-        
         <div className={styles.questDetailsSection}>
           <div className={styles.questCardTitle}>{title}</div>
           <div className={styles.descriptionWrapper}>
@@ -118,7 +108,7 @@ interface QuestData {
   usdcBonded: string;
   usdcReward: string;
   status: 'active' | 'available' | 'ending';
-  questType?: 'proof-required' | 'no-proof' | 'follow-and-own';
+  questType?: 'proof-required' | 'no-proof' | 'follow-and-own' | 'twitter-follow';
   description?: string;
 }
 
@@ -137,16 +127,16 @@ const QuestPage: React.FC = () => {
       // Active Quests
       {
         id: '1',
-        title: 'Azura Marketing',
+        title: 'Azura Viral Video Quest',
         academy: 'Marketing Academy',
         date: '03/16/2025',
         time: '12:33 PM',
-        questName: 'Create Marketing Videos',
+        questName: 'Oracle Vote',
         usdcBonded: '850',
         usdcReward: '142',
         status: 'active',
         questType: 'proof-required',
-        description: 'Create marketing videos using CapCut and AI to generate videos of Azura for marketing purposes.',
+        description: 'Unleash your creativity! Use CapCut and AI to craft stunning, viral-ready marketing videos featuring Azura. Show the world your storytelling skills and compete for the most engaging content. The best videos will be featured across our platforms!',
       },
       {
         id: '2',
@@ -154,7 +144,7 @@ const QuestPage: React.FC = () => {
         academy: 'Community Academy',
         date: '03/17/2025',
         time: '10:15 AM',
-        questName: 'Event Registration',
+        questName: 'Automatic',
         usdcBonded: '1,200',
         usdcReward: '200',
         status: 'active',
@@ -167,12 +157,25 @@ const QuestPage: React.FC = () => {
         academy: 'Social Academy',
         date: '03/18/2025',
         time: '2:45 PM',
-        questName: 'Follow & Own',
+        questName: 'Automatic',
         usdcBonded: '850',
         usdcReward: '142',
         status: 'active',
         questType: 'follow-and-own',
         description: 'Follow the Farcaster account @daemonagent and own an Academic Angel.',
+      },
+      {
+        id: 'twitter-follow-quest',
+        title: 'Follow Mental Wealth DAO',
+        academy: 'Mental Wealth Academy',
+        date: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        questName: 'Automatic',
+        usdcBonded: '100',
+        usdcReward: '10',
+        status: 'active',
+        questType: 'twitter-follow',
+        description: 'Connect your X (Twitter) account and follow @MentalWealthDAO to earn your first shards!',
       },
     ];
 

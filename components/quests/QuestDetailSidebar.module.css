@@ -390,12 +390,13 @@
 
 .requirementItem {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
   padding: 16px;
   background: rgba(81, 104, 255, 0.05);
   border: 1px solid rgba(81, 104, 255, 0.2);
   border-radius: 12px;
+  margin-bottom: 12px;
 }
 
 .checkIcon {
@@ -404,10 +405,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary);
+  background: rgba(81, 104, 255, 0.2);
+  border: 2px solid rgba(81, 104, 255, 0.3);
   border-radius: 50%;
-  color: #ffffff;
+  color: rgba(81, 104, 255, 0.5);
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.checkIconCompleted {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
 }
 
 .requirementContent {
@@ -429,6 +438,31 @@
   font-size: 13px;
   line-height: 1.5;
   color: rgba(26, 29, 51, 0.7);
+}
+
+.stepButton {
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.stepButton:hover:not(:disabled) {
+  background: #3d52d4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(81, 104, 255, 0.3);
+}
+
+.stepButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Responsive */

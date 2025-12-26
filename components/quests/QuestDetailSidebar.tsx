@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePrivy } from '@privy-io/react-auth';
 import styles from './QuestDetailSidebar.module.css';
+import { ConfettiCelebration } from './ConfettiCelebration';
+import { ShardAnimation } from './ShardAnimation';
 
 // Shard Icon Component
 const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
@@ -40,7 +43,7 @@ interface QuestDetailSidebarProps {
     usdcBonded: string;
     usdcReward: string;
     imageUrl?: string;
-    questType?: 'proof-required' | 'no-proof' | 'follow-and-own';
+    questType?: 'proof-required' | 'no-proof' | 'follow-and-own' | 'twitter-follow';
     description?: string;
   } | null;
 }
@@ -48,6 +51,14 @@ interface QuestDetailSidebarProps {
 const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose, quest }) => {
   const [shouldRender, setShouldRender] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
+  const { user: privyUser, login, authenticated } = usePrivy();
+  const [step1Completed, setStep1Completed] = useState(false);
+  const [step2Completed, setStep2Completed] = useState(false);
+  const [isCheckingFollow, setIsCheckingFollow] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showShardAnimation, setShowShardAnimation] = useState(false);
+  const [shardsAwarded, setShardsAwarded] = useState(0);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -80,6 +91,96 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  // Check if Twitter is linked
+  useEffect(() => {
+    if (!quest || quest.questType !== 'twitter-follow' || !privyUser) return;
+    
+    const privyUserAny = privyUser as any;
+    const linkedAccounts = privyUserAny.linkedAccounts || [];
+    const twitterAccount = linkedAccounts.find(
+      (account: any) => account.type === 'twitter' || account.type === 'x'
+    );
+    
+    setStep1Completed(!!twitterAccount);
+  }, [quest, privyUser]);
+
+  const handleConnectTwitter = async () => {
+    try {
+      // Privy: Re-login with Twitter to link account
+      // This will open Privy's login modal with Twitter option
+      await login({
+        loginMethod: 'twitter',
+      });
+      // Step 1 will be updated via useEffect
+    } catch (error) {
+      console.error('Failed to connect Twitter:', error);
+    }
+  };
+
+  const handleCheckFollow = async () => {
+    setIsCheckingFollow(true);
+    try {
+      const response = await fetch('/api/quests/check-twitter-follow', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      
+      if (data.hasTwitterLinked && data.requiresManualVerification) {
+        // For now, we'll allow manual verification
+        // In production, this would check via Twitter API
+        setStep2Completed(true);
+      } else if (data.isFollowing) {
+        setStep2Completed(true);
+      }
+    } catch (error) {
+      console.error('Failed to check follow status:', error);
+    } finally {
+      setIsCheckingFollow(false);
+    }
+  };
+
+  const handleCompleteQuest = async () => {
+    if (!quest || !step1Completed || !step2Completed) return;
+    
+    setIsCompleting(true);
+    try {
+      const shardReward = parseInt(quest.usdcReward) || 10;
+      const response = await fetch('/api/quests/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questId: quest.id,
+          shards: shardReward,
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.ok) {
+        setShardsAwarded(shardReward);
+        setShowConfetti(true);
+        setShowShardAnimation(true);
+        
+        // Refresh shard count in navbar
+        window.dispatchEvent(new Event('shardsUpdated'));
+        
+        // Close sidebar after animation
+        setTimeout(() => {
+          onClose();
+          // Reset states after a delay
+          setTimeout(() => {
+            setShowConfetti(false);
+            setShowShardAnimation(false);
+            setShardsAwarded(0);
+          }, 2000);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Failed to complete quest:', error);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   if (!quest || !shouldRender) return null;
 
@@ -250,6 +351,104 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
               </>
             )}
 
+            {/* Twitter Follow Quest Type */}
+            {quest.questType === 'twitter-follow' && (
+              <>
+                <h3 className={styles.sectionTitle}>Complete Quest</h3>
+                <p className={styles.sectionDescription}>
+                  Connect your X (Twitter) account and follow @MentalWealthDAO to earn shards!
+                </p>
+
+                <div className={styles.requirementsList}>
+                  {/* Step 1: Connect Twitter */}
+                  <div className={styles.requirementItem}>
+                    <div className={`${styles.checkIcon} ${step1Completed ? styles.checkIconCompleted : ''}`}>
+                      {step1Completed ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div className={styles.requirementContent}>
+                      <span className={styles.requirementTitle}>Step 1: Connect X Account</span>
+                      <span className={styles.requirementDescription}>Link your X (Twitter) account to get started</span>
+                    </div>
+                    {!step1Completed && authenticated && (
+                      <button 
+                        className={styles.stepButton}
+                        onClick={handleConnectTwitter}
+                      >
+                        Connect X
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Step 2: Follow @MentalWealthDAO */}
+                  <div className={styles.requirementItem}>
+                    <div className={`${styles.checkIcon} ${step2Completed ? styles.checkIconCompleted : ''}`}>
+                      {step2Completed ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div className={styles.requirementContent}>
+                      <span className={styles.requirementTitle}>Step 2: Follow @MentalWealthDAO</span>
+                      <span className={styles.requirementDescription}>Follow @MentalWealthDAO on X (Twitter)</span>
+                    </div>
+                    {step1Completed && !step2Completed && (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <a
+                          href="https://twitter.com/MentalWealthDAO"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.stepButton}
+                          style={{ textDecoration: 'none' }}
+                        >
+                          Open Twitter
+                        </a>
+                        <button 
+                          className={styles.stepButton}
+                          onClick={handleCheckFollow}
+                          disabled={isCheckingFollow}
+                        >
+                          {isCheckingFollow ? 'Checking...' : '✓ Verify'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Complete Quest Button */}
+                {step1Completed && step2Completed && (
+                  <button 
+                    className={styles.submitButton} 
+                    type="button"
+                    onClick={handleCompleteQuest}
+                    disabled={isCompleting}
+                  >
+                    {isCompleting ? 'Completing...' : 'Complete Quest & Claim Shards'}
+                  </button>
+                )}
+
+                {!authenticated && (
+                  <div className={styles.zkInfo}>
+                    <p className={styles.zkInfoText}>
+                      Please sign in to complete this quest.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Follow and Own Quest Type */}
             {quest.questType === 'follow-and-own' && (
               <>
@@ -362,6 +561,13 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
           </div>
         </div>
       </div>
+      <ConfettiCelebration trigger={showConfetti} />
+      {showShardAnimation && (
+        <ShardAnimation 
+          shards={shardsAwarded} 
+          onComplete={() => setShowShardAnimation(false)}
+        />
+      )}
     </>
   );
 };

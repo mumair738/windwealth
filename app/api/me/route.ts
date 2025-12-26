@@ -14,15 +14,25 @@ export async function GET() {
   await ensureForumSchema();
 
   const user = await getCurrentUserFromRequestCookie();
+  if (!user) {
+    return NextResponse.json({ user: null, dbConfigured: true });
+  }
+
+  // Get shard count from database
+  const shardRows = await sqlQuery<Array<{ shard_count: number }>>(
+    `SELECT shard_count FROM users WHERE id = :id LIMIT 1`,
+    { id: user.id }
+  );
+  const shardCount = shardRows[0]?.shard_count ?? 0;
+
   return NextResponse.json({
-    user: user
-      ? {
-          id: user.id,
-          username: user.username,
-          avatarUrl: user.avatarUrl,
-          shardCount: 0,
-        }
-      : null,
+    user: {
+      id: user.id,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      shardCount,
+      createdAt: user.createdAt,
+    },
     dbConfigured: true,
   });
 }

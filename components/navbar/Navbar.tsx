@@ -68,6 +68,16 @@ const Navbar: React.FC = () => {
     };
 
     fetchShards();
+
+    // Listen for shard updates
+    const handleShardsUpdate = () => {
+      fetchShards();
+    };
+    window.addEventListener('shardsUpdated', handleShardsUpdate);
+
+    return () => {
+      window.removeEventListener('shardsUpdated', handleShardsUpdate);
+    };
   }, [authenticated, ready]);
 
   const isActive = (path: string) => {

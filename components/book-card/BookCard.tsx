@@ -14,7 +14,7 @@ const BookCard: React.FC<BookCardProps> = ({
   author = "By: Jhinn Bay",
   description = "Explore the transformative power of blockchain technology and its revolutionary capabilities in reshaping the digital landscape. This comprehensive guide examines how decentralized systems enable trustless transactions, immutable record-keeping, and programmable value transfer, fundamentally altering how we interact with data, assets, and digital identity in the modern world.",
   category = "Non-Fiction",
-  imageUrl = "https://i.imgur.com/ApMF7cV.jpeg"
+  imageUrl = "https://i.imgur.com/FIuHHGk.jpeg"
 }) => {
   return (
     <div className={styles.bookCard}>

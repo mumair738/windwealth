@@ -61,10 +61,38 @@ export async function ensureForumSchema() {
       wallet_address VARCHAR(255) NOT NULL,
       username VARCHAR(32) NOT NULL UNIQUE,
       avatar_url VARCHAR(1024) NULL,
+      shard_count INT NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_users_privy_user_id (privy_user_id),
       INDEX idx_users_wallet_address (wallet_address)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
+  // Add shard_count column if it doesn't exist (for existing databases)
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ADD COLUMN shard_count INT NOT NULL DEFAULT 0;
+    `);
+  } catch (err: any) {
+    // Column might already exist, ignore error
+    if (!err?.message?.includes('Duplicate column name')) {
+      console.warn('Error adding shard_count column:', err);
+    }
+  }
+
+  await sqlQuery(`
+    CREATE TABLE IF NOT EXISTS quest_completions (
+      id CHAR(36) PRIMARY KEY,
+      user_id CHAR(36) NOT NULL,
+      quest_id VARCHAR(255) NOT NULL,
+      completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      shards_awarded INT NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_user_quest (user_id, quest_id),
+      INDEX idx_quest_completions_user_id (user_id),
+      INDEX idx_quest_completions_quest_id (quest_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
