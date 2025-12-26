@@ -51,7 +51,7 @@ interface QuestDetailSidebarProps {
 const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose, quest }) => {
   const [shouldRender, setShouldRender] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
-  const { user: privyUser, login, authenticated } = usePrivy();
+  const { user: privyUser, authenticated } = usePrivy();
   const [step1Completed, setStep1Completed] = useState(false);
   const [step2Completed, setStep2Completed] = useState(false);
   const [isCheckingFollow, setIsCheckingFollow] = useState(false);
@@ -92,45 +92,53 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
     };
   }, [isOpen, onClose]);
 
-  // Check if Twitter is linked
+  // Check if Twitter is linked via X OAuth
   useEffect(() => {
-    if (!quest || quest.questType !== 'twitter-follow' || !privyUser) return;
+    if (!quest || quest.questType !== 'twitter-follow' || !authenticated) return;
     
-    const privyUserAny = privyUser as any;
-    const linkedAccounts = privyUserAny.linkedAccounts || [];
-    const twitterAccount = linkedAccounts.find(
-      (account: any) => account.type === 'twitter' || account.type === 'x'
-    );
+    const checkXAccount = async () => {
+      try {
+        const response = await fetch('/api/x-auth/status');
+        const data = await response.json();
+        setStep1Completed(data.connected === true);
+      } catch (error) {
+        console.error('Failed to check X account:', error);
+        setStep1Completed(false);
+      }
+    };
     
-    setStep1Completed(!!twitterAccount);
-  }, [quest, privyUser]);
+    checkXAccount();
+  }, [quest, authenticated]);
 
   const handleConnectTwitter = async () => {
     try {
-      // Privy: Re-login with Twitter to link account
-      // This will open Privy's login modal with Twitter option
-      await login({
-        loginMethod: 'twitter',
-      });
-      // Step 1 will be updated via useEffect
+      // Initiate X OAuth flow
+      const response = await fetch('/api/x-auth/initiate');
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        // Redirect to X authorization
+        window.location.href = data.authUrl;
+      } else {
+        console.error('Failed to get auth URL:', data);
+      }
     } catch (error) {
-      console.error('Failed to connect Twitter:', error);
+      console.error('Failed to connect X account:', error);
     }
   };
 
   const handleCheckFollow = async () => {
     setIsCheckingFollow(true);
     try {
-      const response = await fetch('/api/quests/check-twitter-follow', {
+      const response = await fetch('/api/x-auth/check-follow', {
         method: 'POST',
       });
       const data = await response.json();
       
-      if (data.hasTwitterLinked && data.requiresManualVerification) {
-        // For now, we'll allow manual verification
-        // In production, this would check via Twitter API
+      if (data.isFollowing) {
         setStep2Completed(true);
-      } else if (data.isFollowing) {
+      } else if (data.requiresManualVerification) {
+        // Allow manual verification if API check fails
         setStep2Completed(true);
       }
     } catch (error) {

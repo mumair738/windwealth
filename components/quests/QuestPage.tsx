@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import styles from './QuestPage.module.css';
-import { AccountBanner } from '@/components/forum/AccountBanner';
 import QuestDetailSidebar from './QuestDetailSidebar';
 
 // Shard Icon Component
@@ -210,10 +209,6 @@ const QuestPage: React.FC = () => {
           </div>
         </div>
         <div className={styles.heroGlow} />
-      </div>
-
-      <div className={styles.accountBannerWrap}>
-        <AccountBanner />
       </div>
 
       {/* Quests directly under guest banner */}

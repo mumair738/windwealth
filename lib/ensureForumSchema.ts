@@ -97,6 +97,37 @@ export async function ensureForumSchema() {
   `);
 
   await sqlQuery(`
+    CREATE TABLE IF NOT EXISTS x_accounts (
+      id CHAR(36) PRIMARY KEY,
+      user_id CHAR(36) NOT NULL,
+      x_user_id VARCHAR(255) NOT NULL,
+      x_username VARCHAR(255) NOT NULL,
+      access_token VARCHAR(1024) NOT NULL,
+      access_token_secret VARCHAR(1024) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_user_x_account (user_id),
+      UNIQUE KEY unique_x_user_id (x_user_id),
+      INDEX idx_x_accounts_user_id (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
+  await sqlQuery(`
+    CREATE TABLE IF NOT EXISTS x_oauth_states (
+      id CHAR(36) PRIMARY KEY,
+      user_id CHAR(36) NOT NULL,
+      state_token VARCHAR(255) NOT NULL UNIQUE,
+      oauth_token VARCHAR(255) NULL,
+      oauth_token_secret VARCHAR(255) NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      INDEX idx_x_oauth_states_state_token (state_token),
+      INDEX idx_x_oauth_states_user_id (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
+  await sqlQuery(`
     CREATE TABLE IF NOT EXISTS sessions (
       id CHAR(36) PRIMARY KEY,
       user_id CHAR(36) NOT NULL,

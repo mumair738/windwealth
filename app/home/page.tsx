@@ -21,6 +21,21 @@ export default function Home() {
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // Handle X auth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const xAuth = params.get('x_auth');
+    if (xAuth) {
+      // Remove query params from URL
+      window.history.replaceState({}, '', '/home');
+      // Show success/error message if needed
+      if (xAuth === 'success') {
+        // Refresh the page to show connected account
+        window.location.reload();
+      }
+    }
+  }, []);
+
   useEffect(() => {
     // Wait for Privy to be ready before checking authentication
     // Add a small delay to ensure authentication state is stable
