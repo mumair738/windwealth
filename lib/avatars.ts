@@ -10,8 +10,14 @@
  */
 
 // IPFS gateway configuration
-const IPFS_GATEWAY = 'https://peach-impossible-chicken-451.mypinata.cloud/ipfs';
+// Using ipfs.io public gateway (reliable and well-cached)
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs';
 const COLLECTION_CID = 'bafybeieww32fskd7h3f7x3v2pk6y4raplotzeeojag7pwhoket5yrbxdgi';
+
+// Alternative gateways (fallbacks):
+// - https://cloudflare-ipfs.com/ipfs
+// - https://gateway.pinata.cloud/ipfs
+// - https://dweb.link/ipfs
 
 // Total number of avatars in the collection
 const TOTAL_AVATARS = 555;
@@ -80,9 +86,9 @@ function getAvatarById(index: number): Avatar {
   const id = `avatar_${paddedNumber}`;
   
   // Construct IPFS URLs
-  // Images are stored as: {CID}/{number}.png
-  // Metadata is stored as: {CID}/metadata/{number}.json
-  const image_url = `${IPFS_GATEWAY}/${COLLECTION_CID}/${avatarNumber}.png`;
+  // NOTE: Files on IPFS have a space prefix in the filename (e.g., " 1.png")
+  // We URL-encode the space as %20
+  const image_url = `${IPFS_GATEWAY}/${COLLECTION_CID}/%20${avatarNumber}.png`;
   const metadata_url = `${IPFS_GATEWAY}/${COLLECTION_CID}/metadata/${avatarNumber}.json`;
   
   return {

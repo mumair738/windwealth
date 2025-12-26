@@ -14,6 +14,12 @@ const nextConfig = {
       'www.larvalabs.com',
       'i.pinimg.com',
       'api.dicebear.com',
+      // IPFS gateways for avatars
+      'cloudflare-ipfs.com',
+      'ipfs.io',
+      'gateway.pinata.cloud',
+      'dweb.link',
+      'peach-impossible-chicken-451.mypinata.cloud',
     ],
     unoptimized: false,
   },
