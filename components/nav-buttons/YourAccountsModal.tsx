@@ -39,12 +39,45 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
   const wallets: string[] = [];
   // TODO: Implement wallet linking system - for now, show no wallets
 
-  // Extract Twitter/X accounts from Privy user
-  const privyUserAny = privyUser as any;
-  const linkedAccounts = privyUserAny?.linkedAccounts || [];
-  const twitterAccounts = linkedAccounts.filter(
-    (account: any) => account.type === 'twitter' || account.type === 'x'
-  );
+  // Fetch X account status
+  useEffect(() => {
+    const fetchXAccount = async () => {
+      try {
+        const response = await fetch('/api/x-auth/status', { cache: 'no-store' });
+        const data = await response.json();
+        if (data.connected && data.xAccount) {
+          setXAccount(data.xAccount);
+        } else {
+          setXAccount(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch X account:', error);
+        setXAccount(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchXAccount();
+
+    // Refresh when window regains focus (after OAuth redirect)
+    const handleFocus = () => {
+      fetchXAccount();
+    };
+    
+    // Listen for X account update events
+    const handleXAccountUpdate = () => {
+      fetchXAccount();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('xAccountUpdated', handleXAccountUpdate);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('xAccountUpdated', handleXAccountUpdate);
+    };
+  }, []);
 
   // Format wallet address for display
   const formatAddress = (address: string) => {
@@ -184,19 +217,19 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
               )}
 
               <div className={styles.socialsContainer}>
-                {/* Connect X Account Button */}
-                {!isLoading && !xAccount && (
+                {/* Connect X Account Button - Always show alongside LinkedIn and WhatsApp */}
+                {!xAccount && (
                   <button
                     className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}
                     onClick={() => handleSocialConnect('twitter')}
-                    disabled={isConnecting}
+                    disabled={isConnecting || isLoading}
                   >
                     <div className={styles.socialConnectTextContainer}>
                       <div className={styles.socialConnectText}>
-                        {isConnecting ? 'Connecting...' : 'Connect X Account'}
+                        {isConnecting ? 'Connecting...' : isLoading ? 'Loading...' : 'Connect X Account'}
                       </div>
                       <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>
-                        {isConnecting ? 'Connecting...' : 'Connect X Account'}
+                        {isConnecting ? 'Connecting...' : isLoading ? 'Loading...' : 'Connect X Account'}
                       </div>
                     </div>
                   </button>

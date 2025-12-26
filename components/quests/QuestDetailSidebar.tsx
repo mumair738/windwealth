@@ -94,11 +94,14 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
 
   // Check if Twitter is linked via X OAuth
   useEffect(() => {
-    if (!quest || quest.questType !== 'twitter-follow' || !authenticated) return;
+    if (!quest || quest.questType !== 'twitter-follow' || !authenticated) {
+      setStep1Completed(false);
+      return;
+    }
     
     const checkXAccount = async () => {
       try {
-        const response = await fetch('/api/x-auth/status');
+        const response = await fetch('/api/x-auth/status', { cache: 'no-store' });
         const data = await response.json();
         setStep1Completed(data.connected === true);
       } catch (error) {
@@ -108,6 +111,24 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
     };
     
     checkXAccount();
+
+    // Refresh when window regains focus (after OAuth redirect)
+    const handleFocus = () => {
+      checkXAccount();
+    };
+    
+    // Listen for X account update events
+    const handleXAccountUpdate = () => {
+      checkXAccount();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('xAccountUpdated', handleXAccountUpdate);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('xAccountUpdated', handleXAccountUpdate);
+    };
   }, [quest, authenticated]);
 
   const handleConnectTwitter = async () => {
@@ -132,6 +153,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
     try {
       const response = await fetch('/api/x-auth/check-follow', {
         method: 'POST',
+        cache: 'no-store',
       });
       const data = await response.json();
       
@@ -140,9 +162,15 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
       } else if (data.requiresManualVerification) {
         // Allow manual verification if API check fails
         setStep2Completed(true);
+      } else if (data.error) {
+        console.error('Follow check error:', data.error);
+        alert(data.message || 'Failed to verify follow status. Please try again.');
+      } else {
+        alert('Please make sure you are following @MentalWealthDAO on X, then click Verify again.');
       }
     } catch (error) {
       console.error('Failed to check follow status:', error);
+      alert('Failed to check follow status. Please try again.');
     } finally {
       setIsCheckingFollow(false);
     }
@@ -266,6 +294,16 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
               <div className={styles.descriptionBox}>
                 <h3 className={styles.sectionTitle}>Quest Description</h3>
                 <p className={styles.sectionDescription}>{quest.description}</p>
+                <div className={styles.questBannerImage}>
+                  <Image
+                    src="https://i.imgur.com/l44U7ak.png"
+                    alt="Quest Banner"
+                    width={600}
+                    height={300}
+                    className={styles.bannerImage}
+                    unoptimized
+                  />
+                </div>
               </div>
             )}
 

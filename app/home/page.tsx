@@ -28,10 +28,14 @@ export default function Home() {
     if (xAuth) {
       // Remove query params from URL
       window.history.replaceState({}, '', '/home');
-      // Show success/error message if needed
+      // Trigger refresh of X account status
       if (xAuth === 'success') {
-        // Refresh the page to show connected account
-        window.location.reload();
+        // Dispatch event to refresh X account status in modals
+        window.dispatchEvent(new Event('xAccountUpdated'));
+        // Small delay to ensure state updates
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     }
   }, []);
