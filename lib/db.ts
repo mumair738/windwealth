@@ -39,6 +39,17 @@ function createPool(): Pool {
     // Clean the connection string to remove any whitespace or hidden characters
     const cleanUrl = databaseUrl.trim().replace(/\s+/g, '');
     
+    // Validate connection string format - check for common mistakes
+    if (cleanUrl.match(/@[^@]*@/)) {
+      // Multiple @ symbols detected - this is likely a malformed connection string
+      const errorMsg = 'Invalid connection string format: Multiple @ symbols detected. ' +
+        'Format should be: postgresql://username:password@host:port/database. ' +
+        'If using pooler, ensure there is only ONE @ symbol before the hostname.';
+      console.error('[DB] Connection string validation failed:', errorMsg);
+      console.error('[DB] Connection string (masked):', maskConnectionString(cleanUrl));
+      throw new Error(errorMsg);
+    }
+    
     // Log connection info (masked) for debugging
     const isDirectConnection = cleanUrl.includes('db.') && cleanUrl.includes('.supabase.co');
     const isPoolerConnection = cleanUrl.includes('pooler.supabase.com') || cleanUrl.includes('pooler.supabase.co');
@@ -257,7 +268,10 @@ export async function sqlQuery<T = unknown>(
       troubleshooting += '- Direct connection: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres\n';
       troubleshooting += '- Pooler connection: postgresql://postgres.[PROJECT]:[PASSWORD]@[REGION].pooler.supabase.com:6543/postgres\n';
       
-      throw new Error(`Database password authentication failed for user "${username}".\n\nTroubleshooting:\n${troubleshooting}`);
+      const authError = new Error(`Database password authentication failed for user "${username}".\n\nTroubleshooting:\n${troubleshooting}`);
+      // Preserve the error code
+      (authError as any).code = error?.code || '28P01';
+      throw authError;
     }
     
     // Handle Supabase pooler authentication errors

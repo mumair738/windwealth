@@ -38,6 +38,20 @@ export async function POST(request: Request) {
         message: error?.message,
         stack: error?.stack,
       });
+      
+      // Handle password authentication failures (28P01) - this is a critical error
+      if (error?.code === '28P01' || error?.message?.includes('password authentication failed')) {
+        return NextResponse.json(
+          { 
+            error: 'Database authentication failed.',
+            message: error?.message || 'Password authentication failed. Please check your DATABASE_URL connection string.',
+            code: error?.code || '28P01',
+            details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+          },
+          { status: 503 }
+        );
+      }
+      
       // Check if this is a database connection error
       if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND' || error?.code === 'ETIMEDOUT' || error?.message?.includes('connection')) {
         const isDirectConnection = process.env.DATABASE_URL?.includes('db.') && process.env.DATABASE_URL?.includes('.supabase.co');
@@ -58,6 +72,7 @@ export async function POST(request: Request) {
           { status: 503 }
         );
       }
+      
       // Handle pooler authentication errors - these are expected with pooler connections
       // The extension creation fails but schema tables should still be accessible
       if (error?.code === 'XX000' || error?.message?.includes('Tenant or user not found')) {
