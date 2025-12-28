@@ -64,15 +64,18 @@ export async function ensureForumSchema() {
     console.warn('Could not create uuid-ossp extension (may already exist):', err?.message);
   }
 
-  // Users table
+  // Users table - simplified for email/password accounts
   await sqlQuery(`
     CREATE TABLE IF NOT EXISTS users (
       id CHAR(36) PRIMARY KEY,
-      privy_user_id VARCHAR(255) NOT NULL UNIQUE,
-      email VARCHAR(255) NULL UNIQUE,
-      wallet_address VARCHAR(255) NOT NULL,
       username VARCHAR(32) NOT NULL UNIQUE,
-      avatar_url VARCHAR(1024) NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      selected_avatar_id VARCHAR(50) NULL,
+      privy_user_id VARCHAR(255) NULL UNIQUE,
+      wallet_address VARCHAR(255) NULL,
+      gender VARCHAR(10) NULL,
+      birthday DATE NULL,
       shard_count INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -101,6 +104,80 @@ export async function ensureForumSchema() {
     // Column might already exist, ignore error
     if (!err?.message?.includes('already exists') && !err?.message?.includes('duplicate')) {
       console.warn('Error adding shard_count column:', err);
+    }
+  }
+
+  // Add password_hash column if it doesn't exist (for existing databases)
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ADD COLUMN password_hash VARCHAR(255) NULL
+    `);
+  } catch (err: any) {
+    // Column might already exist, ignore error
+    if (!err?.message?.includes('already exists') && !err?.message?.includes('duplicate')) {
+      console.warn('Error adding password_hash column:', err);
+    }
+  }
+
+  // Add selected_avatar_id column if it doesn't exist
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ADD COLUMN selected_avatar_id VARCHAR(50) NULL
+    `);
+  } catch (err: any) {
+    if (!err?.message?.includes('already exists') && !err?.message?.includes('duplicate')) {
+      console.warn('Error adding selected_avatar_id column:', err);
+    }
+  }
+
+  // Add gender column if it doesn't exist
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ADD COLUMN gender VARCHAR(10) NULL
+    `);
+  } catch (err: any) {
+    if (!err?.message?.includes('already exists') && !err?.message?.includes('duplicate')) {
+      console.warn('Error adding gender column:', err);
+    }
+  }
+
+  // Add birthday column if it doesn't exist
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ADD COLUMN birthday DATE NULL
+    `);
+  } catch (err: any) {
+    if (!err?.message?.includes('already exists') && !err?.message?.includes('duplicate')) {
+      console.warn('Error adding birthday column:', err);
+    }
+  }
+
+  // Make privy_user_id and wallet_address nullable (for email/password accounts)
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ALTER COLUMN privy_user_id DROP NOT NULL
+    `);
+  } catch (err: any) {
+    // Column might already be nullable, ignore error
+    if (!err?.message?.includes('does not exist') && !err?.message?.includes('not found')) {
+      console.warn('Error making privy_user_id nullable:', err);
+    }
+  }
+
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ALTER COLUMN wallet_address DROP NOT NULL
+    `);
+  } catch (err: any) {
+    // Column might already be nullable, ignore error
+    if (!err?.message?.includes('does not exist') && !err?.message?.includes('not found')) {
+      console.warn('Error making wallet_address nullable:', err);
     }
   }
 
@@ -329,6 +406,27 @@ export async function ensureForumSchema() {
         throw err;
       }
     }
+  }
+
+  // User avatars table - stores the 5 assigned avatars for each user
+  await sqlQuery(`
+    CREATE TABLE IF NOT EXISTS user_avatars (
+      id CHAR(36) PRIMARY KEY,
+      user_id CHAR(36) NOT NULL,
+      avatar_id VARCHAR(50) NOT NULL,
+      avatar_url VARCHAR(1024) NOT NULL,
+      is_selected BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE (user_id, avatar_id)
+    )
+  `);
+
+  try {
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_user_avatars_user_id ON user_avatars(user_id)`);
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_user_avatars_selected ON user_avatars(user_id, is_selected) WHERE is_selected = true`);
+  } catch (err: any) {
+    // Indexes might already exist
   }
 
   globalThis.__mwaForumSchemaEnsured = true;

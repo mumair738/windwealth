@@ -6,7 +6,7 @@
  * 
  * Expected body:
  * {
- *   username: string (3-32 chars, alphanumeric + underscores)
+ *   username: string (5-32 chars, alphanumeric + underscores)
  *   email?: string (optional, for email notifications)
  *   avatar_id: string (must be from assigned choices)
  * }
@@ -14,9 +14,10 @@
 
 import { NextResponse } from 'next/server';
 import { ensureForumSchema } from '@/lib/ensureForumSchema';
-import { isDbConfigured, sqlQuery } from '@/lib/db';
+import { isDbConfigured, sqlQuery, withTransaction, sqlQueryWithClient } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { cookies } from 'next/headers';
+import { getCurrentUserFromRequestCookie } from '@/lib/auth';
 import { isAvatarValidForUser, getAvatarByAvatarId, getAssignedAvatars } from '@/lib/avatars';
 
 export const runtime = 'nodejs';
@@ -27,10 +28,12 @@ interface CreateProfileBody {
   email?: string;
   avatar_id: string;
   wallet_address?: string;
+  gender?: 'male' | 'female';
+  birthday?: string;
 }
 
-// Username validation regex: 3-32 chars, alphanumeric + underscores
-const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,32}$/;
+// Username validation regex: 5-32 chars, alphanumeric + underscores
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{5,32}$/;
 // Email validation regex (basic)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -81,14 +84,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const { username, email, avatar_id, wallet_address } = body;
+  const { username, email, avatar_id, wallet_address, gender, birthday } = body;
 
   // Validate username
   if (!username || !USERNAME_REGEX.test(username)) {
     return NextResponse.json(
       { 
         error: 'Invalid username.',
-        message: 'Username must be 3-32 characters and contain only letters, numbers, and underscores.'
+        message: 'Username must be 5-32 characters and contain only letters, numbers, and underscores.'
       },
       { status: 400 }
     );
@@ -110,19 +113,19 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    // Generate new user ID
-    const userId = uuidv4();
-    
-    // Generate a temporary privy_user_id for non-Privy users
-    // This allows the profile system to work independently
-    const privyUserId = `profile_${userId}`;
-    
-    // Use provided wallet address or generate a placeholder
-    const walletAddr = wallet_address || `0x${uuidv4().replace(/-/g, '').slice(0, 40)}`;
+  // Get current user from session (created via signup)
+  const currentUser = await getCurrentUserFromRequestCookie();
+  if (!currentUser) {
+    return NextResponse.json(
+      { error: 'Not authenticated. Please sign up first.' },
+      { status: 401 }
+    );
+  }
 
+  const userId = currentUser.id;
+
+  try {
     // Validate avatar is in assigned choices for this user
-    // We use the new userId as the seed
     if (!isAvatarValidForUser(userId, avatar_id)) {
       // Since this is a new user, we need to get their choices based on the new ID
       // and check if the avatar is valid
@@ -148,10 +151,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if username is already taken
+    // Check if username is already taken by another user
     const existingUsername = await sqlQuery<Array<{ id: string }>>(
-      `SELECT id FROM users WHERE username = :username LIMIT 1`,
-      { username }
+      `SELECT id FROM users WHERE username = :username AND id != :userId LIMIT 1`,
+      { username, userId }
     );
 
     if (existingUsername.length > 0) {
@@ -164,39 +167,73 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if email is already taken (if provided)
+    // Check if email is already taken by another user (if provided)
     if (email) {
       const existingEmail = await sqlQuery<Array<{ id: string }>>(
-        `SELECT id FROM users WHERE email = :email LIMIT 1`,
-        { email }
+        `SELECT id FROM users WHERE email = :email AND id != :userId LIMIT 1`,
+        { email, userId }
       );
 
       if (existingEmail.length > 0) {
         return NextResponse.json(
           { 
             error: 'Email already registered.',
-            message: 'Please use a different email or sign in to your existing account.'
+            message: 'Please use a different email.'
           },
           { status: 409 }
         );
       }
     }
 
-    // Create the user profile with welcome shards
+    // Get all 5 assigned avatars for this user
+    const assignedAvatars = getAssignedAvatars(userId);
+    
+    // Update the user profile and store all avatar choices
     const WELCOME_SHARDS = 10;
-    await sqlQuery(
-      `INSERT INTO users (id, privy_user_id, email, wallet_address, username, avatar_url, shard_count)
-       VALUES (:id, :privyUserId, :email, :walletAddress, :username, :avatarUrl, :shardCount)`,
-      {
-        id: userId,
-        privyUserId,
-        email: email || null,
-        walletAddress: walletAddr,
-        username,
-        avatarUrl: avatar.image_url,
-        shardCount: WELCOME_SHARDS,
+    await withTransaction(async (client) => {
+      // Update user profile
+      await sqlQueryWithClient(
+        client,
+        `UPDATE users 
+         SET username = :username,
+             selected_avatar_id = :selectedAvatarId,
+             avatar_url = :avatarUrl,
+             email = COALESCE(:email, email),
+             gender = :gender,
+             birthday = :birthday,
+             shard_count = :shardCount
+         WHERE id = :userId`,
+        {
+          userId,
+          username,
+          selectedAvatarId: avatar_id,
+          avatarUrl: avatar.image_url,
+          email: email || null,
+          gender: gender || null,
+          birthday: birthday || null,
+          shardCount: WELCOME_SHARDS,
+        }
+      );
+
+      // Store all 5 avatar choices for this user
+      for (const assignedAvatar of assignedAvatars) {
+        await sqlQueryWithClient(
+          client,
+          `INSERT INTO user_avatars (id, user_id, avatar_id, avatar_url, is_selected)
+           VALUES (:id, :userId, :avatarId, :avatarUrl, :isSelected)
+           ON CONFLICT (user_id, avatar_id) DO UPDATE SET
+             avatar_url = EXCLUDED.avatar_url,
+             is_selected = EXCLUDED.is_selected`,
+          {
+            id: uuidv4(),
+            userId,
+            avatarId: assignedAvatar.id,
+            avatarUrl: assignedAvatar.image_url,
+            isSelected: assignedAvatar.id === avatar_id,
+          }
+        );
       }
-    );
+    });
 
     // Create a session for the new user
     const sessionToken = uuidv4();
@@ -237,6 +274,12 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error('Error creating profile:', error);
+    console.error('Error details:', {
+      code: error?.code,
+      message: error?.message,
+      constraint: error?.constraint,
+      stack: error?.stack,
+    });
     
     // Handle duplicate key errors (PostgreSQL error code 23505)
     if (error?.code === '23505' || error?.code === 'ER_DUP_ENTRY') {
@@ -261,8 +304,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Return more detailed error in development
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? (error?.message || 'Failed to create profile.')
+      : 'Failed to create profile.';
+    
     return NextResponse.json(
-      { error: 'Failed to create profile.' },
+      { error: errorMessage, details: process.env.NODE_ENV === 'development' ? error?.stack : undefined },
       { status: 500 }
     );
   }

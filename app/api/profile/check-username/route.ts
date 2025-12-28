@@ -17,9 +17,9 @@ export async function GET(request: Request) {
   const username = searchParams.get('username');
 
   // Validate username parameter
-  if (!username || username.length < 3) {
+  if (!username || username.length < 5) {
     return NextResponse.json(
-      { error: 'Username must be at least 3 characters.' },
+      { error: 'Username must be at least 5 characters.' },
       { status: 400 }
     );
   }
@@ -31,7 +31,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    await ensureForumSchema();
+    // Ensure schema is set up, handle connection errors gracefully
+    try {
+      await ensureForumSchema();
+    } catch (error: any) {
+      // Check if this is a database connection error
+      if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND' || error?.code === 'ETIMEDOUT' || error?.message?.includes('connection')) {
+        // If database is not available, assume username is available (will be validated on create)
+        console.warn('Database connection error in username check, assuming available:', error?.message);
+        return NextResponse.json({ available: true, username });
+      }
+      // Re-throw other errors
+      throw error;
+    }
 
     // Check if username exists
     const existing = await sqlQuery<Array<{ id: string }>>(
@@ -43,10 +55,15 @@ export async function GET(request: Request) {
       available: existing.length === 0,
       username,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error checking username:', error);
+    // If it's a connection error, assume available (will be validated on create)
+    if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND' || error?.code === 'ETIMEDOUT' || error?.message?.includes('connection')) {
+      return NextResponse.json({ available: true, username });
+    }
+    // For other errors, return error response
     return NextResponse.json(
-      { error: 'Failed to check username.' },
+      { error: 'Failed to check username.', available: null },
       { status: 500 }
     );
   }

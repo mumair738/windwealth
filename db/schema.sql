@@ -1,28 +1,89 @@
--- PostgreSQL schema for forum + user accounts
--- Run this in your Supabase SQL Editor (Dashboard → SQL Editor → New Query)
+-- ============================================================================
+-- Mental Wealth Academy Database Schema
+-- ============================================================================
+-- Fresh database setup for user onboarding and profile management
+-- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New Query)
+-- ============================================================================
 
--- Enable UUID extensions (try both for compatibility)
+-- Enable required PostgreSQL extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-  id CHAR(36) PRIMARY KEY,
-  privy_user_id VARCHAR(255) NOT NULL UNIQUE,
-  email VARCHAR(255) NULL UNIQUE,
-  wallet_address VARCHAR(255) NOT NULL,
+-- ============================================================================
+-- CORE USER TABLES
+-- ============================================================================
+
+-- Users table - Core user account data from onboarding
+-- Stores: username, email, password, selected avatar, and profile info
+CREATE TABLE users (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
   username VARCHAR(32) NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  selected_avatar_id VARCHAR(50) NULL,
   avatar_url VARCHAR(1024) NULL,
+  gender VARCHAR(10) NULL,
+  birthday DATE NULL,
   shard_count INTEGER NOT NULL DEFAULT 0,
+  -- Optional: For future wallet/Privy integration
+  privy_user_id VARCHAR(255) NULL UNIQUE,
+  wallet_address VARCHAR(255) NULL,
+  -- Timestamps
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for users
-CREATE INDEX IF NOT EXISTS idx_users_privy_user_id ON users(privy_user_id);
-CREATE INDEX IF NOT EXISTS idx_users_wallet_address ON users(wallet_address);
+-- User avatars table - Stores all 5 assigned avatars per user
+-- Allows users to switch between their assigned avatars later
+CREATE TABLE user_avatars (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id CHAR(36) NOT NULL,
+  avatar_id VARCHAR(50) NOT NULL,
+  avatar_url VARCHAR(1024) NOT NULL,
+  is_selected BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (user_id, avatar_id)
+);
 
--- Trigger to update updated_at timestamp
+-- ============================================================================
+-- AUTHENTICATION & SESSIONS
+-- ============================================================================
+
+-- Sessions table - User authentication sessions
+CREATE TABLE sessions (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id CHAR(36) NOT NULL,
+  token CHAR(36) NOT NULL UNIQUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ============================================================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================================================
+
+-- Users table indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_privy_user_id ON users(privy_user_id) WHERE privy_user_id IS NOT NULL;
+CREATE INDEX idx_users_wallet_address ON users(wallet_address) WHERE wallet_address IS NOT NULL;
+
+-- User avatars indexes
+CREATE INDEX idx_user_avatars_user_id ON user_avatars(user_id);
+CREATE INDEX idx_user_avatars_selected ON user_avatars(user_id, is_selected) WHERE is_selected = true;
+
+-- Sessions indexes
+CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX idx_sessions_token ON sessions(token);
+CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
+
+-- ============================================================================
+-- TRIGGERS FOR AUTOMATIC UPDATES
+-- ============================================================================
+
+-- Function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -31,12 +92,69 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Trigger for users table
+CREATE TRIGGER update_users_updated_at 
+  BEFORE UPDATE ON users
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
 
--- Quest completions table
-CREATE TABLE IF NOT EXISTS quest_completions (
-  id CHAR(36) PRIMARY KEY,
+-- ============================================================================
+-- FORUM TABLES (Community Features)
+-- ============================================================================
+
+-- Forum categories table
+CREATE TABLE forum_categories (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  slug VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(128) NOT NULL,
+  description VARCHAR(512) NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+-- Forum threads table
+CREATE TABLE forum_threads (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  category_id CHAR(36) NOT NULL,
+  author_user_id CHAR(36) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES forum_categories(id) ON DELETE CASCADE,
+  FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+-- Forum posts table
+CREATE TABLE forum_posts (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  thread_id CHAR(36) NOT NULL,
+  author_user_id CHAR(36) NOT NULL,
+  body TEXT NOT NULL,
+  attachment_url VARCHAR(1024) NULL,
+  attachment_mime VARCHAR(255) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (thread_id) REFERENCES forum_threads(id) ON DELETE CASCADE,
+  FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+-- Forum indexes
+CREATE INDEX idx_threads_category_id ON forum_threads(category_id);
+CREATE INDEX idx_threads_updated_at ON forum_threads(updated_at);
+CREATE INDEX idx_posts_thread_id ON forum_posts(thread_id);
+CREATE INDEX idx_posts_created_at ON forum_posts(created_at);
+
+-- Forum trigger
+CREATE TRIGGER update_forum_threads_updated_at 
+  BEFORE UPDATE ON forum_threads
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- QUEST SYSTEM
+-- ============================================================================
+
+-- Quest completions table - Tracks user quest progress
+CREATE TABLE quest_completions (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id CHAR(36) NOT NULL,
   quest_id VARCHAR(255) NOT NULL,
   completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -45,24 +163,17 @@ CREATE TABLE IF NOT EXISTS quest_completions (
   UNIQUE (user_id, quest_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_quest_completions_user_id ON quest_completions(user_id);
-CREATE INDEX IF NOT EXISTS idx_quest_completions_quest_id ON quest_completions(quest_id);
+-- Quest indexes
+CREATE INDEX idx_quest_completions_user_id ON quest_completions(user_id);
+CREATE INDEX idx_quest_completions_quest_id ON quest_completions(quest_id);
 
--- Sessions table
-CREATE TABLE IF NOT EXISTS sessions (
-  id CHAR(36) PRIMARY KEY,
-  user_id CHAR(36) NOT NULL,
-  token CHAR(36) NOT NULL UNIQUE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+-- ============================================================================
+-- SOCIAL INTEGRATIONS (Optional - For Future Features)
+-- ============================================================================
 
-CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-
--- X accounts table
-CREATE TABLE IF NOT EXISTS x_accounts (
-  id CHAR(36) PRIMARY KEY,
+-- X (Twitter) accounts table - For future social linking
+CREATE TABLE x_accounts (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id CHAR(36) NOT NULL,
   x_user_id VARCHAR(255) NOT NULL,
   x_username VARCHAR(255) NOT NULL,
@@ -75,14 +186,9 @@ CREATE TABLE IF NOT EXISTS x_accounts (
   UNIQUE (x_user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_x_accounts_user_id ON x_accounts(user_id);
-
-CREATE TRIGGER update_x_accounts_updated_at BEFORE UPDATE ON x_accounts
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- X OAuth states table
-CREATE TABLE IF NOT EXISTS x_oauth_states (
-  id CHAR(36) PRIMARY KEY,
+-- X OAuth states table - For OAuth flow
+CREATE TABLE x_oauth_states (
+  id CHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id CHAR(36) NOT NULL,
   state_token VARCHAR(255) NOT NULL UNIQUE,
   oauth_token VARCHAR(255) NULL,
@@ -91,48 +197,20 @@ CREATE TABLE IF NOT EXISTS x_oauth_states (
   expires_at TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_x_oauth_states_state_token ON x_oauth_states(state_token);
-CREATE INDEX IF NOT EXISTS idx_x_oauth_states_user_id ON x_oauth_states(user_id);
+-- Social integration indexes
+CREATE INDEX idx_x_accounts_user_id ON x_accounts(user_id);
+CREATE INDEX idx_x_oauth_states_state_token ON x_oauth_states(state_token);
+CREATE INDEX idx_x_oauth_states_user_id ON x_oauth_states(user_id);
 
--- Forum categories table
-CREATE TABLE IF NOT EXISTS forum_categories (
-  id CHAR(36) PRIMARY KEY,
-  slug VARCHAR(64) NOT NULL UNIQUE,
-  name VARCHAR(128) NOT NULL,
-  description VARCHAR(512) NULL,
-  sort_order INTEGER NOT NULL DEFAULT 0
-);
+-- Social integration trigger
+CREATE TRIGGER update_x_accounts_updated_at 
+  BEFORE UPDATE ON x_accounts
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
 
--- Forum threads table
-CREATE TABLE IF NOT EXISTS forum_threads (
-  id CHAR(36) PRIMARY KEY,
-  category_id CHAR(36) NOT NULL,
-  author_user_id CHAR(36) NOT NULL,
-  title VARCHAR(200) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (category_id) REFERENCES forum_categories(id) ON DELETE CASCADE,
-  FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE RESTRICT
-);
-
-CREATE INDEX IF NOT EXISTS idx_threads_category_id ON forum_threads(category_id);
-CREATE INDEX IF NOT EXISTS idx_threads_updated_at ON forum_threads(updated_at);
-
-CREATE TRIGGER update_forum_threads_updated_at BEFORE UPDATE ON forum_threads
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Forum posts table
-CREATE TABLE IF NOT EXISTS forum_posts (
-  id CHAR(36) PRIMARY KEY,
-  thread_id CHAR(36) NOT NULL,
-  author_user_id CHAR(36) NOT NULL,
-  body TEXT NOT NULL,
-  attachment_url VARCHAR(1024) NULL,
-  attachment_mime VARCHAR(255) NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (thread_id) REFERENCES forum_threads(id) ON DELETE CASCADE,
-  FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE RESTRICT
-);
-
-CREATE INDEX IF NOT EXISTS idx_posts_thread_id ON forum_posts(thread_id);
-CREATE INDEX IF NOT EXISTS idx_posts_created_at ON forum_posts(created_at);
+-- ============================================================================
+-- SCHEMA COMPLETE
+-- ============================================================================
+-- Your database is now ready for the onboarding system!
+-- Users will be created with: username, email, password_hash, and avatar choices
+-- ============================================================================

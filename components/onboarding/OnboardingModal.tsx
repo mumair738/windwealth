@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './OnboardingModal.module.css';
@@ -16,13 +16,16 @@ interface OnboardingModalProps {
   onClose: () => void;
 }
 
-type Step = 'username' | 'avatar' | 'email' | 'complete';
+type Step = 'personal' | 'account' | 'avatar' | 'complete';
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>('username');
+  const [currentStep, setCurrentStep] = useState<Step>('personal');
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | ''>('');
+  const [birthday, setBirthday] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [avatarChoices, setAvatarChoices] = useState<Avatar[]>([]);
   const [seed, setSeed] = useState<string>('');
@@ -31,9 +34,52 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
 
-  // Username validation
-  const usernameRegex = /^[a-zA-Z0-9_]{3,32}$/;
+  // Username validation (minimum 5 characters)
+  const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/;
   const isUsernameValid = usernameRegex.test(username);
+  
+  // Email validation (required)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailValid = email && emailRegex.test(email);
+  
+  // Password validation
+  const isPasswordValid = password.length >= 8;
+  
+  // Calculate max date (13 years ago from today)
+  const maxDate = (() => {
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setFullYear(today.getFullYear() - 13);
+    return maxDate.toISOString().split('T')[0];
+  })();
+
+  // Birthday validation (must be at least 13 years old) - reactive
+  const isBirthdayValid = useMemo(() => {
+    if (!birthday) return false;
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+    
+    // Calculate exact age
+    let exactAge = age;
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      exactAge = age - 1;
+    }
+    
+    return exactAge >= 13;
+  }, [birthday]);
+  
+  // Personal step validation (gender and birthday)
+  const isPersonalStepValid = gender !== '' && isBirthdayValid;
+  
+  // Account step validation (username, password, email)
+  const isAccountStepValid = 
+    isUsernameValid && 
+    usernameAvailable !== false && // Only block if explicitly unavailable
+    isPasswordValid && 
+    isEmailValid;
 
   // Generate avatar choices when username is confirmed
   const fetchAvatarChoices = useCallback(async (userSeed: string) => {
@@ -58,24 +104,45 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const checkUsername = useCallback(async (name: string) => {
     if (!usernameRegex.test(name)) {
       setUsernameAvailable(null);
+      setCheckingUsername(false);
       return;
     }
     
     setCheckingUsername(true);
+    setUsernameAvailable(null); // Reset while checking
     try {
       const response = await fetch(`/api/profile/check-username?username=${encodeURIComponent(name)}`);
       const data = await response.json();
-      setUsernameAvailable(data.available);
-    } catch {
+      
+      // Handle both success and error responses
+      if (response.ok) {
+        if (typeof data.available === 'boolean') {
+          setUsernameAvailable(data.available);
+        } else {
+          // If available is not a boolean, assume null (unknown)
+          setUsernameAvailable(null);
+        }
+      } else {
+        // If there's an error in the response, check if available is still provided
+        if (typeof data.available === 'boolean') {
+          setUsernameAvailable(data.available);
+        } else {
+          // If request failed and no availability info, don't set availability
+          setUsernameAvailable(null);
+        }
+      }
+    } catch (err) {
+      console.error('Username check error:', err);
+      // On network error, don't set availability (will be validated on server)
       setUsernameAvailable(null);
     } finally {
       setCheckingUsername(false);
     }
-  }, []);
+  }, [usernameRegex]);
 
   // Debounced username check
   useEffect(() => {
-    if (!username || username.length < 3) {
+    if (!username || username.length < 5) {
       setUsernameAvailable(null);
       return;
     }
@@ -87,17 +154,53 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     return () => clearTimeout(timer);
   }, [username, checkUsername]);
 
+  // Clear error when changing steps
+  useEffect(() => {
+    setError(null);
+  }, [currentStep]);
+
   // Handle step transitions
   const handleNextStep = async () => {
     setError(null);
 
-    if (currentStep === 'username') {
-      if (!isUsernameValid) {
-        setError('Username must be 3-32 characters (letters, numbers, underscores only)');
+    if (currentStep === 'personal') {
+      if (!gender) {
+        setError('Please select a gender');
         return;
+      }
+      if (!isBirthdayValid) {
+        setError('You must be at least 13 years old to create an account');
+        return;
+      }
+      setCurrentStep('account');
+    } else if (currentStep === 'account') {
+      if (!isUsernameValid) {
+        setError('Username must be 5-32 characters (letters, numbers, underscores only)');
+        return;
+      }
+      // Only check availability if we haven't checked yet or if it's explicitly unavailable
+      if (usernameAvailable === null && !checkingUsername) {
+        // Trigger a check, but don't block - we'll validate on the server side
+        checkUsername(username);
       }
       if (usernameAvailable === false) {
         setError('This username is already taken');
+        return;
+      }
+      if (!isPasswordValid) {
+        setError('Password must be at least 8 characters');
+        return;
+      }
+      if (!isEmailValid) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      if (!gender) {
+        setError('Please select a gender');
+        return;
+      }
+      if (!isBirthdayValid) {
+        setError('You must be at least 13 years old to create an account');
         return;
       }
       // Generate seed from username for avatar selection
@@ -108,8 +211,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
         setError('Please select an avatar');
         return;
       }
-      setCurrentStep('email');
-    } else if (currentStep === 'email') {
       // Create profile
       await createProfile();
     }
@@ -117,10 +218,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
 
   const handlePrevStep = () => {
     setError(null);
-    if (currentStep === 'avatar') {
-      setCurrentStep('username');
-    } else if (currentStep === 'email') {
-      setCurrentStep('avatar');
+    if (currentStep === 'account') {
+      setCurrentStep('personal');
+    } else if (currentStep === 'avatar') {
+      setCurrentStep('account');
     }
   };
 
@@ -129,19 +230,42 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     setError(null);
 
     try {
-      const response = await fetch('/api/profile/create', {
+      // First, sign up with email/password
+      const signupResponse = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          username,
-          email: email || undefined,
-          avatar_id: selectedAvatar?.id,
+          email,
+          password,
         }),
       });
 
-      const data = await response.json();
+      const signupData = await signupResponse.json();
 
-      if (response.ok) {
+      if (!signupResponse.ok) {
+        setError(signupData.error || 'Failed to create account');
+        setIsLoading(false);
+        return;
+      }
+
+      // Then create the profile with username, avatar, gender, birthday
+      const profileResponse = await fetch('/api/profile/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          username,
+          email,
+          avatar_id: selectedAvatar?.id,
+          gender,
+          birthday,
+        }),
+      });
+
+      const profileData = await profileResponse.json();
+
+      if (profileResponse.ok) {
         setCurrentStep('complete');
         // Redirect to home after brief celebration
         setTimeout(() => {
@@ -149,11 +273,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           onClose();
         }, 2500);
       } else {
-        setError(data.message || data.error || 'Failed to create profile');
+        setError(profileData.message || profileData.error || 'Failed to create profile');
       }
     } catch (err) {
       console.error('Profile creation error:', err);
-      setError('An error occurred. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -188,9 +313,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           <div 
             className={styles.progressFill} 
             style={{ 
-              width: currentStep === 'username' ? '25%' 
-                : currentStep === 'avatar' ? '50%' 
-                : currentStep === 'email' ? '75%' 
+              width: currentStep === 'personal' ? '33%' 
+                : currentStep === 'account' ? '66%' 
+                : currentStep === 'avatar' ? '100%' 
                 : '100%' 
             }} 
           />
@@ -205,8 +330,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           </button>
         )}
 
-        {/* Step 1: Username */}
-        {currentStep === 'username' && (
+        {/* Step 1: Personal Info (Gender & Birthday) */}
+        {currentStep === 'personal' && (
           <div className={styles.stepContent}>
             <div className={styles.stepIcon}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -214,54 +339,170 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
                 <path d="M20 21C20 16.5817 16.4183 13 12 13C7.58172 13 4 16.5817 4 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </div>
-            <h2 className={styles.stepTitle}>Choose Your Username</h2>
+            <h2 className={styles.stepTitle}>Tell Us About Yourself</h2>
             <p className={styles.stepDescription}>
-              This is how other researchers will know you in the Academy.
+              Help us personalize your experience.
             </p>
             
-            <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Username</label>
-              <div className={styles.inputWrapper}>
-                <span className={styles.inputPrefix}>@</span>
+            <div className={styles.formFields}>
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Gender</label>
+                <div className={styles.radioGroup}>
+                  <label className={`${styles.radioOption} ${gender === 'male' ? styles.radioOptionChecked : ''}`}>
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="male"
+                      checked={gender === 'male'}
+                      onChange={(e) => setGender(e.target.value as 'male' | 'female')}
+                    />
+                    <span>Male</span>
+                  </label>
+                  <label className={`${styles.radioOption} ${gender === 'female' ? styles.radioOptionChecked : ''}`}>
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="female"
+                      checked={gender === 'female'}
+                      onChange={(e) => setGender(e.target.value as 'male' | 'female')}
+                    />
+                    <span>Female</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Birthday</label>
                 <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                  placeholder="your_username"
+                  type="date"
+                  value={birthday}
+                  onChange={(e) => {
+                    const selectedDate = e.target.value;
+                    setBirthday(selectedDate);
+                    // Clear error when user selects a date
+                    if (error && error.includes('13 years old')) {
+                      setError(null);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate on blur
+                    const selectedDate = e.target.value;
+                    if (selectedDate && selectedDate > maxDate) {
+                      setError('You must be at least 13 years old to create an account');
+                      setBirthday('');
+                    }
+                  }}
                   className={styles.input}
-                  maxLength={32}
+                  max={maxDate}
                   autoFocus
                 />
-                {checkingUsername && (
-                  <span className={styles.inputSuffix}>
-                    <div className={styles.spinner} />
-                  </span>
-                )}
-                {!checkingUsername && usernameAvailable === true && (
-                  <span className={`${styles.inputSuffix} ${styles.available}`}>✓</span>
-                )}
-                {!checkingUsername && usernameAvailable === false && (
-                  <span className={`${styles.inputSuffix} ${styles.taken}`}>✗</span>
-                )}
+                <p className={styles.inputHint}>
+                  You must be at least 13 years old
+                </p>
               </div>
-              <p className={styles.inputHint}>
-                3-32 characters, letters, numbers, and underscores only
-              </p>
             </div>
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && currentStep === 'personal' && <p className={styles.error}>{error}</p>}
 
             <button 
               className={styles.primaryButton}
               onClick={handleNextStep}
-              disabled={!isUsernameValid || usernameAvailable === false || checkingUsername}
+              disabled={!isPersonalStepValid}
             >
               Continue
             </button>
           </div>
         )}
 
-        {/* Step 2: Avatar Selection */}
+        {/* Step 2: Account Details (Username, Password, Email) */}
+        {currentStep === 'account' && (
+          <div className={styles.stepContent}>
+            <div className={styles.stepIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 12.996 12 12.996C11.6357 12.996 11.2787 12.8934 10.97 12.7L2 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <h2 className={styles.stepTitle}>Create Your Account</h2>
+            <p className={styles.stepDescription}>
+              Set up your login credentials.
+            </p>
+            
+            <div className={styles.formFields}>
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Username</label>
+                <div className={styles.inputWrapper}>
+                  <span className={styles.inputPrefix}>@</span>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="your_username"
+                    className={styles.input}
+                    maxLength={32}
+                    autoFocus
+                  />
+                  {checkingUsername && (
+                    <span className={styles.inputSuffix}>
+                      <div className={styles.spinner} />
+                    </span>
+                  )}
+                  {!checkingUsername && usernameAvailable === true && (
+                    <span className={`${styles.inputSuffix} ${styles.available}`}>✓</span>
+                  )}
+                  {!checkingUsername && usernameAvailable === false && (
+                    <span className={`${styles.inputSuffix} ${styles.taken}`}>✗</span>
+                  )}
+                </div>
+                <p className={styles.inputHint}>
+                  5-32 characters, letters, numbers, and underscores only
+                </p>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className={styles.input}
+                />
+                <p className={styles.inputHint}>
+                  At least 8 characters
+                </p>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="researcher@example.com"
+                  className={styles.input}
+                />
+              </div>
+            </div>
+
+            {error && currentStep === 'account' && <p className={styles.error}>{error}</p>}
+
+            <div className={styles.buttonRow}>
+              <button className={styles.secondaryButton} onClick={handlePrevStep}>
+                Back
+              </button>
+              <button 
+                className={styles.primaryButton}
+                onClick={handleNextStep}
+                disabled={!isAccountStepValid}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Avatar Selection */}
         {currentStep === 'avatar' && (
           <div className={styles.stepContent}>
             <div className={styles.stepIcon}>
@@ -304,7 +545,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
               ))}
             </div>
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && currentStep === 'avatar' && <p className={styles.error}>{error}</p>}
 
             <div className={styles.buttonRow}>
               <button className={styles.secondaryButton} onClick={handlePrevStep}>
@@ -313,69 +554,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
               <button 
                 className={styles.primaryButton}
                 onClick={handleNextStep}
-                disabled={!selectedAvatar}
+                disabled={!selectedAvatar || isLoading}
               >
-                Continue
+                {isLoading ? 'Creating Account...' : 'Create Account'}
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 3: Email (Optional) */}
-        {currentStep === 'email' && (
-          <div className={styles.stepContent}>
-            <div className={styles.stepIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
-                <path d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 12.996 12 12.996C11.6357 12.996 11.2787 12.8934 10.97 12.7L2 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <h2 className={styles.stepTitle}>Add Your Email</h2>
-            <p className={styles.stepDescription}>
-              Optional: Get notified about new quests, events, and academy updates.
-            </p>
-
-            <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="researcher@example.com"
-                className={styles.input}
-              />
-              <p className={styles.inputHint}>
-                You can skip this step and add an email later.
-              </p>
-            </div>
-
-            {error && <p className={styles.error}>{error}</p>}
-
-            <div className={styles.buttonRow}>
-              <button className={styles.secondaryButton} onClick={handlePrevStep}>
-                Back
-              </button>
-              <button 
-                className={styles.primaryButton}
-                onClick={handleNextStep}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Creating Profile...' : 'Create Profile'}
-              </button>
-            </div>
-
-            <button 
-              className={styles.skipButton}
-              onClick={() => {
-                setEmail('');
-                createProfile();
-              }}
-              disabled={isLoading}
-            >
-              Skip for now
-            </button>
-          </div>
-        )}
 
         {/* Step 4: Complete */}
         {currentStep === 'complete' && (

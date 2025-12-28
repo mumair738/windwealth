@@ -40,7 +40,7 @@ export async function GET() {
 function isValidUsername(username: unknown): username is string {
   if (typeof username !== 'string') return false;
   const trimmed = username.trim();
-  if (trimmed.length < 3 || trimmed.length > 32) return false;
+  if (trimmed.length < 5 || trimmed.length > 32) return false;
   return /^[a-zA-Z0-9_]+$/.test(trimmed);
 }
 
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
     return NextResponse.json(
       {
         error:
-          'Invalid username. Use 3-32 chars, letters/numbers/underscore only.',
+          'Invalid username. Use 5-32 chars, letters/numbers/underscore only.',
       },
       { status: 400 }
     );

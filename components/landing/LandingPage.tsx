@@ -26,31 +26,47 @@ const LandingPage: React.FC = () => {
     setMessage(null);
     
     try {
-      // Subscribe email to Mailchimp
-      const response = await fetch('/api/subscribe', {
+      // Try login first
+      const loginResponse = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const loginData = await loginResponse.json();
 
-      if (response.ok) {
-        setMessage({ type: 'success', text: data.message || 'Successfully signed up for beta!' });
-        // Clear form
+      if (loginResponse.ok) {
+        // Login successful - redirect to home
+        window.location.href = '/home';
+        return;
+      }
+
+      // If login fails, try signup
+      const signupResponse = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const signupData = await signupResponse.json();
+
+      if (signupResponse.ok) {
+        // Signup successful - show onboarding
+        setShowOnboarding(true);
         setEmail('');
         setPassword('');
-        // Stay on landing page - no redirect
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to sign up. Please try again.' });
+        setMessage({ type: 'error', text: signupData.error || loginData.error || 'Failed to sign up. Please try again.' });
       }
     } catch (error) {
-      console.error('Subscription error:', error);
+      console.error('Auth error:', error);
       setMessage({ type: 'error', text: 'An error occurred. Please try again later.' });
     } finally {
-    setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -167,10 +183,10 @@ const LandingPage: React.FC = () => {
                   className={styles.loginButton}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Submitting...' : 'Request Beta Access'}
+                  {isLoading ? 'Signing in...' : 'Sign In'}
                 </button>
 
-                <SignInButton />
+                <SignInButton onClick={() => setShowOnboarding(true)} />
 
                 <button 
                   type="button"
