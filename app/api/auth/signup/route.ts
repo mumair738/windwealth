@@ -33,12 +33,18 @@ export async function POST(request: Request) {
       await ensureForumSchema();
     } catch (error: any) {
       console.error('Schema setup error:', error);
+      console.error('Error details:', {
+        code: error?.code,
+        message: error?.message,
+        stack: error?.stack,
+      });
       // Check if this is a database connection error
       if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND' || error?.code === 'ETIMEDOUT' || error?.message?.includes('connection')) {
         return NextResponse.json(
           { 
             error: 'Database connection failed.',
-            message: 'Unable to connect to the database. Please check your database configuration.'
+            message: 'Unable to connect to the database. Please check your database configuration and ensure the server is running.',
+            details: process.env.NODE_ENV === 'development' ? error?.message : undefined
           },
           { status: 503 }
         );

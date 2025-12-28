@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './OnboardingModal.module.css';
@@ -20,7 +20,7 @@ type Step = 'personal' | 'account' | 'avatar' | 'complete';
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>('personal');
+  const [currentStep, setCurrentStep] = useState<Step>('account');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -33,6 +33,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const [error, setError] = useState<string | null>(null);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
+  const checkingRef = useRef<string | null>(null); // Track which username we're currently checking
 
   // Username validation (minimum 5 characters)
   const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/;
@@ -71,15 +72,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     return exactAge >= 13;
   }, [birthday]);
   
-  // Personal step validation (gender and birthday)
-  const isPersonalStepValid = gender !== '' && isBirthdayValid;
-  
-  // Account step validation (username, password, email)
+  // Account step validation (email, username, password) - FIRST STEP
   const isAccountStepValid = 
+    isEmailValid &&
     isUsernameValid && 
     usernameAvailable !== false && // Only block if explicitly unavailable
-    isPasswordValid && 
-    isEmailValid;
+    isPasswordValid;
+  
+  // Personal step validation (gender and birthday) - SECOND STEP
+  const isPersonalStepValid = gender !== '' && isBirthdayValid;
 
   // Generate avatar choices when username is confirmed
   const fetchAvatarChoices = useCallback(async (userSeed: string) => {
@@ -102,17 +103,29 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
 
   // Check username availability
   const checkUsername = useCallback(async (name: string) => {
+    // Prevent duplicate checks for the same username
+    if (checkingRef.current === name) {
+      return;
+    }
+
     if (!usernameRegex.test(name)) {
       setUsernameAvailable(null);
       setCheckingUsername(false);
+      checkingRef.current = null;
       return;
     }
     
+    checkingRef.current = name;
     setCheckingUsername(true);
     setUsernameAvailable(null); // Reset while checking
     try {
       const response = await fetch(`/api/profile/check-username?username=${encodeURIComponent(name)}`);
       const data = await response.json();
+      
+      // Only update state if this is still the current check
+      if (checkingRef.current !== name) {
+        return;
+      }
       
       // Handle both success and error responses
       if (response.ok) {
@@ -134,9 +147,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     } catch (err) {
       console.error('Username check error:', err);
       // On network error, don't set availability (will be validated on server)
-      setUsernameAvailable(null);
+      if (checkingRef.current === name) {
+        setUsernameAvailable(null);
+      }
     } finally {
-      setCheckingUsername(false);
+      if (checkingRef.current === name) {
+        setCheckingUsername(false);
+        checkingRef.current = null;
+      }
     }
   }, [usernameRegex]);
 
@@ -144,15 +162,33 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   useEffect(() => {
     if (!username || username.length < 5) {
       setUsernameAvailable(null);
+      setCheckingUsername(false);
+      checkingRef.current = null;
+      return;
+    }
+
+    // Don't re-check if we're already checking this exact username
+    if (checkingRef.current === username) {
+      return;
+    }
+
+    // Don't re-check if we already confirmed it's available (and not currently checking)
+    if (usernameAvailable === true && checkingRef.current === null) {
       return;
     }
 
     const timer = setTimeout(() => {
-      checkUsername(username);
+      // Double-check username hasn't changed during debounce and we're not already checking it
+      if (username && username.length >= 5 && checkingRef.current !== username) {
+        checkUsername(username);
+      }
     }, 500);
 
-    return () => clearTimeout(timer);
-  }, [username, checkUsername]);
+    return () => {
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]); // Only depend on username - checkUsername is stable, and we use refs to prevent loops
 
   // Clear error when changing steps
   useEffect(() => {
@@ -163,7 +199,25 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const handleNextStep = async () => {
     setError(null);
 
-    if (currentStep === 'personal') {
+    if (currentStep === 'account') {
+      if (!isEmailValid) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      if (!isUsernameValid) {
+        setError('Username must be 5-32 characters (letters, numbers, underscores only)');
+        return;
+      }
+      if (usernameAvailable === false) {
+        setError('This username is already taken');
+        return;
+      }
+      if (!isPasswordValid) {
+        setError('Password must be at least 8 characters');
+        return;
+      }
+      setCurrentStep('personal');
+    } else if (currentStep === 'personal') {
       if (!gender) {
         setError('Please select a gender');
         return;
@@ -172,8 +226,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
         setError('You must be at least 13 years old to create an account');
         return;
       }
-      setCurrentStep('account');
-    } else if (currentStep === 'account') {
+      setCurrentStep('avatar');
+    } else if (currentStep === 'avatar') {
       if (!isUsernameValid) {
         setError('Username must be 5-32 characters (letters, numbers, underscores only)');
         return;
@@ -205,7 +259,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
       }
       // Generate seed from username for avatar selection
       await fetchAvatarChoices(username + Date.now().toString());
-      setCurrentStep('avatar');
     } else if (currentStep === 'avatar') {
       if (!selectedAvatar) {
         setError('Please select an avatar');
@@ -218,10 +271,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
 
   const handlePrevStep = () => {
     setError(null);
-    if (currentStep === 'account') {
-      setCurrentStep('personal');
-    } else if (currentStep === 'avatar') {
+    if (currentStep === 'personal') {
       setCurrentStep('account');
+    } else if (currentStep === 'avatar') {
+      setCurrentStep('personal');
     }
   };
 
@@ -328,8 +381,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           <div 
             className={styles.progressFill} 
             style={{ 
-              width: currentStep === 'personal' ? '33%' 
-                : currentStep === 'account' ? '66%' 
+              width: currentStep === 'account' ? '33%' 
+                : currentStep === 'personal' ? '66%' 
                 : currentStep === 'avatar' ? '100%' 
                 : '100%' 
             }} 
@@ -345,7 +398,99 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           </button>
         )}
 
-        {/* Step 1: Personal Info (Gender & Birthday) */}
+        {/* Step 1: Account Details (Email, Username, Password) */}
+        {currentStep === 'account' && (
+          <div className={styles.stepContent}>
+            <div className={styles.stepIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 12.996 12 12.996C11.6357 12.996 11.2787 12.8934 10.97 12.7L2 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <h2 className={styles.stepTitle}>Create Your Account</h2>
+            <p className={styles.stepDescription}>
+              Set up your login credentials.
+            </p>
+            
+            <div className={styles.formFields}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="onboarding-email" className={styles.inputLabel}>Email Address</label>
+                <input
+                  id="onboarding-email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="researcher@example.com"
+                  className={styles.input}
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="onboarding-username" className={styles.inputLabel}>Username</label>
+                <div className={styles.inputWrapper}>
+                  <span className={styles.inputPrefix}>@</span>
+                  <input
+                    id="onboarding-username"
+                    name="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="your_username"
+                    className={styles.input}
+                    maxLength={32}
+                    autoComplete="username"
+                  />
+                  {checkingUsername && (
+                    <span className={styles.inputSuffix}>
+                      <div className={styles.spinner} />
+                    </span>
+                  )}
+                  {!checkingUsername && usernameAvailable === true && (
+                    <span className={`${styles.inputSuffix} ${styles.available}`}>✓</span>
+                  )}
+                  {!checkingUsername && usernameAvailable === false && (
+                    <span className={`${styles.inputSuffix} ${styles.taken}`}>✗</span>
+                  )}
+                </div>
+                <p className={styles.inputHint}>
+                  5-32 characters, letters, numbers, and underscores only
+                </p>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="onboarding-password" className={styles.inputLabel}>Password</label>
+                <input
+                  id="onboarding-password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className={styles.input}
+                  autoComplete="new-password"
+                />
+                <p className={styles.inputHint}>
+                  At least 8 characters
+                </p>
+              </div>
+            </div>
+
+            {error && currentStep === 'account' && <p className={styles.error}>{error}</p>}
+
+            <button 
+              className={styles.primaryButton}
+              onClick={handleNextStep}
+              disabled={!isAccountStepValid}
+            >
+              Continue
+            </button>
+          </div>
+        )}
+
+        {/* Step 2: Personal Info (Gender & Birthday) */}
         {currentStep === 'personal' && (
           <div className={styles.stepContent}>
             <div className={styles.stepIcon}>
@@ -361,34 +506,40 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
             
             <div className={styles.formFields}>
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>Gender</label>
-                <div className={styles.radioGroup}>
-                  <label className={`${styles.radioOption} ${gender === 'male' ? styles.radioOptionChecked : ''}`}>
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="male"
-                      checked={gender === 'male'}
-                      onChange={(e) => setGender(e.target.value as 'male' | 'female')}
-                    />
-                    <span>Male</span>
-                  </label>
-                  <label className={`${styles.radioOption} ${gender === 'female' ? styles.radioOptionChecked : ''}`}>
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="female"
-                      checked={gender === 'female'}
-                      onChange={(e) => setGender(e.target.value as 'male' | 'female')}
-                    />
-                    <span>Female</span>
-                  </label>
-                </div>
+                <fieldset>
+                  <legend className={styles.inputLabel}>Gender</legend>
+                  <div className={styles.radioGroup}>
+                    <label className={`${styles.radioOption} ${gender === 'male' ? styles.radioOptionChecked : ''}`}>
+                      <input
+                        id="onboarding-gender-male"
+                        name="gender"
+                        type="radio"
+                        value="male"
+                        checked={gender === 'male'}
+                        onChange={(e) => setGender(e.target.value as 'male' | 'female')}
+                      />
+                      <span>Male</span>
+                    </label>
+                    <label className={`${styles.radioOption} ${gender === 'female' ? styles.radioOptionChecked : ''}`}>
+                      <input
+                        id="onboarding-gender-female"
+                        name="gender"
+                        type="radio"
+                        value="female"
+                        checked={gender === 'female'}
+                        onChange={(e) => setGender(e.target.value as 'male' | 'female')}
+                      />
+                      <span>Female</span>
+                    </label>
+                  </div>
+                </fieldset>
               </div>
 
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>Birthday</label>
+                <label htmlFor="onboarding-birthday" className={styles.inputLabel}>Birthday</label>
                 <input
+                  id="onboarding-birthday"
+                  name="birthday"
                   type="date"
                   value={birthday}
                   onChange={(e) => {
@@ -409,6 +560,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
                   }}
                   className={styles.input}
                   max={maxDate}
+                  autoComplete="bday"
                   autoFocus
                 />
                 <p className={styles.inputHint}>
@@ -419,89 +571,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
 
             {error && currentStep === 'personal' && <p className={styles.error}>{error}</p>}
 
-            <button 
-              className={styles.primaryButton}
-              onClick={handleNextStep}
-              disabled={!isPersonalStepValid}
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Account Details (Username, Password, Email) */}
-        {currentStep === 'account' && (
-          <div className={styles.stepContent}>
-            <div className={styles.stepIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
-                <path d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 12.996 12 12.996C11.6357 12.996 11.2787 12.8934 10.97 12.7L2 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <h2 className={styles.stepTitle}>Create Your Account</h2>
-            <p className={styles.stepDescription}>
-              Set up your login credentials.
-            </p>
-            
-            <div className={styles.formFields}>
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>Username</label>
-                <div className={styles.inputWrapper}>
-                  <span className={styles.inputPrefix}>@</span>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    placeholder="your_username"
-                    className={styles.input}
-                    maxLength={32}
-                    autoFocus
-                  />
-                  {checkingUsername && (
-                    <span className={styles.inputSuffix}>
-                      <div className={styles.spinner} />
-                    </span>
-                  )}
-                  {!checkingUsername && usernameAvailable === true && (
-                    <span className={`${styles.inputSuffix} ${styles.available}`}>✓</span>
-                  )}
-                  {!checkingUsername && usernameAvailable === false && (
-                    <span className={`${styles.inputSuffix} ${styles.taken}`}>✗</span>
-                  )}
-                </div>
-                <p className={styles.inputHint}>
-                  5-32 characters, letters, numbers, and underscores only
-                </p>
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className={styles.input}
-                />
-                <p className={styles.inputHint}>
-                  At least 8 characters
-                </p>
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="researcher@example.com"
-                  className={styles.input}
-                />
-              </div>
-            </div>
-
-            {error && currentStep === 'account' && <p className={styles.error}>{error}</p>}
-
             <div className={styles.buttonRow}>
               <button className={styles.secondaryButton} onClick={handlePrevStep}>
                 Back
@@ -509,7 +578,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
               <button 
                 className={styles.primaryButton}
                 onClick={handleNextStep}
-                disabled={!isAccountStepValid}
+                disabled={!isPersonalStepValid}
               >
                 Continue
               </button>
@@ -533,12 +602,17 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
               These 5 avatars were uniquely assigned to you. Choose one to represent your identity.
             </p>
 
-            <div className={styles.avatarGrid}>
-              {avatarChoices.map((avatar) => (
+            <div className={styles.avatarGrid} role="radiogroup" aria-label="Select your avatar">
+              {avatarChoices.map((avatar, index) => (
                 <button
                   key={avatar.id}
+                  id={`avatar-option-${index}`}
+                  name="avatar-selection"
+                  type="button"
                   className={`${styles.avatarOption} ${selectedAvatar?.id === avatar.id ? styles.avatarSelected : ''}`}
                   onClick={() => setSelectedAvatar(avatar)}
+                  aria-label={`Select avatar ${index + 1}`}
+                  aria-pressed={selectedAvatar?.id === avatar.id}
                 >
                   <Image
                     src={avatar.image_url}

@@ -164,6 +164,24 @@
   margin-bottom: 8px;
 }
 
+/* Fieldset for radio groups */
+.inputGroup fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.inputGroup legend {
+  display: block;
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-dark);
+  text-align: left;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
 .inputWrapper {
   position: relative;
   display: flex;
