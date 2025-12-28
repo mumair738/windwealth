@@ -198,7 +198,7 @@ const Navbar: React.FC = () => {
               </span>
             </div>
             {/* User Info */}
-            {authenticated && username && (
+            {authenticated && username && !username.startsWith('user_') && (
               <div className={styles.userInfo}>
                 {avatarUrl && (
                   <Image
@@ -211,6 +211,12 @@ const Navbar: React.FC = () => {
                   />
                 )}
                 <span className={styles.username}>@{username}</span>
+              </div>
+            )}
+            {/* Show incomplete profile message if username is temporary */}
+            {authenticated && username && username.startsWith('user_') && (
+              <div className={styles.incompleteProfile}>
+                <span>Complete Profile</span>
               </div>
             )}
             {/* Mobile Menu Toggle */}

@@ -53,16 +53,10 @@ export async function PUT(request: Request) {
   }
   await ensureForumSchema();
 
-  // Verify Privy authentication
-  const privyUser = await getPrivyUserFromRequest();
-  if (!privyUser) {
-    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
-  }
-
-  // Get our internal user record
+  // Get our internal user record (works for both Privy and email/password auth)
   const user = await getCurrentUserFromRequestCookie();
   if (!user) {
-    return NextResponse.json({ error: 'User account not found. Please complete signup.' }, { status: 404 });
+    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));

@@ -124,9 +124,19 @@ export async function POST(request: Request) {
 
   const userId = currentUser.id;
 
+  // Check if user already has a profile (not just temporary username)
+  const existingUser = await sqlQuery<Array<{ username: string; avatar_url: string | null }>>(
+    `SELECT username, avatar_url FROM users WHERE id = :userId LIMIT 1`,
+    { userId }
+  );
+  const hasExistingProfile = existingUser.length > 0 && 
+    existingUser[0].username && 
+    !existingUser[0].username.startsWith('user_');
+
   try {
     // Validate avatar is in assigned choices for this user
-    if (!isAvatarValidForUser(userId, avatar_id)) {
+    // Skip validation if user already has a profile (allowing updates)
+    if (!hasExistingProfile && !isAvatarValidForUser(userId, avatar_id)) {
       // Since this is a new user, we need to get their choices based on the new ID
       // and check if the avatar is valid
       const assignedAvatars = getAssignedAvatars(userId);
@@ -143,12 +153,27 @@ export async function POST(request: Request) {
     }
 
     // Get the full avatar object
-    const avatar = getAvatarByAvatarId(avatar_id);
-    if (!avatar) {
-      return NextResponse.json(
-        { error: 'Avatar not found.' },
-        { status: 404 }
-      );
+    // If user has existing profile, we can update directly without strict validation
+    let avatar;
+    if (hasExistingProfile) {
+      // For existing profiles, try to get avatar but allow updating even if not in assigned choices
+      avatar = getAvatarByAvatarId(avatar_id);
+      if (!avatar) {
+        // If avatar_id is invalid, still allow update but log it
+        console.warn(`Avatar ${avatar_id} not found for existing profile update`);
+        // Use a default or existing avatar_url
+        const existingAvatarUrl = existingUser[0].avatar_url;
+        avatar = existingAvatarUrl ? { id: avatar_id, image_url: existingAvatarUrl, metadata_url: '' } : null;
+      }
+    } else {
+      // For new profiles, avatar must be valid
+      avatar = getAvatarByAvatarId(avatar_id);
+      if (!avatar) {
+        return NextResponse.json(
+          { error: 'Avatar not found.' },
+          { status: 404 }
+        );
+      }
     }
 
     // Check if username is already taken by another user
@@ -189,9 +214,23 @@ export async function POST(request: Request) {
     const assignedAvatars = getAssignedAvatars(userId);
     
     // Update the user profile and store all avatar choices
-    const WELCOME_SHARDS = 10;
+    const WELCOME_SHARDS = hasExistingProfile ? undefined : 10; // Don't reset shards for existing profiles
     await withTransaction(async (client) => {
       // Update user profile
+      const updateParams: any = {
+        userId,
+        username,
+        selectedAvatarId: avatar_id,
+        avatarUrl: avatar?.image_url || null,
+        email: email || null,
+        gender: gender || null,
+        birthday: birthday || null,
+      };
+      
+      if (WELCOME_SHARDS !== undefined) {
+        updateParams.shardCount = WELCOME_SHARDS;
+      }
+      
       await sqlQueryWithClient(
         client,
         `UPDATE users 
@@ -199,39 +238,32 @@ export async function POST(request: Request) {
              selected_avatar_id = :selectedAvatarId,
              avatar_url = :avatarUrl,
              email = COALESCE(:email, email),
-             gender = :gender,
-             birthday = :birthday,
-             shard_count = :shardCount
+             gender = COALESCE(:gender, gender),
+             birthday = COALES(:birthday, birthday)${WELCOME_SHARDS !== undefined ? ', shard_count = :shardCount' : ''}
          WHERE id = :userId`,
-        {
-          userId,
-        username,
-          selectedAvatarId: avatar_id,
-        avatarUrl: avatar.image_url,
-          email: email || null,
-          gender: gender || null,
-          birthday: birthday || null,
-        shardCount: WELCOME_SHARDS,
-      }
-    );
+        updateParams
+      );
 
-      // Store all 5 avatar choices for this user
-      for (const assignedAvatar of assignedAvatars) {
-        await sqlQueryWithClient(
-          client,
-          `INSERT INTO user_avatars (id, user_id, avatar_id, avatar_url, is_selected)
-           VALUES (:id, :userId, :avatarId, :avatarUrl, :isSelected)
-           ON CONFLICT (user_id, avatar_id) DO UPDATE SET
-             avatar_url = EXCLUDED.avatar_url,
-             is_selected = EXCLUDED.is_selected`,
-          {
-            id: uuidv4(),
-            userId,
-            avatarId: assignedAvatar.id,
-            avatarUrl: assignedAvatar.image_url,
-            isSelected: assignedAvatar.id === avatar_id,
-          }
-        );
+      // Store all 5 avatar choices for this user (only if not existing profile or if we want to refresh)
+      if (!hasExistingProfile) {
+        const assignedAvatars = getAssignedAvatars(userId);
+        for (const assignedAvatar of assignedAvatars) {
+          await sqlQueryWithClient(
+            client,
+            `INSERT INTO user_avatars (id, user_id, avatar_id, avatar_url, is_selected)
+             VALUES (:id, :userId, :avatarId, :avatarUrl, :isSelected)
+             ON CONFLICT (user_id, avatar_id) DO UPDATE SET
+               avatar_url = EXCLUDED.avatar_url,
+               is_selected = EXCLUDED.is_selected`,
+            {
+              id: uuidv4(),
+              userId,
+              avatarId: assignedAvatar.id,
+              avatarUrl: assignedAvatar.image_url,
+              isSelected: assignedAvatar.id === avatar_id,
+            }
+          );
+        }
       }
     });
 

@@ -342,7 +342,16 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           onClose();
         }, 2500);
       } else {
-        setError(profileData.message || profileData.error || 'Failed to create profile');
+        // Log detailed error for debugging
+        console.error('Profile creation failed:', {
+          status: profileResponse.status,
+          statusText: profileResponse.statusText,
+          data: profileData,
+          username,
+          avatar_id: selectedAvatar?.id,
+        });
+        const errorMessage = profileData.message || profileData.error || 'Failed to create profile';
+        setError(`${errorMessage}${profileData.validChoices ? ` Valid choices: ${profileData.validChoices.join(', ')}` : ''}`);
       }
     } catch (err) {
       console.error('Profile creation error:', err);
