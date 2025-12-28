@@ -157,8 +157,9 @@ export async function sqlQuery<T = unknown>(
       const paramValues: unknown[] = [];
       
       // Replace :paramName with $1, $2, etc.
-      let paramIndex = 1;
-      const convertedQuery = query.replace(/:(\w+)/g, (match, paramName) => {
+      // Use negative lookbehind to avoid matching :: (PostgreSQL type casting)
+      // Pattern: (?<!:) means "not preceded by a colon"
+      const convertedQuery = query.replace(/(?<!:):(\w+)/g, (match, paramName) => {
         if (!paramNames.includes(paramName)) {
           paramNames.push(paramName);
           paramValues.push(params[paramName]);
@@ -310,7 +311,9 @@ export function sqlQueryWithClient<T = unknown>(
     const paramValues: unknown[] = [];
     
     // Replace :paramName with $1, $2, etc.
-    const convertedQuery = query.replace(/:(\w+)/g, (match, paramName) => {
+    // Use negative lookbehind to avoid matching :: (PostgreSQL type casting)
+    // Pattern: (?<!:) means "not preceded by a colon"
+    const convertedQuery = query.replace(/(?<!:):(\w+)/g, (match, paramName) => {
       if (!paramNames.includes(paramName)) {
         paramNames.push(paramName);
         paramValues.push(params[paramName]);
