@@ -35,8 +35,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const [checkingUsername, setCheckingUsername] = useState(false);
   const checkingRef = useRef<string | null>(null); // Track which username we're currently checking
 
-  // Username validation (minimum 5 characters)
-  const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/;
+  // Username validation (minimum 5 characters) - memoized to prevent re-renders
+  const usernameRegex = useMemo(() => /^[a-zA-Z0-9_]{5,32}$/, []);
   const isUsernameValid = usernameRegex.test(username);
   
   // Email validation (required)
@@ -226,39 +226,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
         setError('You must be at least 13 years old to create an account');
         return;
       }
-      setCurrentStep('avatar');
-    } else if (currentStep === 'avatar') {
-      if (!isUsernameValid) {
-        setError('Username must be 5-32 characters (letters, numbers, underscores only)');
-        return;
-      }
-      // Only check availability if we haven't checked yet or if it's explicitly unavailable
-      if (usernameAvailable === null && !checkingUsername) {
-        // Trigger a check, but don't block - we'll validate on the server side
-        checkUsername(username);
-      }
-      if (usernameAvailable === false) {
-        setError('This username is already taken');
-        return;
-      }
-      if (!isPasswordValid) {
-        setError('Password must be at least 8 characters');
-        return;
-      }
-      if (!isEmailValid) {
-        setError('Please enter a valid email address');
-        return;
-      }
-      if (!gender) {
-        setError('Please select a gender');
-        return;
-      }
-      if (!isBirthdayValid) {
-        setError('You must be at least 13 years old to create an account');
-        return;
-      }
       // Generate seed from username for avatar selection
       await fetchAvatarChoices(username + Date.now().toString());
+      setCurrentStep('avatar');
     } else if (currentStep === 'avatar') {
       if (!selectedAvatar) {
         setError('Please select an avatar');
