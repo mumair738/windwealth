@@ -123,6 +123,19 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error('Signup error:', err);
     
+    // Handle password authentication failures
+    if (err?.code === '28P01' || err?.message?.includes('password authentication failed')) {
+      return NextResponse.json(
+        { 
+          error: 'Database authentication failed.',
+          message: err?.message || 'Password authentication failed. Please check your DATABASE_URL connection string.',
+          code: err?.code,
+          details: process.env.NODE_ENV === 'development' ? err?.message : undefined
+        },
+        { status: 503 }
+      );
+    }
+    
     // Handle pooler authentication errors
     if (err?.code === 'XX000' || err?.message?.includes('Tenant or user not found')) {
       return NextResponse.json(

@@ -43,10 +43,22 @@ function createPool(): Pool {
     const isDirectConnection = cleanUrl.includes('db.') && cleanUrl.includes('.supabase.co');
     const isPoolerConnection = cleanUrl.includes('pooler.supabase.com') || cleanUrl.includes('pooler.supabase.co');
     
+    // Check username format
+    const usernameMatch = cleanUrl.match(/postgresql?:\/\/([^:]+)/);
+    const username = usernameMatch ? usernameMatch[1] : '';
+    const hasCorrectPoolerUsername = username.includes('.') && username.startsWith('postgres.');
+    
     if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV) {
       console.log('[DB] Initializing connection pool');
       console.log('[DB] Connection type:', isDirectConnection ? 'Direct' : isPoolerConnection ? 'Pooler' : 'Unknown');
       console.log('[DB] Connection string:', maskConnectionString(cleanUrl));
+      
+      // Warn if using pooler connection with wrong username format
+      if (isPoolerConnection && username === 'postgres' && !hasCorrectPoolerUsername) {
+        console.error('[DB] ERROR: Pooler connection detected but username is "postgres" instead of "postgres.[PROJECT-REF]"');
+        console.error('[DB] This will cause authentication failures!');
+        console.error('[DB] Fix: Get the correct connection string from Supabase Dashboard → Settings → Database → Connection Pooling');
+      }
       
       // Warn if using direct connection on Vercel
       if (isDirectConnection && process.env.VERCEL) {
@@ -203,6 +215,49 @@ export async function sqlQuery<T = unknown>(
       
       const fullMessage = `${errorMessage}\n\nTroubleshooting:\n${troubleshooting}\n\nOriginal error: ${error?.message || 'Unknown error'}`;
       throw new Error(fullMessage);
+    }
+    
+    // Handle password authentication failures (28P01)
+    if (error?.code === '28P01' || error?.message?.includes('password authentication failed')) {
+      const databaseUrl = process.env.DATABASE_URL || '';
+      const isPoolerConnection = databaseUrl.includes('pooler.supabase.com') || databaseUrl.includes('pooler.supabase.co');
+      const usernameMatch = databaseUrl.match(/postgresql?:\/\/([^:]+)/);
+      const username = usernameMatch ? usernameMatch[1] : 'unknown';
+      
+      let troubleshooting = 'Password authentication failed. Common causes:\n\n';
+      
+      // Check if using pooler connection with wrong username format
+      if (isPoolerConnection && username === 'postgres') {
+        troubleshooting += '⚠️ WRONG USERNAME FORMAT FOR POOLER CONNECTION!\n';
+        troubleshooting += 'You are using "postgres" as the username, but pooler connections require:\n';
+        troubleshooting += '  postgres.[YOUR-PROJECT-REF]\n\n';
+        troubleshooting += 'To fix:\n';
+        troubleshooting += '1. Go to Supabase Dashboard → Settings → Database → Connection Pooling\n';
+        troubleshooting += '2. Copy the connection string from there (it should already have the correct format)\n';
+        troubleshooting += '3. Format should be: postgresql://postgres.[PROJECT-REF]:[PASSWORD]@...\n';
+        troubleshooting += '4. Update DATABASE_URL in Vercel environment variables\n\n';
+      } else {
+        troubleshooting += '1. Check if the password in your DATABASE_URL is correct\n';
+        troubleshooting += '2. If your password contains special characters, they must be URL-encoded:\n';
+        troubleshooting += '   - @ becomes %40\n';
+        troubleshooting += '   - # becomes %23\n';
+        troubleshooting += '   - / becomes %2F\n';
+        troubleshooting += '   - : becomes %3A\n';
+        troubleshooting += '   - & becomes %26\n';
+        troubleshooting += '   - + becomes %2B\n';
+        troubleshooting += '   - = becomes %3D\n';
+        troubleshooting += '   - % becomes %25\n';
+        troubleshooting += '   - (space) becomes %20\n\n';
+        troubleshooting += '3. For pooler connections, ensure username is: postgres.[PROJECT-REF]\n';
+        troubleshooting += '4. Get a fresh connection string from Supabase Dashboard → Settings → Database\n';
+        troubleshooting += '5. For pooler: Settings → Database → Connection Pooling → Transaction mode\n';
+      }
+      
+      troubleshooting += '\nTo verify your connection string format:\n';
+      troubleshooting += '- Direct connection: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres\n';
+      troubleshooting += '- Pooler connection: postgresql://postgres.[PROJECT]:[PASSWORD]@[REGION].pooler.supabase.com:6543/postgres\n';
+      
+      throw new Error(`Database password authentication failed for user "${username}".\n\nTroubleshooting:\n${troubleshooting}`);
     }
     
     // Handle Supabase pooler authentication errors
