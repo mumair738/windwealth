@@ -333,6 +333,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
       }
 
       if (profileResponse.ok) {
+        // Dispatch event to notify navbar of profile update
+        window.dispatchEvent(new Event('profileUpdated'));
         setCurrentStep('complete');
         // Redirect to home after brief celebration
         setTimeout(() => {
