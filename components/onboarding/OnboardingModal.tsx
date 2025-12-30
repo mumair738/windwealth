@@ -5,12 +5,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './OnboardingModal.module.css';
 
-interface Avatar {
-  id: string;
-  image_url: string;
-  metadata_url: string;
-}
-
 interface OnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,9 +20,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [birthday, setBirthday] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
-  const [avatarChoices, setAvatarChoices] = useState<Avatar[]>([]);
-  const [seed, setSeed] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
@@ -81,25 +72,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     isPasswordValid &&
     gender !== '' &&
     isBirthdayValid;
-
-  // Generate avatar choices using userId (after account is created)
-  const fetchAvatarChoices = useCallback(async (userSeed: string) => {
-    try {
-      const response = await fetch('/api/profile/preview-avatars', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ seed: userSeed }),
-      });
-      const data = await response.json();
-      if (data.choices) {
-        setAvatarChoices(data.choices);
-        setSeed(data.seed);
-      }
-    } catch (err) {
-      console.error('Failed to fetch avatars:', err);
-      setError('Failed to load avatars. Please try again.');
-    }
-  }, []);
 
   // Check username availability
   const checkUsername = useCallback(async (name: string) => {
@@ -371,14 +343,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           />
         </div>
 
-        {/* Close button (not shown on complete step) */}
-        {currentStep !== 'complete' && (
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-        )}
+        {/* Close button */}
+        <button className={styles.closeButton} onClick={onClose} aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
 
         {/* Step 1: Account Details (Email, Username, Password) */}
         {currentStep === 'account' && (
@@ -534,73 +504,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           </div>
         )}
 
-        {/* Avatar selection moved to homepage */}
-        {false && currentStep === 'avatar' && (
-          <div className={styles.stepContent}>
-            <div className={styles.stepIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                <path d="M21 15L16 10L9 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 21L8 15L3 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h2 className={styles.stepTitle}>Select Your Avatar</h2>
-            <p className={styles.stepDescription}>
-              These 5 avatars were uniquely assigned to you. Choose one to represent your identity.
-            </p>
-
-            <div className={styles.avatarGrid} role="radiogroup" aria-label="Select your avatar">
-              {avatarChoices.map((avatar, index) => (
-                <button
-                  key={avatar.id}
-                  id={`avatar-option-${index}`}
-                  name="avatar-selection"
-                  type="button"
-                  className={`${styles.avatarOption} ${selectedAvatar?.id === avatar.id ? styles.avatarSelected : ''}`}
-                  onClick={() => setSelectedAvatar(avatar)}
-                  aria-label={`Select avatar ${index + 1}`}
-                  aria-pressed={selectedAvatar?.id === avatar.id}
-                >
-                  <Image
-                    src={avatar.image_url}
-                    alt={avatar.id}
-                    width={100}
-                    height={100}
-                    className={styles.avatarImage}
-                    unoptimized
-                  />
-                  {selectedAvatar?.id === avatar.id && (
-                    <div className={styles.avatarCheckmark}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="12" fill="var(--color-primary)"/>
-                        <path d="M17 9L10 16L7 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {error && currentStep === 'avatar' && <p className={styles.error}>{error}</p>}
-
-            <div className={styles.buttonRow}>
-              <button className={styles.secondaryButton} onClick={handlePrevStep}>
-                Back
-              </button>
-              <button 
-                className={styles.primaryButton}
-                onClick={handleNextStep}
-                disabled={!selectedAvatar || isLoading}
-              >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
-              </button>
-            </div>
-          </div>
-        )}
-
-
-        {/* Complete step removed - redirecting directly to home */}
+        {/* Avatar selection moved to homepage - see AvatarSelectionModal component */}
       </div>
     </div>
   );

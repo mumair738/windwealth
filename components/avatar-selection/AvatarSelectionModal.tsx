@@ -27,13 +27,6 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch avatar choices when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchAvatarChoices();
-    }
-  }, [isOpen]);
-
   const fetchAvatarChoices = useCallback(async () => {
     setIsFetching(true);
     setError(null);
@@ -52,6 +45,13 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
       setIsFetching(false);
     }
   }, []);
+
+  // Fetch avatar choices when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchAvatarChoices();
+    }
+  }, [isOpen, fetchAvatarChoices]);
 
   const handleSelectAvatar = async () => {
     if (!selectedAvatar) {
