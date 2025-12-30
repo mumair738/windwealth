@@ -235,6 +235,52 @@ export async function ensureForumSchema() {
     // Indexes might already exist
   }
 
+  // Quest crypto rewards table - Tracks on-chain rewards for quest completions
+  await sqlQuery(`
+    CREATE TABLE IF NOT EXISTS quest_crypto_rewards (
+      id CHAR(36) PRIMARY KEY,
+      quest_completion_id CHAR(36) NOT NULL,
+      user_id CHAR(36) NOT NULL,
+      quest_id VARCHAR(255) NOT NULL,
+      reward_amount_wei VARCHAR(255) NOT NULL,
+      token_address VARCHAR(255) NULL,
+      transaction_hash VARCHAR(255) NULL,
+      transaction_status VARCHAR(50) NOT NULL DEFAULT 'pending',
+      distributed_at TIMESTAMP NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (quest_completion_id) REFERENCES quest_completions(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE (quest_completion_id)
+    )
+  `);
+
+  try {
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_quest_crypto_rewards_user_id ON quest_crypto_rewards(user_id)`);
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_quest_crypto_rewards_quest_id ON quest_crypto_rewards(quest_id)`);
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_quest_crypto_rewards_transaction_hash ON quest_crypto_rewards(transaction_hash)`);
+  } catch (err: any) {
+    // Indexes might already exist
+  }
+
+  // Account linking events table - Audit log for account linking/unlinking
+  await sqlQuery(`
+    CREATE TABLE IF NOT EXISTS account_linking_events (
+      id CHAR(36) PRIMARY KEY,
+      user_id CHAR(36) NOT NULL,
+      wallet_address VARCHAR(255) NOT NULL,
+      action VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  try {
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_account_linking_events_user_id ON account_linking_events(user_id)`);
+    await sqlQuery(`CREATE INDEX IF NOT EXISTS idx_account_linking_events_created_at ON account_linking_events(created_at)`);
+  } catch (err: any) {
+    // Indexes might already exist
+  }
+
   // X accounts table
   await sqlQuery(`
     CREATE TABLE IF NOT EXISTS x_accounts (

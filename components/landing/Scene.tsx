@@ -14,14 +14,27 @@ const DitheredWaves = memo(() => {
   const { viewport } = useThree();
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
 
+  // Initialize uniforms with proper default values
+  // Three.js uniforms should be plain objects with 'value' property
   const uniforms = useRef({
     time: {
       value: 0.0,
     },
-    resolution: new THREE.Uniform(new THREE.Vector2()),
-    colorNum: new THREE.Uniform(4.0),
-    pixelSize: new THREE.Uniform(2.0),
-    mouse: new THREE.Uniform(new THREE.Vector2(0.5, 0.5)),
+    resolution: {
+      value: new THREE.Vector2(
+        typeof window !== 'undefined' ? window.innerWidth * DPR : 1920,
+        typeof window !== 'undefined' ? window.innerHeight * DPR : 1080
+      ),
+    },
+    colorNum: {
+      value: 4.0,
+    },
+    pixelSize: {
+      value: 2.0,
+    },
+    mouse: {
+      value: new THREE.Vector2(0.5, 0.5),
+    },
   }).current;
 
   // Track mouse movement
@@ -35,20 +48,43 @@ const DitheredWaves = memo(() => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // Initialize resolution on mount and window resize
+  useEffect(() => {
+    const updateResolution = () => {
+      if (uniforms.resolution.value) {
+        uniforms.resolution.value.set(
+          window.innerWidth * DPR,
+          window.innerHeight * DPR
+        );
+      }
+    };
+    
+    updateResolution();
+    window.addEventListener('resize', updateResolution);
+    return () => window.removeEventListener('resize', updateResolution);
+  }, [uniforms]);
+
   useFrame((state) => {
     const { clock } = state;
     if (mesh.current && mesh.current.material) {
       const material = mesh.current.material as THREE.ShaderMaterial;
-      material.uniforms.time.value = clock.getElapsedTime();
-      material.uniforms.resolution.value = new THREE.Vector2(
-        window.innerWidth * DPR,
-        window.innerHeight * DPR
-      );
-      // Smoothly update mouse position
-      material.uniforms.mouse.value.lerp(
-        new THREE.Vector2(mouseRef.current.x, mouseRef.current.y),
-        0.1
-      );
+      if (material.uniforms) {
+        material.uniforms.time.value = clock.getElapsedTime();
+        // Ensure resolution is always valid
+        if (material.uniforms.resolution?.value) {
+          material.uniforms.resolution.value.set(
+            window.innerWidth * DPR,
+            window.innerHeight * DPR
+          );
+        }
+        // Smoothly update mouse position
+        if (material.uniforms.mouse?.value) {
+          material.uniforms.mouse.value.lerp(
+            new THREE.Vector2(mouseRef.current.x, mouseRef.current.y),
+            0.1
+          );
+        }
+      }
     }
   });
 

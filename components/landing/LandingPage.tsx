@@ -35,7 +35,16 @@ const LandingPage: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const loginData = await loginResponse.json();
+      let loginData;
+      try {
+        const text = await loginResponse.text();
+        loginData = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error('Failed to parse login response:', parseError);
+        setMessage({ type: 'error', text: 'Invalid response from server. Please try again.' });
+        setIsLoading(false);
+        return;
+      }
 
       if (loginResponse.ok) {
         // Login successful - redirect to home
@@ -52,7 +61,16 @@ const LandingPage: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const signupData = await signupResponse.json();
+      let signupData;
+      try {
+        const text = await signupResponse.text();
+        signupData = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error('Failed to parse signup response:', parseError);
+        setMessage({ type: 'error', text: 'Invalid response from server. Please try again.' });
+        setIsLoading(false);
+        return;
+      }
 
       if (signupResponse.ok) {
         // Signup successful - show onboarding
@@ -62,11 +80,16 @@ const LandingPage: React.FC = () => {
       } else {
         setMessage({ type: 'error', text: signupData.error || loginData.error || 'Failed to sign up. Please try again.' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth error:', error);
-      setMessage({ type: 'error', text: 'An error occurred. Please try again later.' });
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setMessage({ type: 'error', text: 'Network error. Please check your connection and try again.' });
+      } else {
+        setMessage({ type: 'error', text: 'An error occurred. Please try again later.' });
+      }
     } finally {
-    setIsLoading(false);
+      setIsLoading(false);
     }
   };
 

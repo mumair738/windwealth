@@ -69,17 +69,19 @@ export async function POST(request: Request) {
       { id: completionId, userId: user.id, questId, shards: shardsToAward }
     );
 
-    // Get updated shard count
-    const shardRows = await sqlQuery<Array<{ shard_count: number }>>(
-      `SELECT shard_count FROM users WHERE id = :id LIMIT 1`,
+    // Get updated shard count and check if account is linked
+    const shardRows = await sqlQuery<Array<{ shard_count: number; wallet_address: string | null }>>(
+      `SELECT shard_count, wallet_address FROM users WHERE id = :id LIMIT 1`,
       { id: user.id }
     );
     const newShardCount = shardRows[0]?.shard_count ?? 0;
+    const hasLinkedAccount = !!shardRows[0]?.wallet_address;
 
     return NextResponse.json({ 
       ok: true, 
       shardsAwarded: shardsToAward,
-      newShardCount 
+      newShardCount,
+      requiresAccountLinking: !hasLinkedAccount,
     });
   } catch (err: any) {
     console.error('Error completing quest:', err);

@@ -300,7 +300,7 @@ export async function POST(request: Request) {
         id: userId,
         username,
         email: email || null,
-        avatarUrl: avatar?.image_url || null,
+        avatarUrl: avatar.image_url,
         shardCount: WELCOME_SHARDS,
       }
     });

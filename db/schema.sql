@@ -209,6 +209,23 @@ CREATE TRIGGER update_x_accounts_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
+-- ROW LEVEL SECURITY (RLS)
+-- ============================================================================
+-- Enable RLS on all tables for security best practices
+-- Note: If using service role connection string, RLS policies don't apply
+-- but enabling RLS is still recommended for defense in depth
+
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_avatars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE forum_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE forum_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE forum_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quest_completions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE x_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE x_oauth_states ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
 -- SCHEMA COMPLETE
 -- ============================================================================
 -- Your database is now ready for the onboarding system!
