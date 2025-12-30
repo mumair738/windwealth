@@ -413,38 +413,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
               </div>
 
               <div className={styles.inputGroup}>
-                <label htmlFor="onboarding-username" className={styles.inputLabel}>Username</label>
-                <div className={styles.inputWrapper}>
-                  <span className={styles.inputPrefix}>@</span>
-                  <input
-                    id="onboarding-username"
-                    name="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    placeholder="your_username"
-                    className={styles.input}
-                    maxLength={32}
-                    autoComplete="username"
-                  />
-                  {checkingUsername && (
-                    <span className={styles.inputSuffix}>
-                      <div className={styles.spinner} />
-                    </span>
-                  )}
-                  {!checkingUsername && usernameAvailable === true && (
-                    <span className={`${styles.inputSuffix} ${styles.available}`}>✓</span>
-                  )}
-                  {!checkingUsername && usernameAvailable === false && (
-                    <span className={`${styles.inputSuffix} ${styles.taken}`}>✗</span>
-                  )}
-                </div>
-                <p className={styles.inputHint}>
-                  5-32 characters, letters, numbers, and underscores only
-                </p>
-              </div>
-
-              <div className={styles.inputGroup}>
                 <label htmlFor="onboarding-password" className={styles.inputLabel}>Password</label>
                 <input
                   id="onboarding-password"
@@ -459,36 +427,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
                 <p className={styles.inputHint}>
                   At least 8 characters
                 </p>
-              </div>
-
-              <div className={styles.inputGroup}>
-                <fieldset>
-                  <legend className={styles.inputLabel}>Gender</legend>
-                  <div className={styles.radioGroup}>
-                    <label className={`${styles.radioOption} ${gender === 'male' ? styles.radioOptionChecked : ''}`}>
-                      <input
-                        id="onboarding-gender-male"
-                        name="gender"
-                        type="radio"
-                        value="male"
-                        checked={gender === 'male'}
-                        onChange={(e) => setGender(e.target.value as 'male' | 'female')}
-                      />
-                      <span>Male</span>
-                    </label>
-                    <label className={`${styles.radioOption} ${gender === 'female' ? styles.radioOptionChecked : ''}`}>
-                      <input
-                        id="onboarding-gender-female"
-                        name="gender"
-                        type="radio"
-                        value="female"
-                        checked={gender === 'female'}
-                        onChange={(e) => setGender(e.target.value as 'male' | 'female')}
-                      />
-                      <span>Female</span>
-                    </label>
-                  </div>
-                </fieldset>
               </div>
 
               <div className={styles.inputGroup}>
@@ -596,6 +534,68 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
                 />
                 <p className={styles.inputHint}>
                   You must be at least 13 years old
+                </p>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <fieldset>
+                  <legend className={styles.inputLabel}>Gender</legend>
+                  <div className={styles.radioGroup}>
+                    <label className={`${styles.radioOption} ${gender === 'male' ? styles.radioOptionChecked : ''}`}>
+                      <input
+                        id="onboarding-gender-male"
+                        name="gender"
+                        type="radio"
+                        value="male"
+                        checked={gender === 'male'}
+                        onChange={(e) => setGender(e.target.value as 'male' | 'female')}
+                      />
+                      <span>Male</span>
+                    </label>
+                    <label className={`${styles.radioOption} ${gender === 'female' ? styles.radioOptionChecked : ''}`}>
+                      <input
+                        id="onboarding-gender-female"
+                        name="gender"
+                        type="radio"
+                        value="female"
+                        checked={gender === 'female'}
+                        onChange={(e) => setGender(e.target.value as 'male' | 'female')}
+                      />
+                      <span>Female</span>
+                    </label>
+                  </div>
+                </fieldset>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="onboarding-username" className={styles.inputLabel}>Username</label>
+                <div className={styles.inputWrapper}>
+                  <span className={styles.inputPrefix}>@</span>
+                  <input
+                    id="onboarding-username"
+                    name="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="your_username"
+                    className={styles.input}
+                    maxLength={32}
+                    autoComplete="username"
+                  />
+                  {checkingUsername && (
+                    <span className={styles.inputSuffix}>
+                      <div className={styles.spinner} />
+                    </span>
+                  )}
+                  {!checkingUsername && usernameAvailable === true && (
+                    <span className={`${styles.inputSuffix} ${styles.available}`}>✓</span>
+                  )}
+                  {!checkingUsername && usernameAvailable === false && (
+                    <span className={`${styles.inputSuffix} ${styles.taken}`}>✗</span>
+                  )}
+                </div>
+                <p className={styles.inputHint}>
+                  5-32 characters, letters, numbers, and underscores only
                 </p>
               </div>
             </div>

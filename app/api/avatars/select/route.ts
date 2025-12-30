@@ -81,6 +81,17 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Check if user still has temporary username - if so, this is an error state
+    // The username should have been set during profile creation
+    if (user.username && user.username.startsWith('user_')) {
+      console.warn('Avatar selection called but user still has temporary username:', {
+        userId: user.id,
+        username: user.username,
+      });
+      // Don't block avatar selection, but log the issue
+      // The profile creation should have set the username already
+    }
+
     // Persist the selected avatar to the database
     await sqlQuery(
       `UPDATE users 

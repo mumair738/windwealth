@@ -235,6 +235,7 @@ export async function POST(request: Request) {
         updateParams.shardCount = WELCOME_SHARDS;
       }
       
+      // Update user profile - ensure username is always set
       await sqlQueryWithClient(
         client,
         `UPDATE users 
@@ -247,6 +248,17 @@ export async function POST(request: Request) {
          WHERE id = :userId`,
         updateParams
       );
+
+      // Log the update for debugging
+      console.log('Profile updated:', {
+        userId,
+        username,
+        hasAvatar: !!avatar,
+        avatarId: avatar_id || null,
+        gender,
+        birthday,
+        shardCount: WELCOME_SHARDS,
+      });
 
       // Store all 5 avatar choices for this user (only if not existing profile or if we want to refresh)
       if (!hasExistingProfile) {

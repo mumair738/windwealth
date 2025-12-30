@@ -215,9 +215,16 @@ const Navbar: React.FC = () => {
             )}
             {/* Show incomplete profile message if username is temporary */}
             {authenticated && username && username.startsWith('user_') && (
-              <div className={styles.incompleteProfile}>
+              <button
+                className={styles.incompleteProfile}
+                onClick={() => {
+                  // Redirect to home page which will show avatar selection if needed
+                  window.location.href = '/home';
+                }}
+                type="button"
+              >
                 <span>Complete Profile</span>
-              </div>
+              </button>
             )}
             {/* Mobile Menu Toggle */}
             <button 
