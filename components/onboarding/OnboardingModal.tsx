@@ -16,7 +16,7 @@ interface OnboardingModalProps {
   onClose: () => void;
 }
 
-type Step = 'personal' | 'account' | 'avatar' | 'complete';
+type Step = 'account' | 'avatar' | 'complete';
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
@@ -73,15 +73,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     return exactAge >= 13;
   }, [birthday]);
   
-  // Account step validation (email, username, password) - FIRST STEP
+  // Account step validation (email, username, password, gender, birthday) - FIRST STEP
   const isAccountStepValid = 
     isEmailValid &&
     isUsernameValid && 
     usernameAvailable !== false && // Only block if explicitly unavailable
-    isPasswordValid;
-  
-  // Personal step validation (gender and birthday) - SECOND STEP
-  const isPersonalStepValid = gender !== '' && isBirthdayValid;
+    isPasswordValid &&
+    gender !== '' &&
+    isBirthdayValid;
 
   // Generate avatar choices using userId (after account is created)
   const fetchAvatarChoices = useCallback(async (userSeed: string) => {
@@ -217,6 +216,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
         setError('Password must be at least 8 characters');
         return;
       }
+      if (!gender) {
+        setError('Please select a gender');
+        return;
+      }
+      if (!isBirthdayValid) {
+        setError('You must be at least 13 years old to create an account');
+        return;
+      }
       
       // Create the account now so we can use userId for avatar generation
       setIsLoading(true);
@@ -255,32 +262,18 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
         // Store userId for avatar generation
         if (signupData.userId) {
           setUserId(signupData.userId);
+          // Generate avatars using userId
+          await fetchAvatarChoices(signupData.userId);
+          setCurrentStep('avatar');
+        } else {
+          setError('Account creation failed. Please try again.');
         }
-        
-        setCurrentStep('personal');
       } catch (err) {
         console.error('Signup error:', err);
         setError('An error occurred. Please try again.');
       } finally {
         setIsLoading(false);
       }
-    } else if (currentStep === 'personal') {
-      if (!gender) {
-        setError('Please select a gender');
-        return;
-      }
-      if (!isBirthdayValid) {
-        setError('You must be at least 13 years old to create an account');
-        return;
-      }
-      // Generate avatars using userId (account was created in previous step)
-      if (userId) {
-        await fetchAvatarChoices(userId);
-      } else {
-        setError('Account creation failed. Please try again.');
-        return;
-      }
-      setCurrentStep('avatar');
     } else if (currentStep === 'avatar') {
       if (!selectedAvatar) {
         setError('Please select an avatar');
@@ -293,13 +286,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
 
   const handlePrevStep = () => {
     setError(null);
-    if (currentStep === 'personal') {
+    if (currentStep === 'avatar') {
       // Reset userId when going back to account step
       // This allows user to change email if needed
       setUserId(null);
+      setAvatarChoices([]);
+      setSelectedAvatar(null);
       setCurrentStep('account');
-    } else if (currentStep === 'avatar') {
-      setCurrentStep('personal');
     }
   };
 
@@ -390,8 +383,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
           <div 
             className={styles.progressFill} 
             style={{ 
-              width: currentStep === 'account' ? '33%' 
-                : currentStep === 'personal' ? '66%' 
+              width: currentStep === 'account' ? '50%' 
                 : currentStep === 'avatar' ? '100%' 
                 : '100%' 
             }} 
@@ -485,35 +477,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
                   At least 8 characters
                 </p>
               </div>
-            </div>
 
-            {error && currentStep === 'account' && <p className={styles.error}>{error}</p>}
-
-            <button 
-              className={styles.primaryButton}
-              onClick={handleNextStep}
-              disabled={!isAccountStepValid || isLoading}
-            >
-              {isLoading ? 'Creating Account...' : 'Continue'}
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Personal Info (Gender & Birthday) */}
-        {currentStep === 'personal' && (
-          <div className={styles.stepContent}>
-            <div className={styles.stepIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/>
-                <path d="M20 21C20 16.5817 16.4183 13 12 13C7.58172 13 4 16.5817 4 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <h2 className={styles.stepTitle}>Tell Us About Yourself</h2>
-            <p className={styles.stepDescription}>
-              Help us personalize your experience.
-            </p>
-            
-            <div className={styles.formFields}>
               <div className={styles.inputGroup}>
                 <fieldset>
                   <legend className={styles.inputLabel}>Gender</legend>
@@ -570,7 +534,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
                   className={styles.input}
                   max={maxDate}
                   autoComplete="bday"
-                  autoFocus
                 />
                 <p className={styles.inputHint}>
                   You must be at least 13 years old
@@ -578,24 +541,19 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
               </div>
             </div>
 
-            {error && currentStep === 'personal' && <p className={styles.error}>{error}</p>}
+            {error && currentStep === 'account' && <p className={styles.error}>{error}</p>}
 
-            <div className={styles.buttonRow}>
-              <button className={styles.secondaryButton} onClick={handlePrevStep}>
-                Back
-              </button>
-              <button 
-                className={styles.primaryButton}
-                onClick={handleNextStep}
-                disabled={!isPersonalStepValid}
-              >
-                Continue
-              </button>
-            </div>
+            <button 
+              className={styles.primaryButton}
+              onClick={handleNextStep}
+              disabled={!isAccountStepValid || isLoading}
+            >
+              {isLoading ? 'Creating Account...' : 'Continue'}
+            </button>
           </div>
         )}
 
-        {/* Step 3: Avatar Selection */}
+        {/* Step 2: Avatar Selection */}
         {currentStep === 'avatar' && (
           <div className={styles.stepContent}>
             <div className={styles.stepIcon}>
