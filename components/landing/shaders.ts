@@ -28,17 +28,29 @@ const float bayerMatrix8x8[64] = float[64](
 );
 
 vec3 dither(vec2 uv, vec3 color) {
-  // Use a fixed reference resolution for consistent dithering across all screen sizes
-  // This ensures the pattern looks the same regardless of actual resolution
-  float refResolution = 1920.0; // Reference resolution for consistent dithering scale
-  int x = int(uv.x * refResolution) % 8;
-  int y = int(uv.y * refResolution) % 8;
-  float threshold = bayerMatrix8x8[y * 8 + x] - 0.25;
+  // Use normalized UV coordinates with fixed scale for consistent dithering
+  // Scale UV to get consistent pattern density regardless of screen size
+  float ditherScale = 1920.0; // Reference scale for consistent pattern
+  vec2 ditherCoord = uv * ditherScale;
+  int x = int(mod(ditherCoord.x, 8.0));
+  int y = int(mod(ditherCoord.y, 8.0));
+  
+  // Get Bayer threshold (0-1 range)
+  float bayerValue = bayerMatrix8x8[y * 8 + x];
+  // Calculate quantization step size
+  float quantStep = 1.0 / (colorNum - 1.0);
+  // Very subtle dithering - reduced intensity to minimize scanlines
+  float threshold = (bayerValue - 0.5) * quantStep * 0.15; // Reduced from 0.5 to 0.15 for minimal effect
 
+  // Apply very subtle dithering threshold
   color.rgb += threshold;
-  color.r = floor(color.r * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
-  color.g = floor(color.g * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
-  color.b = floor(color.b * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
+  
+  // Use more color levels to reduce visible quantization/scanlines
+  // Increase effective color levels by using a higher quantization
+  float effectiveColorNum = colorNum * 2.0; // Double the effective color levels
+  color.r = floor(color.r * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
+  color.g = floor(color.g * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
+  color.b = floor(color.b * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
 
   return color;
 }
@@ -76,17 +88,29 @@ const float bayerMatrix8x8[64] = float[64](
 );
 
 vec3 dither(vec2 uv, vec3 color) {
-  // Use a fixed reference resolution for consistent dithering across all screen sizes
-  // This ensures the pattern looks the same regardless of actual resolution
-  float refResolution = 1920.0; // Reference resolution for consistent dithering scale
-  int x = int(uv.x * refResolution) % 8;
-  int y = int(uv.y * refResolution) % 8;
-  float threshold = bayerMatrix8x8[y * 8 + x] - 0.25;
+  // Use normalized UV coordinates with fixed scale for consistent dithering
+  // Scale UV to get consistent pattern density regardless of screen size
+  float ditherScale = 1920.0; // Reference scale for consistent pattern
+  vec2 ditherCoord = uv * ditherScale;
+  int x = int(mod(ditherCoord.x, 8.0));
+  int y = int(mod(ditherCoord.y, 8.0));
+  
+  // Get Bayer threshold (0-1 range)
+  float bayerValue = bayerMatrix8x8[y * 8 + x];
+  // Calculate quantization step size
+  float quantStep = 1.0 / (colorNum - 1.0);
+  // Very subtle dithering - reduced intensity to minimize scanlines
+  float threshold = (bayerValue - 0.5) * quantStep * 0.15; // Reduced from 0.5 to 0.15 for minimal effect
 
+  // Apply very subtle dithering threshold
   color.rgb += threshold;
-  color.r = floor(color.r * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
-  color.g = floor(color.g * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
-  color.b = floor(color.b * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
+  
+  // Use more color levels to reduce visible quantization/scanlines
+  // Increase effective color levels by using a higher quantization
+  float effectiveColorNum = colorNum * 2.0; // Double the effective color levels
+  color.r = floor(color.r * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
+  color.g = floor(color.g * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
+  color.b = floor(color.b * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
 
   return color;
 }
@@ -180,37 +204,32 @@ void main() {
 
   float f = pattern(uv);
   
-  // Design system colors
+  // Design system colors - black-ish with purple accents
   vec3 purple = vec3(0.318, 0.408, 1.0); // #5168FF (primary purple)
-  vec3 whiteLight = vec3(0.956, 0.961, 0.996); // #F4F5FE (background)
-  vec3 gradientStart = vec3(0.925, 0.925, 1.0); // #ECECFF
-  vec3 gradientEnd = vec3(0.882, 0.882, 0.996); // #E1E1FE
+  vec3 darkBase = vec3(0.05, 0.05, 0.08); // Very dark, slightly blue-tinted black
+  vec3 darkMid = vec3(0.08, 0.08, 0.12); // Slightly lighter dark
+  vec3 purpleDark = vec3(0.15, 0.18, 0.35); // Dark purple
   
-  // Create a gradient from purple to white based on noise pattern
-  // Use the pattern value to mix between colors - make more solid
+  // Create a gradient from dark to purple based on noise pattern
   float purpleAmount = smoothstep(0.2, 0.8, f);
   float gradientMix = smoothstep(0.0, 1.0, f);
   
-  // Mix gradient colors first - increase saturation for more solid look
-  vec3 gradientColor = mix(gradientStart, gradientEnd, gradientMix);
+  // Mix dark gradient colors first
+  vec3 gradientColor = mix(darkBase, darkMid, gradientMix);
   
-  // Then mix in purple accents - increase opacity for more solid background
-  col = mix(gradientColor, purple, purpleAmount * 0.5);
+  // Then mix in purple accents - more prominent purple in the pattern
+  col = mix(gradientColor, purpleDark, purpleAmount * 0.6);
   
-  // Add some white highlights - reduce for more solid appearance
-  float whiteHighlight = smoothstep(0.5, 0.85, f);
-  col = mix(col, whiteLight, whiteHighlight * 0.15);
+  // Add purple highlights where pattern is strongest
+  float purpleHighlight = smoothstep(0.5, 0.85, f);
+  col = mix(col, purple, purpleHighlight * 0.3);
   
-  // Increase overall saturation and brightness for more solid appearance
-  col = mix(col, col * 1.1, 0.3);
+  // Keep it dark but with subtle brightness variation
+  col = mix(col, col * 1.2, 0.2);
 
-  // Apply dithering using normalized UV coordinates for consistent pattern across resolutions
-  // Use vUv (normalized 0-1 coordinates) instead of screen coordinates
-  vec2 ditherUV = vUv;
-  // Scale by pixelSize to maintain consistent dithering density
-  float ditherScale = pixelSize * 1920.0; // Scale relative to reference resolution
-  vec2 uvPixel = (1.0 / ditherScale) * floor(ditherUV * ditherScale);
-  col = dither(uvPixel, col);
+  // Apply Bayer dithering using normalized UV coordinates
+  // This ensures consistent pattern across all screen sizes
+  col = dither(vUv, col);
 
   gl_FragColor = vec4(col, 1.0);
 }`;

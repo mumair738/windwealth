@@ -27,7 +27,7 @@ const DitheredWaves = memo(() => {
       ),
     },
     colorNum: {
-      value: 4.0,
+      value: 8.0, // Increased from 4.0 to 8.0 for smoother colors and less visible scanlines
     },
     pixelSize: {
       value: 2.0,
@@ -39,19 +39,29 @@ const DitheredWaves = memo(() => {
 
   // Track mouse movement
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current.x = e.clientX / window.innerWidth;
-      mouseRef.current.y = 1.0 - (e.clientY / window.innerHeight); // Flip Y coordinate
+      if (window.innerWidth > 0 && window.innerHeight > 0) {
+        mouseRef.current.x = e.clientX / window.innerWidth;
+        mouseRef.current.y = 1.0 - (e.clientY / window.innerHeight); // Flip Y coordinate
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
   }, []);
 
   // Initialize resolution on mount and window resize
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const updateResolution = () => {
-      if (uniforms.resolution.value) {
+      if (uniforms.resolution.value && window.innerWidth > 0 && window.innerHeight > 0) {
         uniforms.resolution.value.set(
           window.innerWidth * DPR,
           window.innerHeight * DPR
@@ -61,7 +71,11 @@ const DitheredWaves = memo(() => {
     
     updateResolution();
     window.addEventListener('resize', updateResolution);
-    return () => window.removeEventListener('resize', updateResolution);
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', updateResolution);
+      }
+    };
   }, [uniforms]);
 
   useFrame((state) => {
@@ -69,14 +83,8 @@ const DitheredWaves = memo(() => {
     if (mesh.current && mesh.current.material) {
       const material = mesh.current.material as THREE.ShaderMaterial;
       if (material.uniforms) {
+        // Only update time and mouse - resolution is handled in useEffect
         material.uniforms.time.value = clock.getElapsedTime();
-        // Ensure resolution is always valid
-        if (material.uniforms.resolution?.value) {
-          material.uniforms.resolution.value.set(
-            window.innerWidth * DPR,
-            window.innerHeight * DPR
-          );
-        }
         // Smoothly update mouse position
         if (material.uniforms.mouse?.value) {
           material.uniforms.mouse.value.lerp(
@@ -108,12 +116,18 @@ DitheredWaves.displayName = 'DitheredWaves';
 const Scene = memo(() => {
   return (
     <Canvas 
-      shadows 
       camera={{ position: [0, 0, 6] }} 
       dpr={[1, 1]}
       style={{ width: '100%', height: '100%', background: 'var(--color-background)' }}
-      gl={{ antialias: false, powerPreference: 'high-performance' }}
+      gl={{ 
+        antialias: false, 
+        powerPreference: 'high-performance',
+        alpha: false,
+        stencil: false,
+        depth: false
+      }}
       frameloop="always"
+      performance={{ min: 0.5 }}
     >
       <Suspense fallback={null}>
         <DitheredWaves />

@@ -5,21 +5,25 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@privy-io/react-auth'],
   },
+  // Optimize compilation
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   images: {
-    domains: [
-      'i.imgur.com',
-      'cdn.builder.io',
-      'via.placeholder.com',
-      'images.unsplash.com',
-      'www.larvalabs.com',
-      'i.pinimg.com',
-      'api.dicebear.com',
-      // IPFS gateways for avatars
-      'cloudflare-ipfs.com',
-      'ipfs.io',
-      'gateway.pinata.cloud',
-      'dweb.link',
-      'peach-impossible-chicken-451.mypinata.cloud',
+    remotePatterns: [
+      { protocol: 'https', hostname: 'i.imgur.com' },
+      { protocol: 'https', hostname: 'cdn.builder.io' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'www.larvalabs.com' },
+      { protocol: 'https', hostname: 'i.pinimg.com' },
+      { protocol: 'https', hostname: 'api.dicebear.com' },
+      { protocol: 'https', hostname: 'cloudflare-ipfs.com' },
+      { protocol: 'https', hostname: 'ipfs.io' },
+      { protocol: 'https', hostname: 'gateway.pinata.cloud' },
+      { protocol: 'https', hostname: 'dweb.link' },
+      { protocol: 'https', hostname: 'peach-impossible-chicken-451.mypinata.cloud' },
     ],
     unoptimized: false,
   },

@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import SignInButton from '@/components/nav-buttons/SignInButton';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import styles from './LandingPage.module.css';
 
-// Dynamically import Scene to avoid SSR issues with Three.js
+// Dynamically import Scene with aggressive lazy loading
 const Scene = dynamic(() => import('./Scene'), {
   ssr: false,
-  loading: () => <div className={styles.canvas} style={{ background: 'var(--color-background)' }} />,
+  loading: () => null, // No loading indicator to avoid blocking
 });
 
 const LandingPage: React.FC = () => {
@@ -20,6 +20,7 @@ const LandingPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showScene, setShowScene] = useState(false);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -97,13 +98,41 @@ const LandingPage: React.FC = () => {
     }
   };
 
-  // Memoize Scene to prevent re-renders when form state changes
-  const memoizedScene = useMemo(() => <Scene />, []);
+  // Load Scene after page is fully interactive - don't block initial render
+  useEffect(() => {
+    // Wait for page to be interactive, then load Scene in background
+    const loadScene = () => {
+      // Use requestIdleCallback if available, otherwise wait for load event
+      const win = window as any;
+      if (win.requestIdleCallback) {
+        win.requestIdleCallback(() => {
+          setShowScene(true);
+        }, { timeout: 2000 });
+      } else {
+        // Fallback: wait for page to be fully loaded
+        if (document.readyState === 'complete') {
+          setTimeout(() => setShowScene(true), 500);
+        } else {
+          win.addEventListener('load', () => {
+            setTimeout(() => setShowScene(true), 500);
+          }, { once: true });
+        }
+      }
+    };
+    
+    // Start loading after a short delay to ensure page renders first
+    const timer = setTimeout(loadScene, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className={styles.container}>
       <div className={styles.canvas}>
-        {memoizedScene}
+        {showScene && (
+          <Suspense fallback={null}>
+            <Scene />
+          </Suspense>
+        )}
       </div>
       
       {/* Logo in top left */}
@@ -124,7 +153,7 @@ const LandingPage: React.FC = () => {
         <div className={styles.promoCard}>
           <div className={styles.promoContent}>
             <div className={styles.promoText}>
-              <h2 className={styles.promoTitle}>TRAINING HUMANS FOR THE AGE OF AI</h2>
+              <h2 className={styles.promoTitle}>The Next Gen Learning Lab</h2>
               <p className={styles.promoDescription}>
                 Explore academic research, access agentic tools, and connect with peers and mentors in MWAs Next Gen Learning Lab.
               </p>
