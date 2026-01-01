@@ -26,13 +26,25 @@ export async function POST(request: Request) {
   // Get wallet address from Authorization header
   const walletAddress = await getWalletAddressFromRequest();
   if (!walletAddress) {
-    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Not signed in.' }, 
+      { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   // Get our internal user record
   const user = await getCurrentUserFromRequestCookie();
   if (!user) {
-    return NextResponse.json({ error: 'User account not found. Please complete signup.' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'User account not found. Please complete signup.' }, 
+      { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   try {
@@ -41,22 +53,45 @@ export async function POST(request: Request) {
     if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
       return NextResponse.json(
         { error: 'Invalid wallet address format.' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check if wallet is already synced to this user
+    if (user.walletAddress && user.walletAddress.toLowerCase() === walletAddress.toLowerCase()) {
+      return NextResponse.json(
+        {
+          ok: true,
+          walletAddress,
+          message: 'Blockchain account is already synced.',
+        },
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
     }
 
     // Check if this wallet is already linked to another user
     const existingWallet = await sqlQuery<Array<{ id: string; username: string }>>(
       `SELECT id, username FROM users 
-       WHERE wallet_address = :walletAddress AND id != :userId 
+       WHERE LOWER(wallet_address) = LOWER(:walletAddress) AND id != :userId 
        LIMIT 1`,
       { walletAddress, userId: user.id }
     );
 
     if (existingWallet.length > 0) {
       return NextResponse.json(
-        { error: 'This account is already linked to another user.' },
-        { status: 409 }
+        { error: 'This blockchain account is already synced to another user.' },
+        { 
+          status: 409,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -67,33 +102,33 @@ export async function POST(request: Request) {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = :userId`,
       { 
-        walletAddress, 
+        walletAddress: walletAddress.toLowerCase(), 
         userId: user.id 
       }
     );
 
-    // Log account linking event
-    const eventId = uuidv4();
-    await sqlQuery(
-      `INSERT INTO account_linking_events (id, user_id, wallet_address, action)
-       VALUES (:id, :userId, :walletAddress, 'linked')`,
-      { 
-        id: eventId, 
-        userId: user.id, 
-        walletAddress 
+    // Return success response with proper Content-Type header to avoid CORB issues
+    return NextResponse.json(
+      {
+        ok: true,
+        walletAddress,
+        message: 'Blockchain account synced successfully.',
+      },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
     );
-
-    return NextResponse.json({
-      ok: true,
-      walletAddress,
-      message: 'Account linked successfully.',
-    });
   } catch (err: any) {
     console.error('Error linking account:', err);
     return NextResponse.json(
       { error: 'Failed to link account.' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 }

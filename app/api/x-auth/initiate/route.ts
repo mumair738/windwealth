@@ -111,10 +111,17 @@ export async function GET() {
     // Redirect to X authorization
     const authUrl = `https://api.twitter.com/oauth/authorize?oauth_token=${oauthToken}&state=${stateToken}`;
 
-    return NextResponse.json({ 
-      authUrl,
-      stateToken 
-    });
+    return NextResponse.json(
+      { 
+        authUrl,
+        stateToken 
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('X OAuth initiation error:', error);
     return NextResponse.json({ error: 'Failed to initiate X OAuth.' }, { status: 500 });

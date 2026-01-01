@@ -38,21 +38,34 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
     };
   }, [onClose]);
 
-  // Extract wallet addresses from Privy user
-  // Only show wallets that are explicitly linked through our system
-  const wallets: string[] = [];
-  // TODO: Implement wallet linking system - for now, show no wallets
+  const [syncedWalletAddress, setSyncedWalletAddress] = useState<string | null>(null);
 
-  // Fetch X account status
+  // Fetch account status (synced wallet and X account)
   useEffect(() => {
     if (!isConnected || !address) {
       setXAccount(null);
+      setSyncedWalletAddress(null);
       setIsLoading(false);
       return;
     }
     
-    const fetchXAccount = async () => {
+    const fetchAccountData = async () => {
       try {
+        // Fetch account status to get synced wallet
+        const accountStatusResponse = await fetch('/api/account/status', {
+          cache: 'no-store',
+          credentials: 'include',
+          headers: getWalletAuthHeaders(address)
+        });
+        
+        if (accountStatusResponse.ok) {
+          const accountStatus = await accountStatusResponse.json();
+          if (accountStatus.walletAddress) {
+            setSyncedWalletAddress(accountStatus.walletAddress);
+          }
+        }
+        
+        // Fetch X account status
         const response = await fetch('/api/x-auth/status', { 
           cache: 'no-store',
           credentials: 'include',
@@ -88,16 +101,16 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
       }
     };
 
-    fetchXAccount();
+    fetchAccountData();
 
     // Refresh when window regains focus (after OAuth redirect)
     const handleFocus = () => {
-      fetchXAccount();
+      fetchAccountData();
     };
     
     // Listen for X account update events
     const handleXAccountUpdate = () => {
-      fetchXAccount();
+      fetchAccountData();
     };
 
     window.addEventListener('focus', handleFocus);
@@ -121,6 +134,58 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
     console.log('Disconnect wallet:', address);
   };
 
+  // Handle blockchain account sync
+  const handleSyncBlockchainAccount = async () => {
+    if (!isConnected || !address) {
+      alert('Please connect your wallet to sync your blockchain account.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/account/link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getWalletAuthHeaders(address),
+        },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+
+      // Parse response
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        alert('Failed to sync blockchain account. Please try again.');
+        return;
+      }
+
+      if (!response.ok) {
+        // Show specific error message
+        const errorMessage = data.error || 'Failed to sync blockchain account.';
+        if (response.status === 404) {
+          alert('Please create an account first before syncing your blockchain account.');
+        } else {
+          alert(errorMessage);
+        }
+        return;
+      }
+
+      if (data.ok) {
+        // Update local state to reflect synced wallet
+        setSyncedWalletAddress(address);
+        alert('Blockchain account synced successfully!');
+        // Refresh account data
+        window.dispatchEvent(new Event('xAccountUpdated'));
+      }
+    } catch (error) {
+      console.error('Failed to sync blockchain account:', error);
+      alert('Failed to sync blockchain account. Please try again.');
+    }
+  };
+
   // Handle social connect
   const handleSocialConnect = async (platform: string) => {
     if (platform === 'twitter' || platform === 'x') {
@@ -128,9 +193,15 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
         return; // Don't attempt if service is unavailable
       }
       
-      // Check authentication before attempting connection
+      // Check authentication and if wallet is synced
       if (!isConnected || !address) {
-        alert('Please connect your wallet to connect your X account.');
+        alert('Please connect your wallet first to connect your X account.');
+        return;
+      }
+      
+      // Check if wallet is synced to the account
+      if (!syncedWalletAddress) {
+        alert('Please sync your blockchain account first to connect your X account.');
         return;
       }
       
@@ -216,12 +287,12 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
 
         <div className={`${styles.modalBody} ${styles.bgPluses} ${styles.connectionsModal}`}>
           <div className={styles.connectionsContainer}>
-            {/* Connected Ethereum Accounts Section */}
+            {/* Synced Blockchain Accounts Section */}
             <div>
-              <p className={`${styles.strokedText} ${styles.large}`}>Connected Ethereum Accounts</p>
+              <p className={`${styles.strokedText} ${styles.large}`}>Synced Blockchain Accounts</p>
               <div className={styles.walletsContainer}>
-                {wallets.length > 0 && wallets.map((wallet, index) => (
-                  <div key={index} className={`${styles.wallet} ${styles.shadowInnerGlow}`}>
+                {syncedWalletAddress && (
+                  <div className={`${styles.wallet} ${styles.shadowInnerGlow}`}>
                     <div>
                       <svg
                         stroke="currentColor"
@@ -234,11 +305,11 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
                       >
                         <path d="M311.9 260.8L160 353.6 8 260.8 160 0l151.9 260.8zM160 383.4L8 290.6 160 512l152-221.4-152 92.8z"></path>
                       </svg>
-                      <span>{formatAddress(wallet)}</span>
+                      <span>{formatAddress(syncedWalletAddress)}</span>
                     </div>
                     <button
                       className={`${styles.animatedButton} ${styles.animatedButtonDisconnect} ${styles.walletDisconnectButton}`}
-                      onClick={() => handleWalletDisconnect(wallet)}
+                      onClick={() => handleWalletDisconnect(syncedWalletAddress)}
                     >
                       <div className={styles.animatedButtonTextContainer}>
                         <div className={styles.animatedButtonText}>UNLINK</div>
@@ -246,19 +317,23 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
                       </div>
                     </button>
                   </div>
-                ))}
-                {serviceUnavailable ? (
-                  <div className={`${styles.emptyContainer} ${styles.gap}`} style={{ opacity: 0.7 }}>
-                    <span style={{ color: '#ff9800' }}>⚠ Wallet linking unavailable</span>
-                    <span style={{ fontSize: '12px' }}>Please try again later</span>
-                  </div>
-                ) : (
-                  <button className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}>
+                )}
+                {!syncedWalletAddress && !serviceUnavailable && (
+                  <button 
+                    className={`${styles.btn} ${styles.connect} ${styles.socialConnectButton}`}
+                    onClick={handleSyncBlockchainAccount}
+                  >
                     <div className={styles.socialConnectTextContainer}>
-                      <div className={styles.socialConnectText}>Link Ethereum Wallet</div>
-                      <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Link Ethereum Wallet</div>
+                      <div className={styles.socialConnectText}>Sync Blockchain Account</div>
+                      <div className={`${styles.socialConnectText} ${styles.socialConnectTextClone}`}>Sync Blockchain Account</div>
                     </div>
                   </button>
+                )}
+                {serviceUnavailable && (
+                  <div className={`${styles.emptyContainer} ${styles.gap}`} style={{ opacity: 0.7 }}>
+                    <span style={{ color: '#ff9800' }}>⚠ Account syncing unavailable</span>
+                    <span style={{ fontSize: '12px' }}>Please try again later</span>
+                  </div>
                 )}
               </div>
             </div>

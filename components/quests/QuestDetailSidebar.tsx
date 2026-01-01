@@ -200,7 +200,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
   const handleConnectTwitter = async () => {
     // Check authentication before attempting connection
     if (!isConnected || !address) {
-      alert('Please connect your wallet to connect your X account.');
+      alert('Please sync your blockchain account first to connect your X account.');
       return;
     }
     
@@ -248,7 +248,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
 
   const handleCheckFollow = async () => {
     if (!isConnected || !address) {
-      alert('Please connect your wallet to verify follow status.');
+      alert('Please sync your blockchain account to verify follow status.');
       return;
     }
     

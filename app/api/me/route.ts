@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ensureForumSchema } from '@/lib/ensureForumSchema';
+import { ensureEventsSchema } from '@/lib/ensureEventsSchema';
 import { getCurrentUserFromRequestCookie } from '@/lib/auth';
 import { isDbConfigured, sqlQuery } from '@/lib/db';
 
@@ -11,6 +12,7 @@ export async function GET() {
     return NextResponse.json({ user: null, dbConfigured: false });
   }
   await ensureForumSchema();
+  await ensureEventsSchema();
 
   const user = await getCurrentUserFromRequestCookie();
   if (!user) {
@@ -24,12 +26,23 @@ export async function GET() {
   );
   const shardCount = shardRows[0]?.shard_count ?? 0;
 
+  // Get event reservations (event slugs)
+  const reservationRows = await sqlQuery<Array<{ slug: string }>>(
+    `SELECT e.slug 
+     FROM event_reservations er
+     JOIN events e ON er.event_id = e.id
+     WHERE er.user_id = :userId`,
+    { userId: user.id }
+  );
+  const eventReservations = reservationRows.map(row => row.slug);
+
   return NextResponse.json({
     user: {
       id: user.id,
       username: user.username,
       avatarUrl: user.avatarUrl,
       shardCount,
+      eventReservations,
       createdAt: user.createdAt,
     },
     dbConfigured: true,

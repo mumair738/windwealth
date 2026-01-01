@@ -18,7 +18,13 @@ export async function GET() {
   // Get our internal user record (authenticated via wallet address)
   const user = await getCurrentUserFromRequestCookie();
   if (!user) {
-    return NextResponse.json({ error: 'User account not found. Please complete signup.' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'User account not found. Please complete signup.' }, 
+      { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   try {
@@ -36,23 +42,43 @@ export async function GET() {
     );
 
     if (xAccountRows.length === 0) {
-      return NextResponse.json({ 
-        connected: false,
-        xAccount: null
-      });
+      return NextResponse.json(
+        { 
+          connected: false,
+          xAccount: null
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
-    return NextResponse.json({ 
-      connected: true,
-      xAccount: {
-        username: xAccountRows[0].x_username,
-        userId: xAccountRows[0].x_user_id,
-        connectedAt: xAccountRows[0].created_at,
+    return NextResponse.json(
+      { 
+        connected: true,
+        xAccount: {
+          username: xAccountRows[0].x_username,
+          userId: xAccountRows[0].x_user_id,
+          connectedAt: xAccountRows[0].created_at,
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
+    );
   } catch (error: any) {
     console.error('X account status error:', error);
-    return NextResponse.json({ error: 'Failed to get X account status.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to get X account status.' }, 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }
 

@@ -24,11 +24,12 @@ export default function Home() {
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [me, setMe] = useState<{ avatarUrl: string | null; shardCount?: number } | null>(null);
+  const [me, setMe] = useState<{ avatarUrl: string | null; shardCount?: number; eventReservations?: string[] } | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [hasValidSession, setHasValidSession] = useState(false);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [rewardData, setRewardData] = useState<{ shards: number; startingShards: number } | null>(null);
+  const [isReserving, setIsReserving] = useState(false);
 
   // Handle X auth callback and auto quest completion
   useEffect(() => {
@@ -225,12 +226,46 @@ export default function Home() {
             <h1 className={styles.sectionTitle}>Events</h1>
             <EventCard
               imageUrl="/uploads/task_01kd2j4dbvebba56djx7072mtz_1766391492_img_0 2.png"
-              heading="Week 1: Self-Mastery"
+              heading="Crypto Clarity"
               badge1Text="Workshop"
-              badge2Text="Dec 15"
-              description="Join us for an immersive workshop focused on self-mastery and personal development. Learn essential skills and connect with like-minded individuals."
+              badge2Text="Jan 4"
+              description="Institutions aren't speculating anymore. They're building. The question is: do you understand what's happening, or are you still watching from the sidelines?"
               onRegister={() => console.log('Register clicked')}
-              onSecondaryAction={() => console.log('Learn more clicked')}
+              eventDetails={{
+                date: 'Sunday, January 4th, 2026',
+                time: '7:00pm EST',
+                description: "Institutions aren't speculating anymore. They're building. The question is: do you understand what's happening, or are you still watching from the sidelines?",
+              }}
+              onReserveSeat={async () => {
+                setIsReserving(true);
+                try {
+                  const response = await fetch('/api/events/reserve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventSlug: 'crypto-clarity-2026-01-04' }),
+                  });
+                  const data = await response.json();
+                  if (data.ok) {
+                    // Refresh user data to update reservation status
+                    const meResponse = await fetch('/api/me', { cache: 'no-store' });
+                    const meData = await meResponse.json();
+                    if (meData.user) {
+                      setMe(meData.user);
+                    }
+                    // Optionally show success message
+                    alert('Seat reserved successfully!');
+                  } else {
+                    alert(data.error || 'Failed to reserve seat');
+                  }
+                } catch (error) {
+                  console.error('Failed to reserve seat:', error);
+                  alert('Failed to reserve seat. Please try again.');
+                } finally {
+                  setIsReserving(false);
+                }
+              }}
+              isReserved={me?.eventReservations?.includes('crypto-clarity-2026-01-04')}
+              isReserving={isReserving}
             />
           </div>
           <div className={styles.promptSection}>

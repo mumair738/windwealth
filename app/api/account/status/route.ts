@@ -22,21 +22,37 @@ export async function GET() {
   // Get our internal user record (authenticated via wallet address)
   const user = await getCurrentUserFromRequestCookie();
   if (!user) {
-    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Not signed in.' }, 
+      { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   try {
     const hasLinkedAccount = !!user.walletAddress;
 
-    return NextResponse.json({
-      hasLinkedAccount,
-      walletAddress: user.walletAddress || undefined,
-    });
+    return NextResponse.json(
+      {
+        hasLinkedAccount,
+        walletAddress: user.walletAddress || undefined,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (err: any) {
     console.error('Error checking account status:', err);
     return NextResponse.json(
       { error: 'Failed to check account status.' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 }
