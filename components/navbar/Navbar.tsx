@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { SearchModal } from '@/components/search-modal/SearchModal';
+import YourAccountsModal from '@/components/nav-buttons/YourAccountsModal';
 import styles from './Navbar.module.css';
 
 // Menu Icon Component
@@ -32,10 +33,13 @@ const Navbar: React.FC = () => {
   const { authenticated, ready } = usePrivy();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isYourAccountsModalOpen, setIsYourAccountsModalOpen] = useState(false);
   const [shardCount, setShardCount] = useState<number | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch user data - works for both Privy and session-based auth
   useEffect(() => {
@@ -96,6 +100,31 @@ const Navbar: React.FC = () => {
 
   const handleCloseModal = () => {
     setIsSearchModalOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    if (isProfileDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isProfileDropdownOpen]);
+
+  const handleProfileClick = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
+
+  const handleYourAccountsClick = () => {
+    setIsProfileDropdownOpen(false);
+    setIsYourAccountsModalOpen(true);
   };
 
 
@@ -196,20 +225,82 @@ const Navbar: React.FC = () => {
                 {shardCount !== null ? String(shardCount).padStart(3, '0') : '000'}
               </span>
             </div>
-            {/* User Info */}
+            {/* User Info Dropdown */}
             {username && !username.startsWith('user_') && (
-              <div className={styles.userInfo}>
-                {avatarUrl && (
-                  <Image
-                    src={avatarUrl}
-                    alt={username}
-                    width={32}
-                    height={32}
-                    className={styles.userAvatar}
-                    unoptimized
-                  />
+              <div className={styles.profileDropdownWrapper} ref={profileDropdownRef}>
+                <div 
+                  className={`${styles.profileDropdownDimmer} ${isProfileDropdownOpen ? styles.active : ''}`}
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                />
+                <button 
+                  className={`${styles.userInfo} ${isProfileDropdownOpen ? styles.userInfoOpen : ''}`}
+                  onClick={handleProfileClick}
+                  type="button"
+                >
+                  {avatarUrl && (
+                    <div className={styles.userAvatarContainer}>
+                      <Image
+                        src={avatarUrl}
+                        alt={username}
+                        width={32}
+                        height={32}
+                        className={styles.userAvatar}
+                        unoptimized
+                      />
+                      <Image
+                        src={avatarUrl}
+                        alt={username}
+                        width={32}
+                        height={32}
+                        className={styles.userAvatarClone}
+                        unoptimized
+                      />
+                    </div>
+                  )}
+                  <span className={styles.username}>@{username}</span>
+                </button>
+                {isProfileDropdownOpen && (
+                  <div className={styles.profileDropdown}>
+                    <div className={styles.profileDropdownContent}>
+                      <Link 
+                        href="/home" 
+                        className={styles.profileLink}
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        <div className={styles.miniProfileCard}>
+                          {avatarUrl && (
+                            <div className={styles.miniProfilePicture}>
+                              <Image
+                                src={avatarUrl}
+                                alt={username}
+                                width={48}
+                                height={48}
+                                className={styles.miniProfileImage}
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                          <div className={styles.miniProfileInfo}>
+                            <span className={styles.miniProfileName}>{username}</span>
+                            <span className={styles.miniProfileLabel}>view profile</span>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                    <div className={styles.profileDropdownMenu}>
+                      <button 
+                        className={styles.dropdownItem}
+                        onClick={handleYourAccountsClick}
+                        type="button"
+                      >
+                        <div className={styles.dropdownItemInfo}>
+                          <span className={styles.dropdownItemTitle}>accounts</span>
+                          <span className={styles.dropdownItemLabel}>manage connections</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
                 )}
-                <span className={styles.username}>@{username}</span>
               </div>
             )}
             {/* Show incomplete profile message if username is temporary */}
@@ -284,6 +375,9 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+      {isYourAccountsModalOpen && (
+        <YourAccountsModal onClose={() => setIsYourAccountsModalOpen(false)} />
+      )}
     </nav>
   );
 };

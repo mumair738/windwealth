@@ -254,6 +254,24 @@
   font-variant-numeric: tabular-nums;
 }
 
+.profileDropdownWrapper {
+  position: relative;
+}
+
+.profileDropdownDimmer {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  z-index: 998;
+  transition: background 0.2s ease;
+}
+
+.profileDropdownDimmer.active {
+  background: rgba(0, 0, 0, 0.2);
+  pointer-events: all;
+}
+
 .userInfo {
   display: flex;
   flex-direction: row;
@@ -263,6 +281,26 @@
   border-radius: 12px;
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.userInfo:hover {
+  background: rgba(81, 104, 255, 0.05);
+  border-color: rgba(81, 104, 255, 0.2);
+}
+
+.userInfoOpen {
+  background: rgba(81, 104, 255, 0.1);
+  border-color: var(--color-primary);
+}
+
+.userAvatarContainer {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
 }
 
 .userAvatar {
@@ -271,12 +309,174 @@
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--color-primary);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.userAvatarClone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-primary);
+  transform: translateY(25px) scale(0.8);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.userInfoOpen .userAvatar {
+  transform: translateY(-25px) scale(0.8);
+  opacity: 0;
+}
+
+.userInfoOpen .userAvatarClone {
+  transform: scale(1.1);
+  opacity: 1;
 }
 
 .username {
   font-size: 16px;
   font-weight: var(--font-weight-medium);
   color: #000000;
+}
+
+.profileDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  min-width: 240px;
+  z-index: 999;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: dropdownFadeIn 0.2s ease forwards;
+}
+
+@keyframes dropdownFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profileDropdownContent {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.profileLink {
+  text-decoration: none;
+  display: block;
+}
+
+.miniProfileCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.miniProfileCard:hover {
+  background: rgba(81, 104, 255, 0.05);
+}
+
+.miniProfilePicture {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--color-primary);
+}
+
+.miniProfileImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.miniProfileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.miniProfileName {
+  font-family: var(--font-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+}
+
+.miniProfileLabel {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+
+.profileDropdownMenu {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdownItem:hover {
+  background: rgba(81, 104, 255, 0.05);
+}
+
+.dropdownItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdownItemTitle {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: #000000;
+  text-transform: lowercase;
+  line-height: 1.2;
+}
+
+.dropdownItemLabel {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: lowercase;
+  line-height: 1.2;
 }
 
 .incompleteProfile {
@@ -663,6 +863,12 @@
     width: 40px;
     height: 40px;
     padding: 8px;
+  }
+
+  .profileDropdown {
+    right: 0;
+    left: auto;
+    min-width: 200px;
   }
 }
 

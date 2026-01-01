@@ -7,6 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import styles from './QuestDetailSidebar.module.css';
 import { ConfettiCelebration } from './ConfettiCelebration';
 import { ShardAnimation } from './ShardAnimation';
+import { XConnectingModal } from '../x-connecting/XConnectingModal';
 
 // Shard Icon Component
 const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
@@ -59,6 +60,8 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
   const [showConfetti, setShowConfetti] = useState(false);
   const [showShardAnimation, setShowShardAnimation] = useState(false);
   const [shardsAwarded, setShardsAwarded] = useState(0);
+  const [showConnectingModal, setShowConnectingModal] = useState(false);
+  const [startingShards, setStartingShards] = useState(0);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -92,34 +95,77 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
     };
   }, [isOpen, onClose]);
 
-  // Check if Twitter is linked via X OAuth
+  // Check if Twitter is linked via X OAuth and auto-check follow status
   useEffect(() => {
     if (!quest || quest.questType !== 'twitter-follow' || !authenticated) {
       setStep1Completed(false);
+      setStep2Completed(false);
       return;
     }
     
-    const checkXAccount = async () => {
+    const checkXAccountAndFollow = async (autoCheckFollow = false) => {
       try {
         const response = await fetch('/api/x-auth/status', { cache: 'no-store' });
         const data = await response.json();
-        setStep1Completed(data.connected === true);
+        const isConnected = data.connected === true;
+        setStep1Completed(isConnected);
+        
+        // If just connected, automatically check follow status
+        if (isConnected && autoCheckFollow && !step2Completed) {
+          const followResponse = await fetch('/api/x-auth/check-follow', {
+            method: 'POST',
+            cache: 'no-store',
+          });
+          const followData = await followResponse.json();
+          
+          if (followData.isFollowing) {
+            setStep2Completed(true);
+            
+            // Auto-complete quest if following
+            try {
+              const completeResponse = await fetch('/api/quests/auto-complete-twitter-quest', {
+                method: 'POST',
+                cache: 'no-store',
+              });
+              const completeData = await completeResponse.json();
+              
+              if (completeData.ok && completeData.shardsAwarded > 0) {
+                setShardsAwarded(completeData.shardsAwarded);
+                setStartingShards(completeData.startingShards || 0);
+                setShowConfetti(true);
+                setShowShardAnimation(true);
+                window.dispatchEvent(new Event('shardsUpdated'));
+                
+                setTimeout(() => {
+                  setShowConfetti(false);
+                  setShowShardAnimation(false);
+                }, 5000);
+              }
+            } catch (error) {
+              console.error('Failed to auto-complete quest:', error);
+            }
+          }
+        }
       } catch (error) {
         console.error('Failed to check X account:', error);
         setStep1Completed(false);
       }
     };
     
-    checkXAccount();
+    // Check for auto_check parameter in URL
+    const params = new URLSearchParams(window.location.search);
+    const autoCheck = params.get('auto_check');
+    
+    checkXAccountAndFollow(autoCheck === 'true');
 
     // Refresh when window regains focus (after OAuth redirect)
     const handleFocus = () => {
-      checkXAccount();
+      checkXAccountAndFollow(true);
     };
     
     // Listen for X account update events
     const handleXAccountUpdate = () => {
-      checkXAccount();
+      checkXAccountAndFollow(true);
     };
 
     window.addEventListener('focus', handleFocus);
@@ -129,22 +175,29 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('xAccountUpdated', handleXAccountUpdate);
     };
-  }, [quest, authenticated]);
+  }, [quest, authenticated, step2Completed]);
 
   const handleConnectTwitter = async () => {
     try {
+      // Show connecting modal
+      setShowConnectingModal(true);
+      
       // Initiate X OAuth flow
       const response = await fetch('/api/x-auth/initiate');
       const data = await response.json();
       
       if (data.authUrl) {
-        // Redirect to X authorization
-        window.location.href = data.authUrl;
+        // Small delay to show the modal, then redirect
+        setTimeout(() => {
+          window.location.href = data.authUrl;
+        }, 800);
       } else {
         console.error('Failed to get auth URL:', data);
+        setShowConnectingModal(false);
       }
     } catch (error) {
       console.error('Failed to connect X account:', error);
+      setShowConnectingModal(false);
     }
   };
 
@@ -181,6 +234,12 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
     
     setIsCompleting(true);
     try {
+      // Get current shard count before completion
+      const meResponse = await fetch('/api/me', { cache: 'no-store' });
+      const meData = await meResponse.json();
+      const currentStartingShards = meData?.user?.shardCount ?? 0;
+      setStartingShards(currentStartingShards);
+      
       const shardReward = parseInt(quest.usdcReward) || 10;
       const response = await fetch('/api/quests/complete', {
         method: 'POST',
@@ -209,7 +268,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
             setShowShardAnimation(false);
             setShardsAwarded(0);
           }, 2000);
-        }, 3000);
+        }, 5000);
       }
     } catch (error) {
       console.error('Failed to complete quest:', error);
@@ -610,10 +669,12 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
       <ConfettiCelebration trigger={showConfetti} />
       {showShardAnimation && (
         <ShardAnimation 
-          shards={shardsAwarded} 
+          shards={shardsAwarded}
+          startingShards={startingShards}
           onComplete={() => setShowShardAnimation(false)}
         />
       )}
+      <XConnectingModal isOpen={showConnectingModal} />
     </>
   );
 };

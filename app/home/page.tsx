@@ -15,6 +15,8 @@ import Navbar from '@/components/navbar/Navbar';
 import { Footer } from '@/components/footer/Footer';
 import EventCard from '@/components/event-card/EventCard';
 import AvatarSelectionModal from '@/components/avatar-selection/AvatarSelectionModal';
+import { ShardAnimation } from '@/components/quests/ShardAnimation';
+import { ConfettiCelebration } from '@/components/quests/ConfettiCelebration';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -22,14 +24,18 @@ export default function Home() {
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [me, setMe] = useState<{ avatarUrl: string | null } | null>(null);
+  const [me, setMe] = useState<{ avatarUrl: string | null; shardCount?: number } | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [hasValidSession, setHasValidSession] = useState(false);
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
+  const [rewardData, setRewardData] = useState<{ shards: number; startingShards: number } | null>(null);
 
-  // Handle X auth callback
+  // Handle X auth callback and auto quest completion
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const xAuth = params.get('x_auth');
+    const autoCheck = params.get('auto_check');
+    
     if (xAuth) {
       // Remove query params from URL
       window.history.replaceState({}, '', '/home');
@@ -37,10 +43,56 @@ export default function Home() {
       if (xAuth === 'success') {
         // Dispatch event to refresh X account status in modals
         window.dispatchEvent(new Event('xAccountUpdated'));
-        // Small delay to ensure state updates
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        
+        // If auto_check is enabled, check and complete quest automatically
+        if (autoCheck === 'true') {
+          const autoCompleteQuest = async () => {
+            try {
+              // Get current shard count before check
+              const meResponse = await fetch('/api/me', { cache: 'no-store' });
+              const meData = await meResponse.json();
+              const startingShards = meData?.user?.shardCount ?? 0;
+              
+              // Check and auto-complete quest
+              const response = await fetch('/api/quests/auto-complete-twitter-quest', {
+                method: 'POST',
+                cache: 'no-store',
+              });
+              
+              const data = await response.json();
+              
+              if (data.ok && data.shardsAwarded > 0) {
+                // Show reward animation
+                setRewardData({
+                  shards: data.shardsAwarded,
+                  startingShards: data.startingShards || startingShards,
+                });
+                setShowRewardAnimation(true);
+                
+                // Refresh shard count in navbar
+                window.dispatchEvent(new Event('shardsUpdated'));
+                
+                // Close animation after completion
+                setTimeout(() => {
+                  setShowRewardAnimation(false);
+                  setRewardData(null);
+                }, 5000);
+              }
+            } catch (error) {
+              console.error('Failed to auto-complete quest:', error);
+            }
+          };
+          
+          // Small delay to ensure X account is saved
+          setTimeout(() => {
+            autoCompleteQuest();
+          }, 1000);
+        } else {
+          // Just reload if no auto check
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
       }
     }
   }, []);
@@ -195,6 +247,16 @@ export default function Home() {
         </div>
       </div>
       <Footer />
+      {showRewardAnimation && rewardData && (
+        <>
+          <ConfettiCelebration trigger={true} />
+          <ShardAnimation 
+            shards={rewardData.shards} 
+            startingShards={rewardData.startingShards}
+            onComplete={() => setShowRewardAnimation(false)}
+          />
+        </>
+      )}
     </main>
   );
 }

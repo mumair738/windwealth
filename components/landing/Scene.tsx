@@ -27,7 +27,7 @@ const DitheredWaves = memo(() => {
       ),
     },
     colorNum: {
-      value: 8.0, // Increased from 4.0 to 8.0 for smoother colors and less visible scanlines
+      value: 4.0, // Not used for quantization anymore, kept for compatibility
     },
     pixelSize: {
       value: 2.0,

@@ -2,6 +2,9 @@
 
 This document defines the immediate next implementation targets following completion of authentication, profiles, username availability, and avatar logic. The goal is to move the system from *identity-ready* to *economy-active* while preserving clean UX language ("accounts," not "wallets") and governance integrity.
 
+> **Recent Implementation:** X Account Connection & Automatic Quest Completion  
+> See [`X_ACCOUNT_CONNECTION_IMPLEMENTATION.md`](./X_ACCOUNT_CONNECTION_IMPLEMENTATION.md) for detailed documentation of the completed X/Twitter integration with automatic quest rewards and Duolingo-style shard animations.
+
 ---
 
 ## 1. Functioning Quests and Rewards

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import styles from './YourAccountsModal.module.css';
+import { XConnectingModal } from '../x-connecting/XConnectingModal';
 
 interface YourAccountsModalProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [showConnectingModal, setShowConnectingModal] = useState(false);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -115,6 +117,7 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
         return; // Don't attempt if service is unavailable
       }
       setIsConnecting(true);
+      setShowConnectingModal(true);
       try {
         // Initiate X OAuth flow
         const response = await fetch('/api/x-auth/initiate');
@@ -123,22 +126,27 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
         if (response.status === 503) {
           setServiceUnavailable(true);
           setIsConnecting(false);
+          setShowConnectingModal(false);
           return;
         }
         
         const data = await response.json();
         
         if (data.authUrl) {
-          // Redirect to X authorization
-          window.location.href = data.authUrl;
+          // Small delay to show the modal, then redirect
+          setTimeout(() => {
+            window.location.href = data.authUrl;
+          }, 800);
         } else {
           console.error('Failed to get auth URL:', data);
           setIsConnecting(false);
+          setShowConnectingModal(false);
         }
       } catch (error) {
         console.error('Failed to connect X account:', error);
         setServiceUnavailable(true);
         setIsConnecting(false);
+        setShowConnectingModal(false);
       }
     } else {
       // TODO: Implement other social connection functionality
@@ -310,6 +318,7 @@ const YourAccountsModal: React.FC<YourAccountsModalProps> = ({ onClose }) => {
           </div>
         </div>
       </div>
+      <XConnectingModal isOpen={showConnectingModal} />
     </div>
   );
 };

@@ -169,7 +169,8 @@ export async function GET(request: Request) {
       { id: stateData.id }
     );
 
-    return NextResponse.redirect(new URL('/home?x_auth=success', request.url));
+    // Redirect with auto_check flag - client will handle the check
+    return NextResponse.redirect(new URL('/home?x_auth=success&auto_check=true', request.url));
   } catch (error: any) {
     console.error('X OAuth callback error:', error);
     return NextResponse.redirect(new URL('/home?x_auth=error', request.url));

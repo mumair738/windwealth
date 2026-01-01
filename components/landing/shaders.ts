@@ -37,21 +37,12 @@ vec3 dither(vec2 uv, vec3 color) {
   
   // Get Bayer threshold (0-1 range)
   float bayerValue = bayerMatrix8x8[y * 8 + x];
-  // Calculate quantization step size
-  float quantStep = 1.0 / (colorNum - 1.0);
-  // Very subtle dithering - reduced intensity to minimize scanlines
-  float threshold = (bayerValue - 0.5) * quantStep * 0.15; // Reduced from 0.5 to 0.15 for minimal effect
+  // Very subtle dithering - minimal threshold for performance (no expensive quantization)
+  float threshold = (bayerValue - 0.5) * 0.02; // Minimal dithering effect
 
-  // Apply very subtle dithering threshold
+  // Apply very subtle dithering threshold only
   color.rgb += threshold;
   
-  // Use more color levels to reduce visible quantization/scanlines
-  // Increase effective color levels by using a higher quantization
-  float effectiveColorNum = colorNum * 2.0; // Double the effective color levels
-  color.r = floor(color.r * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
-  color.g = floor(color.g * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
-  color.b = floor(color.b * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
-
   return color;
 }
 
@@ -97,21 +88,12 @@ vec3 dither(vec2 uv, vec3 color) {
   
   // Get Bayer threshold (0-1 range)
   float bayerValue = bayerMatrix8x8[y * 8 + x];
-  // Calculate quantization step size
-  float quantStep = 1.0 / (colorNum - 1.0);
-  // Very subtle dithering - reduced intensity to minimize scanlines
-  float threshold = (bayerValue - 0.5) * quantStep * 0.15; // Reduced from 0.5 to 0.15 for minimal effect
+  // Very subtle dithering - minimal threshold for performance (no expensive quantization)
+  float threshold = (bayerValue - 0.5) * 0.02; // Minimal dithering effect
 
-  // Apply very subtle dithering threshold
+  // Apply very subtle dithering threshold only
   color.rgb += threshold;
   
-  // Use more color levels to reduce visible quantization/scanlines
-  // Increase effective color levels by using a higher quantization
-  float effectiveColorNum = colorNum * 2.0; // Double the effective color levels
-  color.r = floor(color.r * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
-  color.g = floor(color.g * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
-  color.b = floor(color.b * (effectiveColorNum - 1.0) + 0.5) / (effectiveColorNum - 1.0);
-
   return color;
 }
 
@@ -170,14 +152,14 @@ float cnoise(vec2 P) {
     return 2.3 * n_xy;
 }
 
-const int OCTAVES = 4;
+const int OCTAVES = 3;
 
 float fbm(vec2 p) {
     // Initial values
     float value = -0.2;
     float amplitude = 1.0;
     float frequency = 2.5;
-    // Loop of octaves - reduced from 8 to 4 for better performance
+    // Reduced to 3 octaves for better performance
     for (int i = 0; i < OCTAVES; i++) {
         value += amplitude * abs(cnoise(p));
         p *= frequency;
@@ -189,9 +171,10 @@ float fbm(vec2 p) {
 float pattern(vec2 p) {  
     // Mouse interaction - create flow effect
     vec2 mouseOffset = (mouse - 0.5) * 2.0; // Convert to -1 to 1 range
+    // Simplified: single fbm call with offset instead of triple-nested calls
+    // This reduces computation from 12 octaves to 3 octaves per pixel
     vec2 p2 = p - time * 0.05 + mouseOffset * 0.3;
-    vec2 p3 = p + mouseOffset * 0.5;
-    return fbm(p3 - fbm(p + fbm(p2 * 0.8)));
+    return fbm(p2);
 }
 
 void main() {
