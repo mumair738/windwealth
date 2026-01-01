@@ -25,18 +25,33 @@ function generateOAuthSignature(method: string, url: string, params: Record<stri
 }
 
 export async function GET() {
-  if (!isDbConfigured()) {
-    return NextResponse.json(
-      { error: 'Database is not configured on the server.' },
-      { status: 503 }
-    );
+  try {
+    if (!isDbConfigured()) {
+      return NextResponse.json(
+        { error: 'Database is not configured on the server.' },
+        { status: 503 }
+      );
+    }
+    await ensureForumSchema();
+  } catch (error: any) {
+    console.error('Database setup error:', error);
+    return NextResponse.json({ 
+      error: `Database setup failed: ${error?.message || 'Unknown error'}` 
+    }, { status: 500 });
   }
-  await ensureForumSchema();
 
   // Get our internal user record (authenticated via wallet address)
-  const user = await getCurrentUserFromRequestCookie();
-  if (!user) {
-    return NextResponse.json({ error: 'User account not found. Please complete signup.' }, { status: 404 });
+  let user;
+  try {
+    user = await getCurrentUserFromRequestCookie();
+    if (!user) {
+      return NextResponse.json({ error: 'User account not found. Please complete signup.' }, { status: 404 });
+    }
+  } catch (error: any) {
+    console.error('User authentication error:', error);
+    return NextResponse.json({ 
+      error: `Authentication failed: ${error?.message || 'Unknown error'}` 
+    }, { status: 500 });
   }
 
   const xApiKey = process.env.X_API_KEY;
@@ -50,6 +65,12 @@ export async function GET() {
     // Generate request token
     const requestTokenUrl = 'https://api.twitter.com/oauth/request_token';
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/x-auth/callback`;
+    
+    console.log('[X OAuth] Initiating request token:', {
+      callbackUrl,
+      hasApiKey: !!xApiKey,
+      hasSecret: !!xSecret,
+    });
     
     const oauthParams: Record<string, string> = {
       oauth_callback: callbackUrl,
@@ -67,6 +88,7 @@ export async function GET() {
       .map(key => `${encodeURIComponent(key)}="${encodeURIComponent(oauthParams[key])}"`)
       .join(', ')}`;
 
+    console.log('[X OAuth] Making request to Twitter API...');
     const response = await fetch(requestTokenUrl, {
       method: 'POST',
       headers: {
@@ -74,6 +96,8 @@ export async function GET() {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
+    
+    console.log('[X OAuth] Response status:', response.status, response.statusText);
 
     if (!response.ok) {
       const text = await response.text();
@@ -132,10 +156,25 @@ export async function GET() {
       }
     );
   } catch (error: any) {
-    console.error('X OAuth initiation error:', error);
+    console.error('X OAuth initiation error:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      code: error?.code,
+      cause: error?.cause,
+    });
     const errorMessage = error?.message || 'Unknown error';
-    const errorDetails = process.env.NODE_ENV === 'development' ? errorMessage : 'Failed to initiate X OAuth.';
-    return NextResponse.json({ error: errorDetails }, { status: 500 });
+    // Always include error message in response for debugging
+    return NextResponse.json({ 
+      error: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { 
+        stack: error?.stack,
+        details: {
+          name: error?.name,
+          code: error?.code,
+        }
+      })
+    }, { status: 500 });
   }
 }
 
