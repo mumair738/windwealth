@@ -225,7 +225,6 @@ export default function Home() {
           <div className={styles.eventsSection} data-intro="events">
             <h1 className={styles.sectionTitle}>Events</h1>
             <EventCard
-              imageUrl="/uploads/task_01kd2j4dbvebba56djx7072mtz_1766391492_img_0 2.png"
               heading="Crypto Clarity"
               badge1Text="Workshop"
               badge2Text="Jan 4"
