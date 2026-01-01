@@ -27,10 +27,7 @@ const config = createConfig(
     appDescription: "Mental Wealth Academy is a virtual learning platform for the next generation.",
     appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://mentalwealthacademy.world",
     appIcon: `${process.env.NEXT_PUBLIC_APP_URL || "https://mentalwealthacademy.world"}/icons/favicon.png`,
-    
-    // Disable auto-connect - only connect when user explicitly opts in
-    autoConnect: false,
-  }),
+  })
 );
 
 const queryClient = new QueryClient();
