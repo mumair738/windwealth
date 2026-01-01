@@ -50,6 +50,8 @@ export async function GET() {
     const requestTokenUrl = 'https://api.twitter.com/oauth/request_token';
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/x-auth/callback`;
     
+    console.log('Using callback URL:', callbackUrl);
+    
     const oauthParams: Record<string, string> = {
       oauth_callback: callbackUrl,
       oauth_consumer_key: xApiKey,
