@@ -270,7 +270,13 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
   };
 
   const handleCompleteQuest = async () => {
-    if (!quest || !step1Completed || !step2Completed) return;
+    if (!quest) return;
+    
+    // For twitter-follow quests, require both steps to be completed
+    // For no-proof quests, allow direct completion
+    if (quest.questType === 'twitter-follow' && (!step1Completed || !step2Completed)) {
+      return;
+    }
     
     setIsCompleting(true);
     try {
@@ -309,9 +315,12 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
             setShardsAwarded(0);
           }, 2000);
         }, 5000);
+      } else {
+        alert(data.error || 'Failed to complete quest. Please try again.');
       }
     } catch (error) {
       console.error('Failed to complete quest:', error);
+      alert('Failed to complete quest. Please try again.');
     } finally {
       setIsCompleting(false);
     }
@@ -469,7 +478,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
               <>
                 <h3 className={styles.sectionTitle}>Complete Quest</h3>
                 <p className={styles.sectionDescription}>
-                  Register for the event on the homepage. No proof upload is required for this quest.
+                  Register for the event on the homepage. After registering, click the button below to complete the quest and claim your {quest.usdcReward} shards.
                 </p>
 
                 <div className={styles.actionBox}>
@@ -480,19 +489,44 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                     </svg>
                   </div>
                   <p className={styles.actionText}>
-                    Visit the homepage and click &quot;Register&quot; on the event card to complete this quest.
+                    Visit the homepage and click &quot;Register&quot; on the event card, then return here to complete the quest.
                   </p>
                 </div>
 
-                <button 
-                  className={styles.submitButton} 
-                  type="button"
-                  onClick={() => {
-                    window.location.href = '/home';
-                  }}
-                >
-                  Go to Homepage
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button 
+                    className={styles.submitButton} 
+                    type="button"
+                    onClick={handleCompleteQuest}
+                    disabled={isCompleting}
+                  >
+                    {isCompleting ? 'Completing...' : `Complete Quest & Claim ${quest.usdcReward} Shards`}
+                  </button>
+                  
+                  <button 
+                    className={styles.secondaryButton} 
+                    type="button"
+                    onClick={() => {
+                      window.location.href = '/home';
+                    }}
+                    style={{ 
+                      background: 'transparent', 
+                      color: 'var(--color-primary)', 
+                      border: '2px solid var(--color-primary)',
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-button)',
+                      fontSize: '14px',
+                      fontWeight: 'var(--font-weight-medium)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Go to Homepage
+                  </button>
+                </div>
               </>
             )}
 
