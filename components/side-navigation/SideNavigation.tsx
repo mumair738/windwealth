@@ -3,8 +3,6 @@ import Image from 'next/image';
 import ProfileButton from '@/components/nav-buttons/ProfileButton';
 import ExploreQuestsButton from '@/components/nav-buttons/ExploreQuestsButton';
 import NewsletterCard from '@/components/newsletter-card/NewsletterCard';
-import FarcasterFriends from '@/components/farcaster-friends/FarcasterFriends';
-import LibraryCard from '@/components/library-card/LibraryCard';
 import styles from './SideNavigation.module.css';
 
 const SideNavigation: React.FC = () => {
@@ -21,8 +19,6 @@ const SideNavigation: React.FC = () => {
       </div>
       <ProfileButton />
       <ExploreQuestsButton />
-      <FarcasterFriends />
-      <LibraryCard />
       <NewsletterCard />
     </div>
   );
