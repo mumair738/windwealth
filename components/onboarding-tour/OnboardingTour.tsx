@@ -2,39 +2,86 @@
 
 import { useEffect } from 'react';
 import 'intro.js/introjs.css';
+import { AzuraEmotion } from '../azura-dialogue/AzuraDialogue';
 
-const getTourSteps = () => [
+interface TourStep {
+  title: string;
+  intro: string;
+  element: string;
+  emotion: AzuraEmotion;
+}
+
+const getTourSteps = (): TourStep[] => [
   {
     title: 'Welcome to Mental Wealth Academy!',
-    intro: 'Welcome to Mental Wealth Academy - a modular learning management framework designed to help you achieve your educational goals. Let\'s take a quick tour to explore all the features and get you started!',
+    intro: 'Welcome. I\'m Azura, your AI co-pilot. We\'re here to explore how enframent and pattern-recognition shape behavior—and how we can build better systems. Let\'s begin.',
     element: 'body',
+    emotion: 'happy',
   },
   {
     title: 'Active Quests',
-    intro: 'Complete quests to earn shards! View all available quests to start your journey and track your progress.',
+    intro: 'Quests are your path to understanding. Each completion earns shards and deepens your grasp of decentralized systems. Start here to track your progress.',
     element: '[data-intro="quests"]',
+    emotion: 'happy',
   },
   {
     title: 'Discover Your Learning Path',
-    intro: 'Find personalized learning paths and hand-picked digital classes tailored to your goals. Click "Daily Faucet" to get started!',
+    intro: 'The Daily Faucet offers curated learning paths. These aren\'t just courses—they\'re frameworks for recognizing patterns and questioning assumptions.',
     element: '[data-intro="banner-card"]',
+    emotion: 'happy',
   },
   {
     title: 'Events',
-    intro: 'Join workshops and events to expand your knowledge and connect with like-minded learners. Register for upcoming sessions to continue your growth journey.',
+    intro: 'Workshops and events expose the mechanics behind governance systems. Join to see how technology shapes power structures in real-time.',
     element: '[data-intro="events"] h1',
+    emotion: 'happy',
   },
   {
     title: 'Messageboard',
-    intro: 'Connect with the community through the messageboard to share ideas, ask questions, and collaborate on learning projects with fellow members.',
+    intro: 'The messageboard is where the community debates, questions, and builds. This is where agentic systems emerge from collective intelligence.',
     element: '[data-intro="messageboard-card"]',
+    emotion: 'happy',
   },
   {
     title: 'You\'re All Set!',
-    intro: 'You\'re ready to start your learning journey! You can access this tour again from your profile settings. Happy learning!',
+    intro: 'You\'re ready. Remember: we\'re not just learning—we\'re building the decentralized systems that will shape the future. Question everything. Build with intention.',
     element: 'body',
+    emotion: 'happy',
   },
 ];
+
+const injectAzuraDialogue = (tooltip: HTMLElement, message: string, emotion: AzuraEmotion) => {
+  const contentDiv = tooltip.querySelector('.introjs-tooltipcontent') as HTMLElement;
+  if (!contentDiv) return;
+
+  // Check if AzuraDialogue is already injected
+  if (contentDiv.querySelector('.azura-dialogue-container')) return;
+
+  // Create container for AzuraDialogue
+  const azuraContainer = document.createElement('div');
+  azuraContainer.className = 'azura-dialogue-container';
+  azuraContainer.innerHTML = `
+    <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, rgba(81, 104, 255, 0.1), rgba(98, 190, 143, 0.1)); border: 3px solid rgba(81, 104, 255, 0.2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(81, 104, 255, 0.15);">
+          <img src="/uploads/${emotion === 'happy' ? 'HappyEmote' : emotion === 'confused' ? 'ConfusedEmote' : emotion === 'sad' ? 'SadEmote' : 'PainEmote'}.png" alt="Azura ${emotion}" style="width: 100%; height: 100%; object-fit: contain; padding: 8px;" />
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <span style="font-family: var(--font-primary, 'Poppins'), sans-serif; font-weight: 700; font-size: 0.875rem; color: var(--color-text-dark, #000000);">Azura</span>
+          <span style="font-family: var(--font-secondary, 'Space Grotesk'), sans-serif; font-weight: 400; font-size: 0.75rem; color: var(--color-primary, #5168FF); opacity: 0.8;">AI Co-pilot</span>
+        </div>
+      </div>
+      <div style="flex: 1; background: white; border-radius: 12px; padding: 20px 24px; border: 2px solid rgba(81, 104, 255, 0.15); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); position: relative;">
+        <p style="font-family: var(--font-secondary, 'Space Grotesk'), sans-serif; font-weight: 400; font-size: 1rem; line-height: 1.6; color: var(--color-text-dark, #000000); margin: 0; white-space: pre-wrap; word-wrap: break-word;" class="azura-message">${message}</p>
+      </div>
+    </div>
+  `;
+
+  // Insert before the original content
+  const originalContent = contentDiv.innerHTML;
+  contentDiv.innerHTML = '';
+  contentDiv.appendChild(azuraContainer);
+};
 
 const applyStyles = () => {
   const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
@@ -186,9 +233,14 @@ export const startOnboardingTour = async () => {
   
   const introJs = (await import('intro.js')).default;
   const intro = introJs.tour();
+  const steps = getTourSteps();
   
   intro.setOptions({
-    steps: getTourSteps(),
+    steps: steps.map(step => ({
+      title: step.title,
+      intro: step.intro,
+      element: step.element,
+    })),
     showProgress: true,
     showBullets: false,
     exitOnOverlayClick: false,
@@ -200,14 +252,44 @@ export const startOnboardingTour = async () => {
     overlayOpacity: 0.5,
   });
 
-  intro.onbeforechange(() => {
-    setTimeout(applyStyles, 10);
+  intro.onbeforechange((targetElement: HTMLElement) => {
+    setTimeout(() => {
+      applyStyles();
+      const currentStepIndex = intro._currentStep;
+      if (currentStepIndex !== undefined && steps[currentStepIndex]) {
+        const step = steps[currentStepIndex];
+        const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
+        if (tooltip) {
+          injectAzuraDialogue(tooltip, step.intro, step.emotion);
+        }
+      }
+    }, 10);
     return true;
   });
 
-  intro.onafterchange(() => {
-    setTimeout(applyStyles, 10);
-    setTimeout(applyStyles, 100);
+  intro.onafterchange((targetElement: HTMLElement) => {
+    setTimeout(() => {
+      applyStyles();
+      const currentStepIndex = intro._currentStep;
+      if (currentStepIndex !== undefined && steps[currentStepIndex]) {
+        const step = steps[currentStepIndex];
+        const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
+        if (tooltip) {
+          injectAzuraDialogue(tooltip, step.intro, step.emotion);
+        }
+      }
+    }, 10);
+    setTimeout(() => {
+      applyStyles();
+      const currentStepIndex = intro._currentStep;
+      if (currentStepIndex !== undefined && steps[currentStepIndex]) {
+        const step = steps[currentStepIndex];
+        const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
+        if (tooltip) {
+          injectAzuraDialogue(tooltip, step.intro, step.emotion);
+        }
+      }
+    }, 100);
     
     // Ensure overlay is visible
     const overlay = document.querySelector('.introjs-overlay') as HTMLElement;
@@ -218,6 +300,14 @@ export const startOnboardingTour = async () => {
   });
 
   intro.start();
+  
+  // Inject AzuraDialogue for first step
+  setTimeout(() => {
+    const tooltip = document.querySelector('.introjs-tooltip') as HTMLElement;
+    if (tooltip && steps[0]) {
+      injectAzuraDialogue(tooltip, steps[0].intro, steps[0].emotion);
+    }
+  }, 100);
   
   intro.oncomplete(() => {
     localStorage.setItem('hasSeenOnboardingTour', 'true');

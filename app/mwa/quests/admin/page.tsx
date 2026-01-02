@@ -1,6 +1,10 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/navbar/Navbar';
 import { Footer } from '@/components/footer/Footer';
 import Link from 'next/link';
+import StillTutorial, { TutorialStep } from '@/components/still-tutorial/StillTutorial';
 import styles from './page.module.css';
 
 const communityAvatars = [
@@ -11,10 +15,63 @@ const communityAvatars = [
   { name: 'Iris', color: '#6AD9FF' },
 ];
 
+const getTutorialSteps = (): TutorialStep[] => [
+  {
+    message: 'Welcome to the Decision Room. I\'m Azura, your AI co-pilot. Here, every quest submission gets analyzed—not just for completion, but for the patterns it reveals about behavior and governance.',
+    emotion: 'happy',
+  },
+  {
+    message: 'This is where I work. I read each submission, identify the underlying patterns, and draft recommendations. Think of me as a co-pilot—I highlight what matters, but you make the final call.',
+    emotion: 'happy',
+    targetElement: '[data-tutorial-target="azura-card"]',
+  },
+  {
+    message: 'The Admin Voting Room is where human judgment meets algorithmic analysis. You debate, question, and decide. I\'m here to clarify evidence and surface biases you might miss.',
+    emotion: 'happy',
+    targetElement: '[data-tutorial-target="admin-room"]',
+  },
+  {
+    message: 'Each submission tells a story. Look beyond the proof—what patterns does it reveal? How does it shape belief? These are the questions that matter in building better systems.',
+    emotion: 'confused',
+    targetElement: '[data-tutorial-target="submission"]',
+  },
+  {
+    message: 'Remember: we\'re not just approving quests. We\'re exposing how enframent shapes behavior and building agentic systems that question assumptions. Every decision here shapes the future.',
+    emotion: 'happy',
+  },
+];
+
 export default function AdminVotingPage() {
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    // Check if user has seen the admin tutorial
+    const hasSeenTutorial = localStorage.getItem('hasSeenAdminTutorial');
+    if (!hasSeenTutorial) {
+      // Small delay to ensure page is rendered
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem('hasSeenAdminTutorial', 'true');
+    setShowTutorial(false);
+  };
+
   return (
     <>
       <Navbar />
+      <StillTutorial
+        steps={getTutorialSteps()}
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+        onComplete={handleTutorialComplete}
+        title="Admin Voting Guide"
+        showProgress={true}
+      />
       <main className={styles.page}>
         <div className={styles.content}>
           <div className={styles.breadcrumbs}>
@@ -37,7 +94,7 @@ export default function AdminVotingPage() {
           </header>
 
           <section className={styles.grid}>
-            <div className={styles.cardDark}>
+            <div className={styles.cardDark} data-tutorial-target="azura-card">
               <div className={styles.cardHeader}>
                 <div>
                   <p className={styles.cardEyebrow}>AI Agentic Daemon</p>
@@ -75,7 +132,7 @@ export default function AdminVotingPage() {
               </div>
             </div>
 
-            <div className={styles.cardLight}>
+            <div className={styles.cardLight} data-tutorial-target="admin-room">
               <div className={styles.cardHeader}>
                 <div>
                   <p className={styles.cardEyebrowLight}>Community Council</p>
@@ -111,7 +168,7 @@ export default function AdminVotingPage() {
             </div>
           </section>
 
-          <section className={styles.submissionCard}>
+          <section className={styles.submissionCard} data-tutorial-target="submission">
             <div className={styles.submissionHeader}>
               <div>
                 <p className={styles.submissionEyebrow}>Submission</p>

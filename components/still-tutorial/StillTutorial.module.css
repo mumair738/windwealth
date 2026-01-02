@@ -1,0 +1,228 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9997;
+  backdrop-filter: blur(2px);
+}
+
+.highlight {
+  transition: all 0.3s ease;
+  z-index: 9998;
+}
+
+.container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-background, #F4F5FE);
+  border: 2px solid white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  min-width: 700px;
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.header {
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(81, 104, 255, 0.2);
+  position: relative;
+}
+
+.title {
+  font-family: var(--font-primary, 'Poppins'), sans-serif;
+  font-weight: var(--font-weight-bold, 700);
+  font-size: 2rem;
+  color: var(--color-text-dark, #000000);
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background-color: rgba(81, 104, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary, #5168FF), var(--color-secondary, #62BE8F));
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.closeButton {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-dark, #000000);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: rotate(90deg);
+}
+
+.content {
+  padding: 32px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.footer {
+  padding: 20px 32px;
+  border-top: 1px solid rgba(81, 104, 255, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.stepIndicator {
+  font-family: var(--font-secondary, 'Space Grotesk'), sans-serif;
+  font-weight: var(--font-weight-regular, 400);
+  font-size: 0.875rem;
+  color: var(--color-text-dark, #000000);
+  opacity: 0.7;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.prevButton,
+.nextButton,
+.completeButton {
+  font-family: var(--font-button, 'IBM Plex Mono'), monospace;
+  font-weight: var(--font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid;
+}
+
+.prevButton {
+  background-color: transparent;
+  color: var(--color-text-dark, #000000);
+  border-color: var(--color-text-dark, #000000);
+}
+
+.prevButton:hover {
+  background-color: var(--color-text-dark, #000000);
+  color: var(--color-text-light, #ECECEC);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nextButton {
+  background-color: var(--color-primary, #5168FF);
+  color: var(--color-text-light, #ECECEC);
+  border-color: var(--color-primary, #5168FF);
+}
+
+.nextButton:hover:not(:disabled) {
+  background-color: #3d52e6;
+  border-color: #3d52e6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(81, 104, 255, 0.4);
+}
+
+.nextButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.completeButton {
+  background-color: var(--color-secondary, #62BE8F);
+  color: var(--color-text-light, #ECECEC);
+  border-color: var(--color-secondary, #62BE8F);
+}
+
+.completeButton:hover:not(:disabled) {
+  background-color: #4fa87a;
+  border-color: #4fa87a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(98, 190, 143, 0.4);
+}
+
+.completeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    min-width: auto;
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .header {
+    padding: 20px 24px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    padding-right: 40px;
+  }
+
+  .content {
+    padding: 24px;
+  }
+
+  .footer {
+    padding: 16px 24px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .prevButton,
+  .nextButton,
+  .completeButton {
+    flex: 1;
+  }
+}
