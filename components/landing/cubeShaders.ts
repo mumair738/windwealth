@@ -7,6 +7,7 @@ uniform vec3 ucolor4;
 uniform vec3 ucolor5;
 uniform float asciicode;
 uniform sampler2D utexture;
+uniform sampler2D uAsciiImageTexture;
 uniform float brightness;
 uniform float asciiu;
 uniform vec2 resolution;
@@ -26,12 +27,48 @@ vec2 barrelDistortion(vec2 uv, float strength) {
     return center + coord * factor;
 }
 
-// Simple ASCII-like pattern
-float asciiPattern(vec2 uv, float code) {
-    vec2 grid = floor(uv * code);
-    vec2 cell = fract(uv * code);
-    float pattern = step(0.5, cell.x) * step(0.5, cell.y);
-    return pattern;
+// Create star pattern (✦) - 4-pointed star
+float starPattern(vec2 uv, float size) {
+    vec2 p = uv - 0.5;
+    float angle = atan(p.y, p.x);
+    float radius = length(p) * 2.0;
+    
+    // Create 4-pointed star shape using polar coordinates
+    // Rotate angle by 45 degrees to align points
+    float rotatedAngle = angle + 3.14159 * 0.25;
+    float starShape = abs(cos(rotatedAngle * 2.0));
+    
+    // Create star outline - inner radius smaller for star effect
+    float innerRadius = size * 0.4;
+    float outerRadius = size;
+    float dist = radius / mix(innerRadius, outerRadius, starShape);
+    
+    // Threshold for star visibility - make stars fill most of cell
+    return step(dist, 1.0);
+}
+
+// Sample image and create pixelated ASCII star pattern (screen-space)
+vec3 asciiPatternScreenSpace(vec2 screenUV, sampler2D imageTexture, float code, out float mask) {
+    // Apply barrel distortion to screen coordinates
+    vec2 distortedUV = barrelDistortion(screenUV, 0.15);
+    
+    // Create grid for ASCII characters (lower code = bigger cells = bigger stars)
+    vec2 grid = floor(distortedUV * code);
+    vec2 cell = fract(distortedUV * code);
+    
+    // Sample image at the center of each ASCII cell (pixelated)
+    vec2 cellCenter = (grid + 0.5) / code;
+    vec4 imageColor = texture2D(imageTexture, cellCenter);
+    
+    // Get brightness to determine star size
+    float brightness = dot(imageColor.rgb, vec3(0.299, 0.587, 0.114));
+    
+    // Create star pattern - larger stars that fill most of the cell (tighter spacing)
+    float starSize = mix(0.45, 0.50, brightness); // Bigger stars, tighter spacing
+    mask = starPattern(cell, starSize);
+    
+    // Return the image color (pixelated based on ASCII grid)
+    return imageColor.rgb;
 }
 
 void main() {
@@ -39,38 +76,49 @@ void main() {
     vec2 uv = vUv;
     vec2 pos = vPosition.xy;
     
-    // Barrel distortion
-    vec2 distortedUV = barrelDistortion(uv, 0.1);
-    
-    // ASCII texture effect
-    float asciiValue = asciiPattern(distortedUV, asciicode);
-    float asciiBrightness = asciiu * asciiValue;
-    
     // Sample texture
     vec4 textureColor = texture2D(utexture, aPixelUV);
     
-    // Combine colors based on position and normal
-    vec3 color1 = ucolor1;
-    vec3 color2 = ucolor2;
-    vec3 color3 = ucolor3;
-    vec3 color4 = ucolor4;
-    vec3 color5 = ucolor5;
+    // Brand colors for each face
+    vec3 color1 = ucolor1; // Primary: #5168FF
+    vec3 color2 = ucolor2; // Secondary: #62BE8F
+    vec3 color3 = ucolor3; // Gradient start: #ECECFF
+    vec3 color4 = ucolor4; // Gradient end: #E1E1FE
+    vec3 color5 = ucolor5; // Background: #F4F5FE
+    vec3 color6 = vec3(0.925, 0.925, 0.925); // Text Light: #ECECEC
     
-    // Mix colors based on position
-    float mixFactor = (vNormal.x + vNormal.y + vNormal.z) * 0.33 + 0.5;
-    vec3 baseColor = mix(color1, color2, mixFactor);
-    baseColor = mix(baseColor, color3, vPosition.z * 0.5 + 0.5);
-    baseColor = mix(baseColor, color4, distortedUV.x);
-    baseColor = mix(baseColor, color5, distortedUV.y);
+    // Determine which face we're on based on the dominant normal component
+    vec3 absNormal = abs(vNormal);
+    vec3 baseColor;
     
-    // Apply texture color
-    baseColor = mix(baseColor, textureColor.rgb, textureColor.a);
+    // Find the dominant axis (x, y, or z)
+    if (absNormal.x > absNormal.y && absNormal.x > absNormal.z) {
+        // X-axis faces
+        baseColor = vNormal.x > 0.0 ? color1 : color2; // +X = Primary, -X = Secondary
+    } else if (absNormal.y > absNormal.z) {
+        // Y-axis faces
+        baseColor = vNormal.y > 0.0 ? color3 : color4; // +Y = Gradient start, -Y = Gradient end
+    } else {
+        // Z-axis faces
+        baseColor = vNormal.z > 0.0 ? color5 : color6; // +Z = Background, -Z = Text Light
+    }
     
-    // Apply ASCII brightness and depth
-    baseColor *= (brightness + asciiBrightness);
+    // Don't apply texture color overlay - use solid face colors only
+    // baseColor stays as the solid face color
     
-    // Final color with depth
-    vec3 finalColor = baseColor * (1.0 + asciiu * 0.2);
+    // Apply brightness
+    baseColor *= brightness;
+    
+    // Get screen-space coordinates for ASCII mask
+    vec2 screenUV = gl_FragCoord.xy / resolution;
+    
+    // Create pixelated ASCII star pattern from image (screen-space)
+    float asciiMask;
+    vec3 asciiColor = asciiPatternScreenSpace(screenUV, uAsciiImageTexture, asciicode, asciiMask);
+    
+    // ASCII pattern is the primary visual - blend cube colors into ASCII colors
+    // Where stars exist, mix ASCII image colors with cube colors
+    vec3 finalColor = mix(asciiColor, baseColor * 0.5 + asciiColor * 0.5, asciiMask * 0.5);
     
     gl_FragColor = vec4(finalColor, 1.0);
 }`;

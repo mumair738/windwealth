@@ -14,12 +14,13 @@ const getDPR = () => {
 };
 
 // Cube component with unique rotation
-const RotatingCube = memo(({ position, rotationSpeed, scale }: { position: [number, number, number], rotationSpeed: [number, number, number], scale: number }) => {
+const RotatingCube = memo(({ position, rotationSpeed, scale, verticalSpeed }: { position: [number, number, number], rotationSpeed: [number, number, number], scale: number, verticalSpeed: number }) => {
   const mesh = useRef<THREE.Mesh>(null);
   const dprRef = useRef(getDPR());
   const textureRef = useRef<THREE.Texture | null>(null);
+  const basePosition = useRef<[number, number, number]>(position);
 
-  // Create texture on mount
+  // Create solid white texture (no gradient) - texture overlay removed in shader
   useEffect(() => {
     if (!textureRef.current && typeof window !== 'undefined') {
       const canvas = document.createElement('canvas');
@@ -27,11 +28,8 @@ const RotatingCube = memo(({ position, rotationSpeed, scale }: { position: [numb
       canvas.height = 256;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Create a simple gradient texture
-        const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-        gradient.addColorStop(0, 'rgba(81, 104, 255, 0.8)');
-        gradient.addColorStop(1, 'rgba(45, 55, 100, 0.8)');
-        ctx.fillStyle = gradient;
+        // Solid white texture (texture overlay is disabled in shader, so this won't affect colors)
+        ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
         ctx.fillRect(0, 0, 256, 256);
         
         textureRef.current = new THREE.CanvasTexture(canvas);
@@ -51,15 +49,17 @@ const RotatingCube = memo(({ position, rotationSpeed, scale }: { position: [numb
   const uniforms = useRef({
     time: { value: 0.0 },
     rotationSpeed: { value: new THREE.Vector3(...rotationSpeed) },
-    ucolor1: { value: new THREE.Vector3(0.318, 0.408, 1.0) }, // Purple
-    ucolor2: { value: new THREE.Vector3(0.22, 0.25, 0.38) }, // Dark purple
-    ucolor3: { value: new THREE.Vector3(0.45, 0.55, 1.0) }, // Bright purple
-    ucolor4: { value: new THREE.Vector3(0.18, 0.18, 0.24) }, // Dark
-    ucolor5: { value: new THREE.Vector3(0.28, 0.35, 0.55) }, // Medium purple
-    asciicode: { value: 20.0 },
+    // Brand colors - each face will use a different one (solid colors, not gradients)
+    ucolor1: { value: new THREE.Vector3(0.318, 0.408, 1.0) }, // Primary: #5168FF
+    ucolor2: { value: new THREE.Vector3(0.753, 0.235, 0.941) }, // rgb(192, 60, 240)
+    ucolor3: { value: new THREE.Vector3(0.333, 0.776, 0.341) }, // #55C657
+    ucolor4: { value: new THREE.Vector3(0.329, 0.965, 0.741) }, // rgb(84, 246, 189)
+    ucolor5: { value: new THREE.Vector3(0.118, 0.047, 0.224) }, // rgb(212, 198, 234)
+    asciicode: { value: 100.0 }, // Higher value = tighter spacing between stars (doubled to halve spacing)
     utexture: { value: null as THREE.Texture | null },
+    uAsciiImageTexture: { value: new THREE.Texture() },
     brightness: { value: 1.0 },
-    asciiu: { value: 0.3 },
+    asciiu: { value: 1.0 }, // Not used in current implementation
     resolution: {
       value: new THREE.Vector2(
         typeof window !== 'undefined' ? window.innerWidth * dprRef.current : 1920,
@@ -68,7 +68,7 @@ const RotatingCube = memo(({ position, rotationSpeed, scale }: { position: [numb
     },
   }).current;
 
-  // Update texture uniform when texture is ready
+  // Update texture uniforms when textures are ready
   useEffect(() => {
     if (textureRef.current && uniforms.utexture) {
       uniforms.utexture.value = textureRef.current;
@@ -99,11 +99,17 @@ const RotatingCube = memo(({ position, rotationSpeed, scale }: { position: [numb
 
   useFrame((state) => {
     const { clock } = state;
-    if (mesh.current && mesh.current.material) {
-      const material = mesh.current.material as THREE.ShaderMaterial;
-      if (material.uniforms) {
-        material.uniforms.time.value = clock.getElapsedTime();
+    if (mesh.current) {
+      if (mesh.current.material) {
+        const material = mesh.current.material as THREE.ShaderMaterial;
+        if (material.uniforms) {
+          material.uniforms.time.value = clock.getElapsedTime();
+        }
       }
+      // Animate vertical position
+      const time = clock.getElapsedTime();
+      const yOffset = Math.sin(time * verticalSpeed) * 1.5; // Vertical movement amplitude
+      mesh.current.position.y = basePosition.current[1] + yOffset;
     }
   });
 
@@ -126,14 +132,31 @@ const CubesScene = memo(() => {
   const cubes = [];
   const count = 20;
   
+  // Calculate viewport bounds for even distribution
+  // Camera is at z=10, fov=75, so we can calculate visible area
+  const cameraZ = 10;
+  const fov = 75;
+  const aspect = typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16/9;
+  const fovRad = (fov * Math.PI) / 180;
+  const visibleHeight = 2 * Math.tan(fovRad / 2) * cameraZ;
+  const visibleWidth = visibleHeight * aspect;
+  
+  // Use grid-based distribution with some randomness for more even spread
+  const gridSize = Math.ceil(Math.sqrt(count));
+  
   for (let i = 0; i < count; i++) {
-    // Use a more spread out distribution
-    const angle = (i / count) * Math.PI * 2;
-    // Larger radius range for more spacing
-    const radius = 4 + Math.random() * 5;
-    const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 2;
-    const y = Math.sin(angle) * radius + (Math.random() - 0.5) * 2;
-    // More depth spread
+    // Grid-based distribution with randomization
+    const gridX = (i % gridSize) / (gridSize - 1);
+    const gridY = Math.floor(i / gridSize) / (gridSize - 1);
+    
+    // Convert grid position to viewport coordinates with randomization
+    const baseX = (gridX - 0.5) * visibleWidth * 0.8; // Use 80% of visible width
+    const baseY = (gridY - 0.5) * visibleHeight * 0.8; // Use 80% of visible height
+    
+    // Add random offset to break grid pattern and reach edges
+    const x = baseX + (Math.random() - 0.5) * visibleWidth * 0.3;
+    const y = baseY + (Math.random() - 0.5) * visibleHeight * 0.3;
+    // Depth spread
     const z = (Math.random() - 0.5) * 8;
     
     // Unique rotation speeds for each cube
@@ -144,10 +167,14 @@ const CubesScene = memo(() => {
     // Scale variation - only larger (1.0 to 2.5 range)
     const scale = 1.0 + Math.random() * 1.5; // Range: 1.0 to 2.5
     
+    // Vertical movement speed - some move up, some move down (positive = up, negative = down)
+    const verticalSpeed = (Math.random() - 0.5) * 0.5; // Range: -0.25 to 0.25
+    
     cubes.push({
       position: [x, y, z] as [number, number, number],
       rotationSpeed: [rotX, rotY, rotZ] as [number, number, number],
       scale: scale,
+      verticalSpeed: verticalSpeed,
     });
   }
 
@@ -159,6 +186,7 @@ const CubesScene = memo(() => {
           position={cube.position}
           rotationSpeed={cube.rotationSpeed}
           scale={cube.scale}
+          verticalSpeed={cube.verticalSpeed}
         />
       ))}
     </>
@@ -166,6 +194,7 @@ const CubesScene = memo(() => {
 });
 
 CubesScene.displayName = 'CubesScene';
+
 
 const Scene = memo(() => {
   const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
