@@ -85,28 +85,27 @@ void main() {
     // Sample texture
     vec4 textureColor = texture2D(utexture, aPixelUV);
     
-    // Brand colors for each face - values come from Scene.tsx uniforms
-    vec3 color1 = ucolor1; // Primary: #5168FF - (0.318, 0.408, 1.0)
-    vec3 color2 = ucolor2; // Secondary:rgb(155, 190, 98) - (0.384, 0.745, 0.561)
-    vec3 color3 = ucolor3; // Green variant - (0.333, 0.776, 0.341)
-    vec3 color4 = ucolor4; // Cyan - (0.329, 0.965, 0.741)
-    vec3 color5 = ucolor5; // Dark purple - (0.118, 0.047, 0.224)
-    vec3 color6 = vec3(0.925, 0.925, 0.925); // Text Light: #ECECEC
+    // Use only 5 colors - assign to 6 faces (color1 used twice for opposite faces)
+    vec3 color1 = ucolor1; // Primary: #5168FF
+    vec3 color2 = ucolor2; // Secondary:rgb(212, 84, 101)
+    vec3 color3 = ucolor3; // Green variant:rgb(101, 235, 23)
+    vec3 color4 = ucolor4; // Cyan:rgb(208, 246, 84)
+    vec3 color5 = ucolor5; // Dark purple: #1E0C39
     
     // Determine which face we're on based on the dominant normal component
     vec3 absNormal = abs(vNormal);
     vec3 baseColor;
     
-    // Find the dominant axis (x, y, or z)
+    // Find the dominant axis (x, y, or z) - use 5 colors for 6 faces
     if (absNormal.x > absNormal.y && absNormal.x > absNormal.z) {
         // X-axis faces
-        baseColor = vNormal.x > 0.0 ? color1 : color2; // +X = Primary, -X = Secondary
+        baseColor = vNormal.x > 0.0 ? color1 : color2; // +X = color1, -X = color2
     } else if (absNormal.y > absNormal.z) {
         // Y-axis faces
-        baseColor = vNormal.y > 0.0 ? color3 : color4; // +Y = Gradient start, -Y = Gradient end
+        baseColor = vNormal.y > 0.0 ? color3 : color4; // +Y = color3, -Y = color4
     } else {
         // Z-axis faces
-        baseColor = vNormal.z > 0.0 ? color5 : color6; // +Z = Background, -Z = Text Light
+        baseColor = vNormal.z > 0.0 ? color5 : color1; // +Z = color5, -Z = color1 (reuse)
     }
     
     // Don't apply texture color overlay - use solid face colors only
@@ -148,6 +147,7 @@ export const cubeVertexShader = `precision highp float;
 
 uniform float time;
 uniform vec3 rotationSpeed;
+uniform float horizontalOnly; // 1.0 for horizontal-only rotation, 0.0 for full rotation
 
 varying vec2 vUv;
 varying vec2 aPixelUV;
@@ -160,10 +160,10 @@ void main() {
     
     vec3 pos = position;
     
-    // Apply unique rotation per cube (rotationSpeed passed as uniform)
-    float rotX = time * rotationSpeed.x;
+    // Apply rotation - if horizontalOnly, only rotate around Y axis
+    float rotX = horizontalOnly > 0.5 ? 0.0 : time * rotationSpeed.x;
     float rotY = time * rotationSpeed.y;
-    float rotZ = time * rotationSpeed.z;
+    float rotZ = horizontalOnly > 0.5 ? 0.0 : time * rotationSpeed.z;
     
     // Rotate around X axis
     float cosX = cos(rotX);
@@ -171,7 +171,7 @@ void main() {
     float y1 = pos.y * cosX - pos.z * sinX;
     float z1 = pos.y * sinX + pos.z * cosX;
     
-    // Rotate around Y axis
+    // Rotate around Y axis (horizontal rotation)
     float cosY = cos(rotY);
     float sinY = sin(rotY);
     float x2 = pos.x * cosY + z1 * sinY;

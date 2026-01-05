@@ -14,7 +14,7 @@ const getDPR = () => {
 };
 
 // Cube component with unique rotation
-const RotatingCube = memo(({ position, rotationSpeed, scale, verticalSpeed }: { position: [number, number, number], rotationSpeed: [number, number, number], scale: number, verticalSpeed: number }) => {
+const RotatingCube = memo(({ position, rotationSpeed, scale, verticalSpeed, horizontalOnly }: { position: [number, number, number], rotationSpeed: [number, number, number], scale: number, verticalSpeed: number, horizontalOnly: boolean }) => {
   const mesh = useRef<THREE.Mesh>(null);
   const dprRef = useRef(getDPR());
   const textureRef = useRef<THREE.Texture | null>(null);
@@ -49,12 +49,13 @@ const RotatingCube = memo(({ position, rotationSpeed, scale, verticalSpeed }: { 
   const uniforms = useRef({
     time: { value: 0.0 },
     rotationSpeed: { value: new THREE.Vector3(...rotationSpeed) },
-    // Brand colors - each face will use a different one (solid colors, not gradients)
+    horizontalOnly: { value: horizontalOnly ? 1.0 : 0.0 },
+    // Brand colors - 5 colors used for 6 faces (color1 used twice)
     ucolor1: { value: new THREE.Vector3(0.318, 0.408, 1.0) }, // Primary: #5168FF (rgb(81, 104, 255))
-    ucolor2: { value: new THREE.Vector3(0.384, 0.745, 0.561) }, // Secondary: #62BE8F (rgb(98, 190, 143))
-    ucolor3: { value: new THREE.Vector3(0.333, 0.776, 0.341) }, // Green variant: rgb(85, 198, 87)
-    ucolor4: { value: new THREE.Vector3(0.329, 0.965, 0.741) }, // Cyan: rgb(84, 246, 189)
-    ucolor5: { value: new THREE.Vector3(0.118, 0.047, 0.224) }, // Dark purple: rgb(30, 12, 57)
+    ucolor2: { value: new THREE.Vector3(0.831, 0.329, 0.396) }, // Secondary: rgb(212, 84, 101)
+    ucolor3: { value: new THREE.Vector3(0.396, 0.922, 0.090) }, // Green variant: rgb(101, 235, 23)
+    ucolor4: { value: new THREE.Vector3(0.816, 0.965, 0.329) }, // Cyan: rgb(208, 246, 84)
+    ucolor5: { value: new THREE.Vector3(0.118, 0.047, 0.224) }, // Dark purple: #1E0C39 (rgb(30, 12, 57))
     asciicode: { value: 100.0 }, // Higher value = tighter spacing between stars (doubled to halve spacing)
     utexture: { value: null as THREE.Texture | null },
     uAsciiImageTexture: { value: new THREE.Texture() },
@@ -170,11 +171,15 @@ const CubesScene = memo(() => {
     // Vertical movement speed - some move up, some move down (positive = up, negative = down)
     const verticalSpeed = (Math.random() - 0.5) * 1.0; // Range: -0.5 to 0.5 (doubled from 0.25)
     
+    // Some cubes rotate only horizontally (around Y axis) - about 40% of cubes
+    const horizontalOnly = Math.random() < 0.4;
+    
     cubes.push({
       position: [x, y, z] as [number, number, number],
       rotationSpeed: [rotX, rotY, rotZ] as [number, number, number],
       scale: scale,
       verticalSpeed: verticalSpeed,
+      horizontalOnly: horizontalOnly,
     });
   }
 
@@ -187,6 +192,7 @@ const CubesScene = memo(() => {
           rotationSpeed={cube.rotationSpeed}
           scale={cube.scale}
           verticalSpeed={cube.verticalSpeed}
+          horizontalOnly={cube.horizontalOnly}
         />
       ))}
     </>

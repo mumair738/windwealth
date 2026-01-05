@@ -27,7 +27,11 @@ function getWagmiConfig() {
     },
 
     // Required API Keys
-    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'bf5a914a-4385-4dcd-a24e-08d868477043',
+    // Family wallet explicit configuration:
+    // - WalletConnect Project ID: 742bad7153998ca0c2f5f449aedc3eea
+    // - Appkit Auth API secret: dbf77d81-4de9-49cf-8fb9-c318986aa5b7
+    //   (Set as NEXT_PUBLIC_APPKIT_AUTH_SECRET environment variable if needed)
+    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '742bad7153998ca0c2f5f449aedc3eea',
 
     // Required App Info
     appName: "Mental Wealth Academy",
@@ -62,6 +66,10 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
               wallet: {
                 preference: 'all', // Allow all wallet types including Family wallets
                 display: 'modal',
+                // Family wallet explicit configuration
+                // Appkit Auth API secret: dbf77d81-4de9-49cf-8fb9-c318986aa5b7
+                // This may need to be set as NEXT_PUBLIC_APPKIT_AUTH_SECRET environment variable
+                // if OnchainKit supports it
               },
             }}
           >

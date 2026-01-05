@@ -414,7 +414,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
           </svg>
         </button>
 
-        {/* Step 1: Account Details (Email, Username, Password) */}
+        {/* Step 1: Account Details (Email, Username, Password)
+            Note: For wallet signups, email and password are skipped, but username is still required */}
         {currentStep === 'account' && (
           <div className={styles.stepContent}>
             <div className={styles.stepIcon}>

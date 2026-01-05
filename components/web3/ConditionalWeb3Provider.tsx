@@ -3,6 +3,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
+import { WalletErrorBoundary } from './WalletErrorBoundary';
 
 // Dynamically import Web3Provider ONLY when needed (not on landing page)
 // Using Next.js dynamic() with ssr: false to completely avoid loading on landing page
@@ -20,5 +21,10 @@ const Web3Provider = dynamic(
  */
 export function ConditionalWeb3Provider({ children }: { children: React.ReactNode }) {
   // Always wrap with Web3Provider since landing page now needs wallet functionality
-  return <Web3Provider>{children}</Web3Provider>;
+  // Wrap in error boundary to catch Family wallet errors
+  return (
+    <WalletErrorBoundary>
+      <Web3Provider>{children}</Web3Provider>
+    </WalletErrorBoundary>
+  );
 }

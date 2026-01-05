@@ -5,7 +5,7 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import SignInButton from '@/components/nav-buttons/SignInButton';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
-import { WalletAdvancedDemo } from './WalletAdvancedDemo';
+import { WalletConnectionHandler } from './WalletAdvancedDemo';
 import styles from './LandingPage.module.css';
 
 // Dynamically import Scene with aggressive lazy loading
@@ -28,7 +28,7 @@ const LandingPage: React.FC = () => {
   useEffect(() => {
     const handleProfileUpdate = () => {
       // When profile is updated, check if we should redirect
-      // This will be handled by WalletAdvancedDemo's useEffect
+      // This will be handled by WalletConnectionHandler's useEffect
       if (showOnboarding) {
         setShowOnboarding(false);
         setIsWalletSignup(false);
@@ -249,7 +249,7 @@ const LandingPage: React.FC = () => {
               
             {/* Wallet Connection */}
             <div className={styles.walletSection}>
-              <WalletAdvancedDemo onWalletConnected={(address) => {
+              <WalletConnectionHandler onWalletConnected={(address) => {
                 setIsWalletSignup(true);
                 setShowOnboarding(true);
               }} />
