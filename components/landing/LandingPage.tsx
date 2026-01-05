@@ -153,9 +153,9 @@ const LandingPage: React.FC = () => {
         <div className={styles.promoCard}>
           <div className={styles.promoContent}>
             <div className={styles.promoText}>
-              <h2 className={styles.promoTitle}>Agentic Learning Infrastructure</h2>
+              <h2 className={styles.promoTitle}>EDUCATION FOR AGENTIC DAEMONS</h2>
               <p className={styles.promoDescription}>
-                An agentic research-driven LMS platform exploring cyber-psychology, and testing pragmatic parasocial governance systems.
+                An agentic research-driven LMS workshop exploring cyber-psychology, and testing pragmatic parasocial governance systems.
               </p>
             </div>
           </div>
@@ -252,7 +252,7 @@ const LandingPage: React.FC = () => {
                   className={styles.signupLink}
                   onClick={() => setShowOnboarding(true)}
                 >
-                  Become a MWA Researcher, <span className={styles.highlight}>Join today!</span>
+                  Become a MWA Researcher, <span className={styles.highlight}>Purchase membership today</span>
                 </button>
                 
                 <div className={styles.termsText}>

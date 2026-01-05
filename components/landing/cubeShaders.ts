@@ -109,6 +109,21 @@ void main() {
     // Apply brightness
     baseColor *= brightness;
     
+    // Add emissive glow to boost color density and make colors pop
+    // Calculate view direction for rim lighting effect
+    vec3 viewDir = normalize(-vPosition);
+    float fresnel = 1.0 - abs(dot(viewDir, vNormal));
+    
+    // Emissive glow - boost the base color intensity
+    vec3 emissiveGlow = baseColor * 0.4; // Base emissive intensity
+    
+    // Add edge glow for extra pop (stronger on edges)
+    float edgeGlow = pow(fresnel, 2.0) * 0.3;
+    vec3 edgeGlowColor = baseColor * edgeGlow;
+    
+    // Combine base color with glow effects
+    vec3 glowingColor = baseColor + emissiveGlow + edgeGlowColor;
+    
     // Get screen-space coordinates for ASCII mask
     vec2 screenUV = gl_FragCoord.xy / resolution;
     
@@ -117,8 +132,8 @@ void main() {
     vec3 asciiColor = asciiPatternScreenSpace(screenUV, uAsciiImageTexture, asciicode, asciiMask);
     
     // ASCII pattern is the primary visual - blend cube colors into ASCII colors
-    // Where stars exist, mix ASCII image colors with cube colors
-    vec3 finalColor = mix(asciiColor, baseColor * 0.5 + asciiColor * 0.5, asciiMask * 0.5);
+    // Where stars exist, mix ASCII image colors with cube colors (use glowing colors)
+    vec3 finalColor = mix(asciiColor, glowingColor * 0.5 + asciiColor * 0.5, asciiMask * 0.5);
     
     gl_FragColor = vec4(finalColor, 1.0);
 }`;

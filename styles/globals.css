@@ -57,6 +57,7 @@ body {
 
 body {
   font-family: var(--font-primary);
+  background-color: #000000;
   background-image: url('https://i.imgur.com/Vy2e9Ej.png');
   background-size: cover;
   background-position: center;
