@@ -41,11 +41,11 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
   // Password validation (required only for non-wallet signup)
   const isPasswordValid = isWalletSignup ? true : (password.length >= 8);
   
-  // Calculate max date (13 years ago from today) - memoized to prevent recalculation
+  // Calculate max date (18 years ago from today) - memoized to prevent recalculation
   const maxDate = useMemo(() => {
     const today = new Date();
     const max = new Date(today);
-    max.setFullYear(today.getFullYear() - 13);
+    max.setFullYear(today.getFullYear() - 18);
     return max.toISOString().split('T')[0];
   }, []);
   
@@ -57,7 +57,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
     return min.toISOString().split('T')[0];
   }, []);
 
-  // Birthday validation (must be at least 13 years old) - reactive
+  // Birthday validation (must be at least 18 years old) - reactive
   const isBirthdayValid = useMemo(() => {
     if (!birthday) return false;
     
@@ -85,7 +85,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
       exactAge = age - 1;
     }
     
-    return exactAge >= 13;
+    return exactAge >= 18;
   }, [birthday, minDate]);
   
   // Account step validation (email, username, password, birthday) - FIRST STEP
@@ -195,10 +195,19 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
     setError(null);
 
     if (currentStep === 'account') {
-      if (!isEmailValid) {
-        setError('Please enter a valid email address');
-        return;
+      // Skip email/password validation for wallet signups
+      if (!isWalletSignup) {
+        if (!isEmailValid) {
+          setError('Please enter a valid email address');
+          return;
+        }
+        if (!isPasswordValid) {
+          setError('Password must be at least 8 characters');
+          return;
+        }
       }
+      
+      // Username validation applies to both wallet and email signups
       if (!isUsernameValid) {
         setError('Username must be 5-32 characters (letters, numbers, underscores)');
         return;
@@ -207,10 +216,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
         setError('This username is already taken');
         return;
       }
-      if (!isPasswordValid) {
-        setError('Password must be at least 8 characters');
-        return;
-      }
+      
+      // Birthday validation applies to both wallet and email signups
       if (!birthday) {
         setError('Please enter your birthday');
         return;
@@ -222,7 +229,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
         } else if (birthDate > new Date()) {
           setError('Birthday cannot be in the future');
         } else {
-          setError('You must be at least 13 years old to create an account');
+          setError('You must be at least 18 years old to create an account');
         }
         return;
       }
@@ -491,7 +498,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
                         setError('Birthday cannot be in the future');
                         setBirthday('');
                       } else {
-                        // Check age requirement (must be at least 13 years old)
+                        // Check age requirement (must be at least 18 years old)
                         const age = today.getFullYear() - birthDate.getFullYear();
                         const monthDiff = today.getMonth() - birthDate.getMonth();
                         const dayDiff = today.getDate() - birthDate.getDate();
@@ -500,7 +507,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
                           exactAge = age - 1;
                         }
                         
-                        if (exactAge < 13 || selectedDate > maxDate) {
+                        if (exactAge < 18 || selectedDate > maxDate) {
                           setError('You must be at least 18 years old to create an account');
                           setBirthday('');
                         }
@@ -513,7 +520,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
                   autoComplete="bday"
                 />
                 <p className={styles.inputHint}>
-                  You must be at least 13 years old
+                  You must be at least 18 years old
                 </p>
               </div>
 

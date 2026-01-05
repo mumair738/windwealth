@@ -22,6 +22,7 @@ export function WalletAdvancedDemo({ onWalletConnected }: WalletAdvancedDemoProp
     if (isConnected && address && !isProcessing && processedAddress !== address) {
       handleWalletConnection(address);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address, isProcessing, processedAddress]);
 
   // Reset processed address when wallet disconnects
@@ -54,11 +55,12 @@ export function WalletAdvancedDemo({ onWalletConnected }: WalletAdvancedDemoProp
 
     window.addEventListener('profileUpdated', handleProfileUpdate);
     return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address, isProcessing]);
 
   const handleWalletConnection = async (walletAddress: string) => {
     // Prevent processing the same address twice
-    if (processedAddress === walletAddress) {
+    if (processedAddress === walletAddress && isProcessing) {
       return;
     }
     
@@ -129,12 +131,23 @@ export function WalletAdvancedDemo({ onWalletConnected }: WalletAdvancedDemoProp
             onWalletConnected(walletAddress);
           }
         } else {
-          const errorData = await signupResponse.json();
-          console.error('Wallet signup failed:', errorData);
-          alert(errorData.error || 'Failed to create account. Please try again.');
+          // Reset processedAddress to allow retry (user can disconnect/reconnect to retry)
+          setProcessedAddress(null);
+          let errorMessage = 'Failed to create account. Please try again.';
+          try {
+            const errorData = await signupResponse.json();
+            errorMessage = errorData.error || errorMessage;
+            console.error('Wallet signup failed:', errorData);
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            console.error('Response status:', signupResponse.status, signupResponse.statusText);
+          }
+          alert(errorMessage);
         }
       }
     } catch (error) {
+      // Reset processedAddress to allow retry
+      setProcessedAddress(null);
       console.error('Error handling wallet connection:', error);
       alert('An error occurred. Please try again.');
     } finally {
