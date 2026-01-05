@@ -18,12 +18,18 @@ varying vec2 aPixelUV;
 varying vec3 vPosition;
 varying vec3 vNormal;
 
-// Barrel distortion
+// Barrel distortion - enhanced fisheye effect
 vec2 barrelDistortion(vec2 uv, float strength) {
     vec2 center = vec2(0.5, 0.5);
     vec2 coord = uv - center;
     float dist = length(coord);
-    float factor = 1.0 + strength * dist * dist;
+    
+    // Enhanced barrel distortion formula for more realistic fisheye effect
+    // Uses polynomial distortion for smoother, more natural curve
+    float distSquared = dist * dist;
+    float distFourth = distSquared * distSquared;
+    float factor = 1.0 + strength * distSquared + strength * 0.5 * distFourth;
+    
     return center + coord * factor;
 }
 
@@ -49,8 +55,8 @@ float starPattern(vec2 uv, float size) {
 
 // Sample image and create pixelated ASCII star pattern (screen-space)
 vec3 asciiPatternScreenSpace(vec2 screenUV, sampler2D imageTexture, float code, out float mask) {
-    // Apply barrel distortion to screen coordinates
-    vec2 distortedUV = barrelDistortion(screenUV, 0.15);
+    // Apply barrel distortion to screen coordinates - increased strength for more pronounced effect
+    vec2 distortedUV = barrelDistortion(screenUV, 1.2);
     
     // Create grid for ASCII characters (lower code = bigger cells = bigger stars)
     vec2 grid = floor(distortedUV * code);

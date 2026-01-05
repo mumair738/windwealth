@@ -5,15 +5,32 @@ uniform vec2 resolution;
 uniform float asciicode;
 uniform float asciiu;
 
+// Barrel distortion - enhanced fisheye effect
+vec2 barrelDistortion(vec2 uv, float strength) {
+    vec2 center = vec2(0.5, 0.5);
+    vec2 coord = uv - center;
+    float dist = length(coord);
+    
+    // Enhanced barrel distortion formula for more realistic fisheye effect
+    float distSquared = dist * dist;
+    float distFourth = distSquared * distSquared;
+    float factor = 1.0 + strength * distSquared + strength * 0.5 * distFourth;
+    
+    return center + coord * factor;
+}
+
 // Sample image and convert to ASCII circle pattern
 float asciiPattern(vec2 screenUV, sampler2D imageTexture, float code) {
-    // Sample the source image at this screen position
-    vec4 imageColor = texture2D(imageTexture, screenUV);
+    // Apply barrel distortion to screen coordinates
+    vec2 distortedUV = barrelDistortion(screenUV, 1.2);
+    
+    // Sample the source image at the distorted position
+    vec4 imageColor = texture2D(imageTexture, distortedUV);
     float brightness = dot(imageColor.rgb, vec3(0.299, 0.587, 0.114)); // Luminance
     
-    // Create grid for ASCII characters
-    vec2 grid = floor(screenUV * code);
-    vec2 cell = fract(screenUV * code);
+    // Create grid for ASCII characters (using distorted UV for consistent distortion)
+    vec2 grid = floor(distortedUV * code);
+    vec2 cell = fract(distortedUV * code);
     
     // Create circle pattern based on brightness (large circles)
     vec2 center = vec2(0.5, 0.5);
