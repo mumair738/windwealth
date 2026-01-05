@@ -85,12 +85,12 @@ void main() {
     // Sample texture
     vec4 textureColor = texture2D(utexture, aPixelUV);
     
-    // Brand colors for each face
-    vec3 color1 = ucolor1; // Primary: #5168FF
-    vec3 color2 = ucolor2; // Secondary: #62BE8F
-    vec3 color3 = ucolor3; // Gradient start: #ECECFF
-    vec3 color4 = ucolor4; // Gradient end: #E1E1FE
-    vec3 color5 = ucolor5; // Background: #F4F5FE
+    // Brand colors for each face - values come from Scene.tsx uniforms
+    vec3 color1 = ucolor1; // Primary: #5168FF - (0.318, 0.408, 1.0)
+    vec3 color2 = ucolor2; // Secondary:rgb(155, 190, 98) - (0.384, 0.745, 0.561)
+    vec3 color3 = ucolor3; // Green variant - (0.333, 0.776, 0.341)
+    vec3 color4 = ucolor4; // Cyan - (0.329, 0.965, 0.741)
+    vec3 color5 = ucolor5; // Dark purple - (0.118, 0.047, 0.224)
     vec3 color6 = vec3(0.925, 0.925, 0.925); // Text Light: #ECECEC
     
     // Determine which face we're on based on the dominant normal component

@@ -50,11 +50,11 @@ const RotatingCube = memo(({ position, rotationSpeed, scale, verticalSpeed }: { 
     time: { value: 0.0 },
     rotationSpeed: { value: new THREE.Vector3(...rotationSpeed) },
     // Brand colors - each face will use a different one (solid colors, not gradients)
-    ucolor1: { value: new THREE.Vector3(0.318, 0.408, 1.0) }, // Primary: #5168FF
-    ucolor2: { value: new THREE.Vector3(0.753, 0.235, 0.941) }, // rgb(192, 60, 240)
-    ucolor3: { value: new THREE.Vector3(0.333, 0.776, 0.341) }, // #55C657
-    ucolor4: { value: new THREE.Vector3(0.329, 0.965, 0.741) }, // rgb(244, 197, 44)
-    ucolor5: { value: new THREE.Vector3(0.118, 0.047, 0.224) }, // rgb(212, 198, 234)
+    ucolor1: { value: new THREE.Vector3(0.318, 0.408, 1.0) }, // Primary: #5168FF (rgb(81, 104, 255))
+    ucolor2: { value: new THREE.Vector3(0.384, 0.745, 0.561) }, // Secondary: #62BE8F (rgb(98, 190, 143))
+    ucolor3: { value: new THREE.Vector3(0.333, 0.776, 0.341) }, // Green variant: rgb(85, 198, 87)
+    ucolor4: { value: new THREE.Vector3(0.329, 0.965, 0.741) }, // Cyan: rgb(84, 246, 189)
+    ucolor5: { value: new THREE.Vector3(0.118, 0.047, 0.224) }, // Dark purple: rgb(30, 12, 57)
     asciicode: { value: 100.0 }, // Higher value = tighter spacing between stars (doubled to halve spacing)
     utexture: { value: null as THREE.Texture | null },
     uAsciiImageTexture: { value: new THREE.Texture() },
