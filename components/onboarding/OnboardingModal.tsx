@@ -3,17 +3,21 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAccount } from 'wagmi';
+import { getWalletAuthHeaders } from '@/lib/wallet-api';
 import styles from './OnboardingModal.module.css';
 
 interface OnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isWalletSignup?: boolean;
 }
 
 type Step = 'account';
 
-const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) => {
+const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWalletSignup = false }) => {
   const router = useRouter();
+  const { address } = useAccount();
   const [currentStep, setCurrentStep] = useState<Step>('account');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -31,12 +35,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
   const usernameRegex = useMemo(() => /^[a-zA-Z0-9_]{5,32}$/, []);
   const isUsernameValid = usernameRegex.test(username);
   
-  // Email validation (required)
+  // Email validation (required only for non-wallet signup)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isEmailValid = email && emailRegex.test(email);
+  const isEmailValid = isWalletSignup ? true : (email && emailRegex.test(email));
   
-  // Password validation
-  const isPasswordValid = password.length >= 8;
+  // Password validation (required only for non-wallet signup)
+  const isPasswordValid = isWalletSignup ? true : (password.length >= 8);
   
   // Calculate max date (13 years ago from today) - memoized to prevent recalculation
   const maxDate = useMemo(() => {
@@ -229,7 +233,20 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
         return;
       }
       
-      // Create the account now so we can use userId for avatar generation
+      // For wallet signup, account is already created, just create profile
+      if (isWalletSignup) {
+        if (!address) {
+          setError('Wallet not connected. Please connect your wallet first.');
+          setIsLoading(false);
+          return;
+        }
+        // Account already exists from wallet connection, just create profile
+        setIsLoading(true);
+        await createProfile();
+        return;
+      }
+
+      // Create the account now so we can use userId for avatar generation (email/password signup)
       setIsLoading(true);
       try {
         const signupResponse = await fetch('/api/auth/signup', {
@@ -292,16 +309,29 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
     try {
       // Account was already created in the account step, just create/update the profile
       // Note: avatar_id is not included - user will select avatar on homepage
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      
+      // Add wallet auth headers if this is a wallet signup
+      if (isWalletSignup && address) {
+        Object.assign(headers, getWalletAuthHeaders(address));
+      }
+
+      const requestBody: any = {
+        username,
+        gender,
+        birthday,
+        // No avatar_id - user selects avatar on homepage
+      };
+      
+      // Only include email for non-wallet signups
+      if (!isWalletSignup && email) {
+        requestBody.email = email;
+      }
+
       const profileResponse = await fetch('/api/profile/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          email,
-          gender,
-          birthday,
-          // No avatar_id - user selects avatar on homepage
-        }),
+        headers,
+        body: JSON.stringify(requestBody),
       });
 
       let profileData;
@@ -318,9 +348,11 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
       if (profileResponse.ok) {
         // Dispatch event to notify navbar of profile update
         window.dispatchEvent(new Event('profileUpdated'));
-        // Redirect to home immediately - avatar selection will happen there
-        router.push('/home');
+        // Close modal first
         onClose();
+        // Use window.location.replace for reliable redirect (ensures full page reload with new session)
+        // This ensures cookies are properly sent and session is recognized
+        window.location.replace('/home');
       } else {
         // Log detailed error for debugging
         console.error('Profile creation failed:', {
@@ -397,37 +429,41 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose }) =>
             </p>
             
             <div className={styles.formFields}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="onboarding-email" className={styles.inputLabel}>Email Address</label>
-                <input
-                  id="onboarding-email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="researcher@example.com"
-                  className={styles.input}
-                  autoComplete="email"
-                  autoFocus
-                />
-              </div>
+              {!isWalletSignup && (
+                <>
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="onboarding-email" className={styles.inputLabel}>Email Address</label>
+                    <input
+                      id="onboarding-email"
+                      name="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="researcher@example.com"
+                      className={styles.input}
+                      autoComplete="email"
+                      autoFocus
+                    />
+                  </div>
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="onboarding-password" className={styles.inputLabel}>Password</label>
-                <input
-                  id="onboarding-password"
-                  name="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className={styles.input}
-                  autoComplete="new-password"
-                />
-                <p className={styles.inputHint}>
-                  At least 8 characters
-                </p>
-              </div>
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="onboarding-password" className={styles.inputLabel}>Password</label>
+                    <input
+                      id="onboarding-password"
+                      name="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className={styles.input}
+                      autoComplete="new-password"
+                    />
+                    <p className={styles.inputHint}>
+                      At least 8 characters
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div className={styles.inputGroup}>
                 <label htmlFor="onboarding-birthday" className={styles.inputLabel}>Birthday</label>

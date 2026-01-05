@@ -39,6 +39,14 @@ export async function GET() {
   }
 
   try {
+    // Get full user profile including gender and birthday
+    const userProfile = await sqlQuery<Array<{ gender: string | null; birthday: string | null }>>(
+      `SELECT gender, birthday FROM users WHERE id = :userId LIMIT 1`,
+      { userId: user.id }
+    );
+    
+    const profile = userProfile[0] || { gender: null, birthday: null };
+
     // Get linked accounts
     const linkedAccounts: LinkedAccount[] = [];
 
@@ -72,6 +80,8 @@ export async function GET() {
         shardCount: user.shardCount,
         walletAddress: user.walletAddress,
         createdAt: user.createdAt,
+        gender: profile.gender,
+        birthday: profile.birthday,
       },
       linkedAccounts,
     });

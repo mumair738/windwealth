@@ -16,18 +16,9 @@ const Web3Provider = dynamic(
 
 /**
  * Conditionally wraps children with Web3Provider only on pages that need wallet functionality.
- * The landing page (/) should NOT have Web3Provider to avoid loading wagmi/connectkit dependencies.
+ * The landing page (/) now needs Web3Provider for wallet connection functionality.
  */
 export function ConditionalWeb3Provider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  
-  // Pages that should NOT have Web3Provider (no wallet functionality needed)
-  const excludedPaths = ['/'];
-  
-  // Only wrap with Web3Provider if not on excluded paths
-  if (excludedPaths.includes(pathname)) {
-    return <>{children}</>;
-  }
-  
+  // Always wrap with Web3Provider since landing page now needs wallet functionality
   return <Web3Provider>{children}</Web3Provider>;
 }

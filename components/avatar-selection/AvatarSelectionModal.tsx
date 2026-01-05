@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { useAccount } from 'wagmi';
+import { getWalletAuthHeaders } from '@/lib/wallet-api';
 import styles from './AvatarSelectionModal.module.css';
 
 interface Avatar {
@@ -21,6 +23,7 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
   onClose,
   onAvatarSelected 
 }) => {
+  const { address, isConnected } = useAccount();
   const [avatarChoices, setAvatarChoices] = useState<Avatar[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +34,15 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
     setIsFetching(true);
     setError(null);
     try {
-      const response = await fetch('/api/avatars/choices');
+      // Include wallet auth headers if wallet is connected
+      const headers: HeadersInit = {};
+      if (isConnected && address) {
+        Object.assign(headers, getWalletAuthHeaders(address));
+      }
+      
+      const response = await fetch('/api/avatars/choices', {
+        headers
+      });
       const data = await response.json();
       if (response.ok && data.choices) {
         setAvatarChoices(data.choices);
@@ -44,7 +55,7 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
     } finally {
       setIsFetching(false);
     }
-  }, []);
+  }, [isConnected, address]);
 
   // Fetch avatar choices when modal opens
   useEffect(() => {
@@ -63,9 +74,15 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
     setError(null);
 
     try {
+      // Include wallet auth headers if wallet is connected
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (isConnected && address) {
+        Object.assign(headers, getWalletAuthHeaders(address));
+      }
+      
       const response = await fetch('/api/avatars/select', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           avatar_id: selectedAvatar.id,
         }),
@@ -200,4 +217,3 @@ const AvatarSelectionModal: React.FC<AvatarSelectionModalProps> = ({
 };
 
 export default AvatarSelectionModal;
-

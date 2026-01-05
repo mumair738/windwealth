@@ -60,38 +60,9 @@ export function BlockchainAccountModal({
   // Monitor wallet connection status - don't auto-sync, just update UI
   // The user will explicitly click "Sync Account" after connecting
 
-  const handleCreateWallet = async () => {
-    try {
-      setError(null);
-      
-      // Dynamically import Family SDK only when needed
-      const { FamilyAccountsSdk } = await import('family');
-      
-      // Ensure SDK is connected before using it
-      // Call connect() if available, ignore errors if already connected
-      if (typeof FamilyAccountsSdk.connect === 'function') {
-        try {
-          await FamilyAccountsSdk.connect();
-        } catch (connectError: any) {
-          // If already connected or other connection-related error, continue
-          // The session.create() call will handle the actual connection state
-          const errorMsg = connectError?.message?.toLowerCase() || '';
-          if (!errorMsg.includes('already') && !errorMsg.includes('connected')) {
-            // Only log unexpected errors, but continue anyway
-            console.warn('Family SDK connect warning:', connectError);
-          }
-        }
-      }
-      
-      // Use Family SDK to create/connect wallet
-      await FamilyAccountsSdk.session.create();
-      
-      // Modal will update automatically when wagmi detects the connection
-      // User will then see "Sync Account" button
-    } catch (error: any) {
-      console.error('Failed to create wallet with Family:', error);
-      setError(error?.message || 'Failed to create wallet. Please try again.');
-    }
+  const handleCreateWallet = () => {
+    // Use ConnectKit to create/connect wallet
+    setConnectKitOpen(true);
   };
 
   const handleConnectWallet = () => {

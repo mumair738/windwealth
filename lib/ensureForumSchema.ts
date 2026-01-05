@@ -141,6 +141,19 @@ export async function ensureForumSchema() {
     }
   }
 
+  // Make email nullable for wallet-based signups (if not already nullable)
+  try {
+    await sqlQuery(`
+      ALTER TABLE users 
+      ALTER COLUMN email DROP NOT NULL
+    `);
+  } catch (err: any) {
+    // Column might already be nullable, ignore error
+    if (!err?.message?.includes('does not exist') && !err?.message?.includes('cannot be cast')) {
+      console.warn('Error making email nullable:', err);
+    }
+  }
+
   // Add selected_avatar_id column if it doesn't exist
   try {
     await sqlQuery(`

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
+import { getWalletAuthHeaders } from '@/lib/wallet-api';
 import { SearchModal } from '@/components/search-modal/SearchModal';
 import YourAccountsModal from '@/components/nav-buttons/YourAccountsModal';
 import styles from './Navbar.module.css';
@@ -30,7 +31,7 @@ const SearchIcon: React.FC<{ size?: number }> = ({ size = 20 }) => {
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -45,7 +46,16 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/me', { cache: 'no-store' });
+        // Include wallet auth headers if wallet is connected
+        const headers: HeadersInit = {};
+        if (isConnected && address) {
+          Object.assign(headers, getWalletAuthHeaders(address));
+        }
+        
+        const response = await fetch('/api/me', { 
+          cache: 'no-store',
+          headers
+        });
         const data = await response.json();
         if (data?.user) {
           if (data.user.shardCount !== undefined) {
@@ -85,7 +95,7 @@ const Navbar: React.FC = () => {
       window.removeEventListener('shardsUpdated', handleShardsUpdate);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, [isConnected]); // Refetch when wallet connection state changes
+  }, [isConnected, address]); // Refetch when wallet connection state changes
 
   const isActive = (path: string) => {
     if (path === '/home') {

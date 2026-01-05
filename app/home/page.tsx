@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
+import { getWalletAuthHeaders } from '@/lib/wallet-api';
 import Hero from '@/components/hero/Hero';
 import Banner from '@/components/banner/Banner';
 import SideNavigation from '@/components/side-navigation/SideNavigation';
@@ -20,7 +21,7 @@ import { ConfettiCelebration } from '@/components/quests/ConfettiCelebration';
 import styles from './page.module.css';
 
 export default function Home() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -30,6 +31,8 @@ export default function Home() {
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [rewardData, setRewardData] = useState<{ shards: number; startingShards: number } | null>(null);
   const [isReserving, setIsReserving] = useState(false);
+  const hasCheckedAuthRef = useRef(false);
+  const lastCheckedAddressRef = useRef<string | undefined>(undefined);
 
   // Handle X auth callback and auto quest completion
   useEffect(() => {
@@ -100,14 +103,35 @@ export default function Home() {
 
   // Check authentication via /api/me (supports both Privy and session-based auth)
   useEffect(() => {
+    // Only check if we haven't checked yet, or if wallet address changed
+    const shouldCheck = !hasCheckedAuthRef.current || 
+      (isConnected && address && address !== lastCheckedAddressRef.current);
+    
+    if (!shouldCheck) return;
+    
+    let isMounted = true;
     const checkAuth = async () => {
       setIsCheckingAuth(true);
       try {
-        const response = await fetch('/api/me', { cache: 'no-store' });
+        // Include wallet auth headers if wallet is connected
+        const headers: HeadersInit = {};
+        if (isConnected && address) {
+          Object.assign(headers, getWalletAuthHeaders(address));
+          lastCheckedAddressRef.current = address;
+        }
+        
+        const response = await fetch('/api/me', { 
+          cache: 'no-store',
+          headers
+        });
         const data = await response.json();
+        
+        if (!isMounted) return;
+        
         if (data.user) {
           setHasValidSession(true);
           setMe(data.user);
+          hasCheckedAuthRef.current = true;
           // Show avatar modal if user has no avatar
           if (!data.user.avatarUrl) {
             setShowAvatarModal(true);
@@ -117,37 +141,36 @@ export default function Home() {
         }
       } catch (err) {
         console.error('Failed to check authentication:', err);
-        setHasValidSession(false);
+        if (isMounted) {
+          setHasValidSession(false);
+        }
       } finally {
-        setIsCheckingAuth(false);
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
       }
     };
 
     checkAuth();
-  }, []);
 
-  // Fetch user data when wallet connection state changes
-  useEffect(() => {
-    if (isConnected && hasValidSession) {
-      fetch('/api/me', { cache: 'no-store' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.user) {
-            setMe(data.user);
-            // Show avatar modal if user has no avatar
-            if (!data.user.avatarUrl) {
-              setShowAvatarModal(true);
-            }
-          }
-        })
-        .catch(err => console.error('Failed to fetch user data:', err));
-    }
-  }, [isConnected, hasValidSession]);
+    return () => {
+      isMounted = false;
+    };
+  }, [isConnected, address]); // Re-check only when wallet connection state actually changes
 
   // Listen for profile updates to refresh avatar status
   useEffect(() => {
     const handleProfileUpdate = () => {
-      fetch('/api/me')
+      // Include wallet auth headers if wallet is connected
+      const headers: HeadersInit = {};
+      if (isConnected && address) {
+        Object.assign(headers, getWalletAuthHeaders(address));
+      }
+      
+      fetch('/api/me', { 
+        cache: 'no-store',
+        headers
+      })
         .then(res => res.json())
         .then(data => {
           if (data.user) {
@@ -163,12 +186,13 @@ export default function Home() {
 
     window.addEventListener('profileUpdated', handleProfileUpdate);
     return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
-  }, []);
+  }, [isConnected, address]);
 
   useEffect(() => {
     // Redirect if we've finished checking auth and user has no valid session
     // This works for both Privy auth and session-based auth
-    if (!isCheckingAuth && !hasValidSession && !isRedirecting) {
+    // Only redirect if we've actually checked auth (not on initial mount)
+    if (hasCheckedAuthRef.current && !isCheckingAuth && !hasValidSession && !isRedirecting) {
       const timer = setTimeout(() => {
         setIsRedirecting(true);
         router.push('/');
@@ -200,7 +224,15 @@ export default function Home() {
         onClose={() => setShowAvatarModal(false)}
         onAvatarSelected={() => {
           // Refresh user data after avatar selection
-          fetch('/api/me')
+          const headers: HeadersInit = {};
+          if (isConnected && address) {
+            Object.assign(headers, getWalletAuthHeaders(address));
+          }
+          
+          fetch('/api/me', { 
+            cache: 'no-store',
+            headers
+          })
             .then(res => res.json())
             .then(data => {
               if (data.user) {
