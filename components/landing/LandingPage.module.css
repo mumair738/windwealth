@@ -811,13 +811,16 @@
   }
 
   .logoContainer {
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
+    display: none;
   }
 
   .logoImage {
     width: 100px;
+  }
+  
+  /* Hide wallet section on mobile */
+  .walletSection {
+    display: none;
   }
 
   .loginTitle {

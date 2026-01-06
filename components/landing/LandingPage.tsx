@@ -339,9 +339,9 @@ const LandingPage: React.FC = () => {
           </div>
           <div className={styles.promoContent}>
             <div className={styles.promoText}>
-              <h2 className={styles.promoTitle}>CYBER-PSYCHOLOGY ENDOWMENT FOR AGENTIC RESEARCH</h2>
+              <h2 className={styles.promoTitle}>NEXT GEN CYBER-PSYCHOLOGY ENDOWMENT FOR MENTAL HEALTH</h2>
               <p className={styles.promoDescription}>
-                An agentic research-driven LMS workshop funding cyber-psychology, and pragmatic parasocial governance systems.
+                A community owned fund driving mental health changes in cyber-culture, through pragmatic parasocial governance systems.
               </p>
             </div>
           </div>
@@ -361,7 +361,7 @@ const LandingPage: React.FC = () => {
                   priority
                 />
               </div>
-              <h1 className={styles.loginTitle}>Join</h1>
+              <h1 className={styles.loginTitle}>Create account</h1>
             </div>
             
             {/* Google Sign Up Button - Hidden for now */}
@@ -468,6 +468,8 @@ const LandingPage: React.FC = () => {
 
               {/* Actions */}
               <div className={styles.actions}>
+                <SignInButton onClick={() => setShowOnboarding(true)} />
+
                 <button
                   type="submit"
                   className={styles.loginButton}
@@ -475,8 +477,6 @@ const LandingPage: React.FC = () => {
                 >
                   {isLoading ? 'Signing in...' : 'Continue'}
                 </button>
-
-                <SignInButton onClick={() => setShowOnboarding(true)} />
                 
                 <div className={styles.termsText}>
                   By joining Mental Wealth Academy, I confirm that I have read and agree to the{' '}

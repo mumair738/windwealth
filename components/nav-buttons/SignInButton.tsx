@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import styles from './SignInButton.module.css';
 
 interface SignInButtonProps {
@@ -16,13 +15,6 @@ const SignInButton: React.FC<SignInButtonProps> = ({ onClick }) => {
       onClick={onClick}
       type="button"
     >
-      <Image 
-        src="/icons/ethlogo.svg" 
-        alt="Ethereum logo" 
-        width={20}
-        height={20}
-        className={styles.ethLogo}
-      />
       <span className={styles.buttonText}>Create Account</span>
     </button>
   );
