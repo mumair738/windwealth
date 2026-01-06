@@ -13,10 +13,10 @@ import BookCard from '@/components/book-card/BookCard';
 import OnboardingTour from '@/components/onboarding-tour/OnboardingTour';
 import Navbar from '@/components/navbar/Navbar';
 import { Footer } from '@/components/footer/Footer';
-import EventCard from '@/components/event-card/EventCard';
 import AvatarSelectionModal from '@/components/avatar-selection/AvatarSelectionModal';
 import { ShardAnimation } from '@/components/quests/ShardAnimation';
 import { ConfettiCelebration } from '@/components/quests/ConfettiCelebration';
+import ImpactSnapshot from '@/components/impact-snapshot/ImpactSnapshot';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -29,7 +29,6 @@ export default function Home() {
   const [hasValidSession, setHasValidSession] = useState(false);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [rewardData, setRewardData] = useState<{ shards: number; startingShards: number } | null>(null);
-  const [isReserving, setIsReserving] = useState(false);
   const hasCheckedAuthRef = useRef(false);
   const lastCheckedAddressRef = useRef<string | undefined>(undefined);
 
@@ -246,54 +245,11 @@ export default function Home() {
       <Banner />
       <div className={styles.content}>
         <div className={styles.middleSection}>
+          <div data-intro="impact-snapshot">
+            <ImpactSnapshot />
+          </div>
           <div data-intro="quests">
             <Quests />
-          </div>
-          <div className={styles.eventsAndPromptRow}>
-          <div className={styles.eventsSection} data-intro="events">
-            <h1 className={styles.sectionTitle}>Events</h1>
-            <EventCard
-              heading="Crypto Clarity"
-              badge1Text="Workshop"
-              badge2Text="Jan 4"
-              description="Institutions aren't speculating anymore. They're building. The question is: do you understand what's happening, or are you still watching from the sidelines?"
-              onRegister={() => console.log('Register clicked')}
-              eventDetails={{
-                date: 'Sunday, January 4th, 2026',
-                time: '7:00pm EST',
-                description: "Institutions aren't speculating anymore. They're building. The question is: do you understand what's happening, or are you still watching from the sidelines?",
-              }}
-              onReserveSeat={async () => {
-                setIsReserving(true);
-                try {
-                  const response = await fetch('/api/events/reserve', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ eventSlug: 'crypto-clarity-2026-01-04' }),
-                  });
-                  const data = await response.json();
-                  if (data.ok) {
-                    // Refresh user data to update reservation status
-                    const meResponse = await fetch('/api/me', { cache: 'no-store' });
-                    const meData = await meResponse.json();
-                    if (meData.user) {
-                      setMe(meData.user);
-                    }
-                    // Optionally show success message
-                    alert('Seat reserved successfully!');
-                  } else {
-                    alert(data.error || 'Failed to reserve seat');
-                  }
-                } catch (error) {
-                  console.error('Failed to reserve seat:', error);
-                  alert('Failed to reserve seat. Please try again.');
-                } finally {
-                  setIsReserving(false);
-                }
-              }}
-              isReserved={me?.eventReservations?.includes('crypto-clarity-2026-01-04')}
-              isReserving={isReserving}
-            />
           </div>
           <div className={styles.promptSection}>
               <h1 className={styles.sectionTitle}>Messageboard</h1>
@@ -302,7 +258,6 @@ export default function Home() {
                 <BookCard />
               </div>
             </div>
-          </div>
         </div>
         <div data-intro="side-navigation">
           <SideNavigation />

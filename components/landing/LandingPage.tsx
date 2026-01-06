@@ -14,6 +14,145 @@ const Scene = dynamic(() => import('./Scene'), {
   loading: () => null, // No loading indicator to avoid blocking
 });
 
+// Rotating Text Component
+const RotatingTextSection: React.FC = () => {
+  const texts = React.useMemo(() => [
+    'own and control their destiny',
+    'fund holistic decisions',
+    'restore and secure control'
+  ], []);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentWidth, setCurrentWidth] = useState(0);
+  const [textWidths, setTextWidths] = useState<number[]>([]);
+  const textItemRefs = React.useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % texts.length);
+    }, 3000); // Change text every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [texts.length]);
+
+  // Measure the width of all texts to size each item properly
+  // Using a more accurate method that accounts for font rendering
+  useEffect(() => {
+    const measureAllWidths = () => {
+      const fontSize = window.innerWidth >= 768 ? '2.65rem' : '1.2rem';
+      const widths = texts.map(text => {
+        const span = document.createElement('span');
+        span.style.visibility = 'hidden';
+        span.style.position = 'absolute';
+        span.style.whiteSpace = 'nowrap';
+        span.style.fontSize = fontSize;
+        span.style.fontFamily = 'var(--font-primary)';
+        span.style.fontWeight = 'inherit';
+        span.style.letterSpacing = 'normal';
+        span.style.textRendering = 'optimizeLegibility';
+        (span.style as any).webkitFontSmoothing = 'antialiased';
+        (span.style as any).mozOsxFontSmoothing = 'grayscale';
+        span.textContent = text;
+        document.body.appendChild(span);
+        
+        // Use getBoundingClientRect for more accurate measurement
+        const rect = span.getBoundingClientRect();
+        const width = Math.ceil(rect.width);
+        
+        document.body.removeChild(span);
+        
+        // Add generous buffer: 5% of width + fixed buffer based on font size
+        const percentageBuffer = Math.ceil(width * 0.05);
+        const fixedBuffer = window.innerWidth >= 768 ? 20 : 10;
+        return width + percentageBuffer + fixedBuffer;
+      });
+      setTextWidths(widths);
+    };
+
+    measureAllWidths();
+    window.addEventListener('resize', measureAllWidths);
+    return () => window.removeEventListener('resize', measureAllWidths);
+  }, [texts]);
+
+  // Measure actual rendered element after mount for verification
+  useEffect(() => {
+    if (textItemRefs.current[currentIndex]) {
+      const element = textItemRefs.current[currentIndex];
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const actualWidth = Math.ceil(rect.width);
+        // If actual width is larger than measured, use the larger value
+        if (actualWidth > currentWidth) {
+          setCurrentWidth(actualWidth + 10); // Add small buffer
+        }
+      }
+    }
+  }, [currentIndex, currentWidth]);
+
+  // Update current width when index changes
+  useEffect(() => {
+    if (textWidths.length > 0 && textWidths[currentIndex]) {
+      setCurrentWidth(textWidths[currentIndex]);
+    }
+  }, [currentIndex, textWidths]);
+
+  // Calculate rotation for 3D effect
+  const rotation = currentIndex * 120; // 120 degrees per item (360 / 3)
+
+  return (
+    <div className={styles.rotatingTextContainer}>
+      <div className={styles.rotatingTextLines}>
+        <h3 className={styles.rotatingTextHeading}>
+          <span className={styles.rotatingTextStatic}>Helping people</span>
+          <div 
+            className={styles.rotatingTextWrapper}
+            style={{ 
+              width: currentWidth > 0 ? `${currentWidth}px` : 'auto',
+              height: '50px',
+              perspective: '1000px',
+              overflow: 'hidden',
+              display: 'inline-block',
+              verticalAlign: 'middle',
+              transition: 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            <div 
+              className={styles.rotatingTextInner}
+              style={{
+                transformStyle: 'preserve-3d',
+                transform: `rotateX(${-rotation}deg)`,
+                transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                width: '100%',
+                height: '100%'
+              }}
+            >
+              {texts.map((text, index) => {
+                const itemRotation = index * 120;
+                return (
+                  <div
+                    key={index}
+                    ref={(el) => { textItemRefs.current[index] = el; }}
+                    className={styles.rotatingTextItem}
+                    style={{
+                      transform: `translateX(-50%) rotateX(${itemRotation}deg) translateZ(60px)`,
+                      backfaceVisibility: 'hidden',
+                      width: 'auto',
+                      left: '50%',
+                      transformOrigin: 'center center'
+                    }}
+                  >
+                    {text}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </h3>
+        <p className={styles.rotatingTextStaticLine}>with other humans for a better world</p>
+      </div>
+    </div>
+  );
+};
+
 const LandingPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -122,6 +261,8 @@ const LandingPage: React.FC = () => {
         setShowOnboarding(true);
         setEmail('');
         setPassword('');
+        // Dispatch event to notify wallet component that user now has an account
+        window.dispatchEvent(new CustomEvent('userLoggedIn'));
       } else {
         setMessage({ type: 'error', text: signupData.error || loginData.error || 'Failed to sign up. Please try again.' });
       }
@@ -198,9 +339,9 @@ const LandingPage: React.FC = () => {
           </div>
           <div className={styles.promoContent}>
             <div className={styles.promoText}>
-              <h2 className={styles.promoTitle}>AGENTIC LEARNING ECOSYSTEM FOR NEXT GEN CREATORS</h2>
+              <h2 className={styles.promoTitle}>CYBER-PSYCHOLOGY ENDOWMENT FOR AGENTIC RESEARCH</h2>
               <p className={styles.promoDescription}>
-                An agentic research-driven LMS workshop exploring cyber-psychology, and testing pragmatic parasocial governance systems.
+                An agentic research-driven LMS workshop funding cyber-psychology, and pragmatic parasocial governance systems.
               </p>
             </div>
           </div>
@@ -346,6 +487,120 @@ const LandingPage: React.FC = () => {
             </form>
           </div>
         </div>
+      </div>
+
+      {/* Company Logos Section */}
+      <div className={styles.companyLogosSection}>
+        <p className={styles.trustedByText}>Ecosystem & Research Foundations</p>
+        <div className={styles.logosGrid}>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/Logo_ElizaOS_Blue_RGB.png"
+              alt="ElizaOS logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/full-ethereum-logo.png"
+              alt="Ethereum logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/full-aragon-logo.png"
+              alt="Aragon logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/OP_vertical_1200px.png"
+              alt="Optimism logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/foundation-dark.621f9c538e70-1.png"
+              alt="Foundation logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/ieee_logo_icon_169993.webp"
+              alt="IEEE logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/American_Psychological_Association_logo.svg.png"
+              alt="American Psychological Association logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/World_Health_Organization_Logo.svg.png"
+              alt="World Health Organization logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/gitcoin.png"
+              alt="Gitcoin logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+          <div className={styles.logoItem}>
+            <Image
+              src="/companylogos/1_o5Q3503plQP12FtVSn0nXQ.png"
+              alt="Partner logo"
+              width={120}
+              height={80}
+              className={styles.logoImage}
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Pattern Background Section */}
+      <div className={styles.patternSection}>
+        <div className={styles.patternOverlay}></div>
+        {/* Rotating Text Section */}
+        <RotatingTextSection />
       </div>
 
       {/* Onboarding Modal */}

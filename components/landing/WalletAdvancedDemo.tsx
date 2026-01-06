@@ -22,6 +22,8 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedAddress, setProcessedAddress] = useState<string | null>(null);
   const [hasTriggeredOnboarding, setHasTriggeredOnboarding] = useState(false);
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null); // null = checking, true/false = known
+  const [showAccountMessage, setShowAccountMessage] = useState(false);
   const processingRef = useRef<string | null>(null); // Track which address is currently being processed
 
   // If we have a valid address from wagmi's useAccount hook, that's sufficient.
@@ -107,6 +109,34 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
     // it when the wallet is fully connected and ready.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address, isProcessing, processedAddress]);
+
+  // Check if user has an account (email/password account) on mount and when login status changes
+  useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch('/api/me', {
+          credentials: 'include',
+        });
+        const data = await response.json().catch(() => ({ user: null }));
+        setHasAccount(!!data.user);
+        setShowAccountMessage(false); // Hide message if account is found
+      } catch (error) {
+        console.error('Failed to check account:', error);
+        setHasAccount(false);
+      }
+    };
+    checkAccount();
+
+    // Listen for login events to re-check account status
+    const handleLogin = () => {
+      setTimeout(checkAccount, 500); // Small delay to ensure session is set
+    };
+    window.addEventListener('userLoggedIn', handleLogin);
+    
+    return () => {
+      window.removeEventListener('userLoggedIn', handleLogin);
+    };
+  }, []);
 
   // Reset processed address when wallet disconnects
   useEffect(() => {
@@ -344,17 +374,40 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
     }
   };
 
+  const handleConnectClick = () => {
+    // If we're still checking account status, wait
+    if (hasAccount === null) {
+      return;
+    }
+
+    // If user doesn't have an account, show message instead of opening wallet modal
+    if (!hasAccount) {
+      setShowAccountMessage(true);
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        setShowAccountMessage(false);
+      }, 5000);
+      return;
+    }
+
+    // User has account, allow wallet connection
+    setOpen(true);
+  };
+
   return (
     <div>
+      {showAccountMessage && (
+        <div className={styles.accountMessage}>
+          You need to create an account first before connecting a wallet.
+        </div>
+      )}
       <button
         type="button"
         className={styles.connectWallet}
-        onClick={() => {
-          setOpen(true);
-        }}
-        disabled={isProcessing}
+        onClick={handleConnectClick}
+        disabled={isProcessing || hasAccount === null}
       >
-        {isProcessing ? 'Processing...' : 'Connect Wallet'}
+        {isProcessing ? 'Processing...' : hasAccount === null ? 'Checking...' : 'Connect Wallet'}
       </button>
     </div>
   );

@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAccount, useDisconnect } from 'wagmi';
 import { getWalletAuthHeaders } from '@/lib/wallet-api';
-import { SearchModal } from '@/components/search-modal/SearchModal';
 import YourAccountsModal from '@/components/nav-buttons/YourAccountsModal';
 import styles from './Navbar.module.css';
 
@@ -19,29 +18,17 @@ const MenuIcon: React.FC<{ size?: number }> = ({ size = 32 }) => {
   );
 };
 
-// Search Icon Component
-const SearchIcon: React.FC<{ size?: number }> = ({ size = 20 }) => {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.searchIcon}>
-      <circle cx="11" cy="11" r="8" stroke="rgba(156, 163, 175, 1)" strokeWidth="2" fill="none"/>
-      <path d="m21 21-4.35-4.35" stroke="rgba(156, 163, 175, 1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-};
-
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isYourAccountsModalOpen, setIsYourAccountsModalOpen] = useState(false);
   const [shardCount, setShardCount] = useState<number | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch user data - works for both Privy and session-based auth
@@ -104,14 +91,6 @@ const Navbar: React.FC = () => {
       return pathname === '/home' || pathname === '/';
     }
     return pathname === path || pathname?.startsWith(path + '/');
-  };
-
-  const handleSearchClick = () => {
-    setIsSearchModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsSearchModalOpen(false);
   };
 
   // Close dropdown when clicking outside
@@ -183,28 +162,6 @@ const Navbar: React.FC = () => {
           </Link>
         </div>
 
-        {/* Search Bar - Hidden on mobile, icon only on tablet */}
-        <div className={styles.searchContainer} ref={searchContainerRef}>
-          <div className={styles.searchInputContainer}>
-            <div className={styles.searchInputWrapper}>
-              <div className={styles.searchIconLeft}>
-                <SearchIcon size={20} />
-              </div>
-              <input
-                type="text"
-                placeholder="Search with Daemon Model"
-                className={styles.searchInput}
-                onClick={handleSearchClick}
-                readOnly
-              />
-            </div>
-          </div>
-          <SearchModal 
-            isOpen={isSearchModalOpen} 
-            onClose={handleCloseModal}
-            searchContainerRef={searchContainerRef}
-          />
-        </div>
 
         <div className={styles.rightContent}>
           {/* Desktop Navigation Links */}

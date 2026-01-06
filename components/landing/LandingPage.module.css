@@ -1,8 +1,9 @@
 .container {
-  position: relative;
+  position: static;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  height: auto;
+  overflow: visible;
 }
 
 .loginHeader {
@@ -26,24 +27,29 @@
 }
 
 .canvas {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   z-index: 0;
   background-color: #000000;
+  pointer-events: none;
 }
 
 .cardsContainer {
-  position: fixed;
-  top: 50%;
+  position: absolute;
+  top: 50vh;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.9);
   z-index: 10;
   display: flex;
   gap: 0;
   align-items: stretch;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  height: auto;
 }
 
 .promoCard {
@@ -83,7 +89,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('https://i.imgur.com/lsgm35f.jpeg');
+  background-image: url('https://i.imgur.com/WwbitCr.jpeg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -769,8 +775,8 @@
   }
 
   .cardsContainer {
-    position: fixed;
-    top: 50%;
+    position: absolute;
+    top: 50vh;
     left: 50%;
     right: auto;
     transform: translate(-50%, -50%);
@@ -853,3 +859,263 @@
   }
 }
 
+/* Company Logos Section */
+.companyLogosSection {
+  position: absolute;
+  top: calc(100vh + 100px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  z-index: 5;
+  animation: fadeInLogos 400ms ease-out forwards;
+  animation-delay: 200ms;
+  opacity: 0;
+  pointer-events: none;
+  background-color: #00000000;
+}
+
+.companyLogosSection > * {
+  pointer-events: auto;
+}
+
+@keyframes fadeInLogos {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.trustedByText {
+  width: fit-content;
+  background-color: rgba(255, 255, 255, 0);
+  padding: 4px 8px;
+  text-align: left;
+  font-family: var(--font-primary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02rem;
+  color: #d7cdf2;
+  margin: 0 0 16px 0;
+  border-radius: 4px;
+}
+
+/* Rotating Text Section */
+.rotatingTextContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  text-align: center;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.rotatingTextLines {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.rotatingTextHeading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-primary);
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.rotatingTextStaticLine {
+  margin: 0;
+  font-family: var(--font-primary);
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .rotatingTextHeading {
+    font-size: 2.65rem;
+  }
+  
+  .rotatingTextStaticLine {
+    font-size: 2.65rem;
+  }
+}
+
+.rotatingTextStatic {
+  white-space: nowrap;
+}
+
+.rotatingTextWrapper {
+  position: relative;
+  margin: 0 0.25rem;
+  vertical-align: middle;
+  text-align: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.rotatingTextInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.rotatingTextItem {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  color: #ffffff;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (min-width: 768px) {
+  .rotatingTextHeading {
+    font-size: 2.65rem;
+  }
+  
+  .rotatingTextWrapper {
+    margin-top: -2px;
+  }
+}
+
+.logosGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  justify-items: center;
+  gap: 4px;
+}
+
+@media (min-width: 640px) {
+  .logosGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .logosGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .logosGrid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.logoItem {
+  position: relative;
+  display: flex;
+  height: 80px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: rgba(210, 216, 255, 0.98);
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.logoItem:hover {
+  background-color: rgba(255, 255, 255, 0.939);
+}
+
+.logoItem .logoImage {
+  width: auto;
+  height: auto;
+  max-height: 40px;
+  max-width: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: grayscale(100%);
+  mix-blend-mode: multiply;
+  transition: opacity 200ms ease;
+}
+
+.logoItem:hover .logoImage {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+@media (max-width: 768px) {
+  .companyLogosSection {
+    padding: 0 16px 0 16px;
+    top: calc(100vh + 50px);
+  }
+  
+  .trustedByText {
+    font-size: 0.8rem;
+  }
+  
+  .logoItem {
+    height: 60px;
+    padding: 12px;
+  }
+  
+  .logoItem .logoImage {
+    max-height: 32px;
+  }
+}
+
+/* Pattern Background Section */
+.patternSection {
+  position: absolute;
+  top: calc(100vh + 600px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-height: 400px;
+  background-color: rgba(22, 23, 22, 0.98);
+  z-index: 4;
+  overflow: hidden;
+}
+
+.patternOverlay {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0.3;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><filter id='n'><feTurbulence type='turbulence' baseFrequency='0.85' numOctaves='1' seed='7' stitchTiles='stitch'/><feColorMatrix type='saturate' values='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 12%;
+  filter: saturate(1.2) contrast(1.1);
+  pointer-events: none;
+}

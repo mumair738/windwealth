@@ -1,7 +1,7 @@
 .navbar {
   width: 100%;
   height: auto;
-  min-height: 100px;
+  min-height: 80px;
   background: #F4F5FE;
   border-bottom: 2px solid #000000;
   border-radius: 0;
@@ -20,16 +20,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px clamp(16px, 3vw, 40px);
-  gap: 24px;
-  min-height: 100px;
+  gap: 16px;
+  min-height: 80px;
 }
 
 .leftContent {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: clamp(12px, 2vw, 37px);
-  flex-shrink: 1;
+  gap: clamp(12px, 2vw, 24px);
+  flex-shrink: 0;
   min-width: 0;
 }
 
@@ -67,8 +67,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: clamp(12px, 1.5vw, 24px);
-  flex-shrink: 1;
+  gap: clamp(8px, 1.2vw, 16px);
+  flex-shrink: 0;
   min-width: 0;
 }
 
@@ -76,24 +76,27 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: clamp(8px, 1.5vw, 24px);
-  flex-wrap: wrap;
+  gap: clamp(4px, 1vw, 12px);
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .navButton {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
-  padding: 0;
+  gap: 6px;
+  padding: 0 12px;
   background: transparent;
   border: none;
-  border-radius: 24px;
+  border-radius: 20px;
   cursor: pointer;
   text-decoration: none;
-  height: 48px;
-  padding: 0 20px;
-  transition: all 0.3s ease;
+  height: 40px;
+  min-width: fit-content;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .navButton:hover {
@@ -120,7 +123,7 @@
 
 .buttonLabel {
   font-family: var(--font-primary);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: rgba(163, 163, 163, 1);
   white-space: nowrap;
@@ -128,7 +131,7 @@
 
 .buttonLabelActive {
   font-family: var(--font-primary);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: #ECECEC;
   white-space: nowrap;
@@ -583,61 +586,42 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1;
-  max-width: 600px;
-  margin: 0 auto;
+  flex-shrink: 0;
   position: relative;
 }
 
-.searchInputContainer {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.searchInputWrapper {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: #FFFFFF;
-  border: 1px solid #FFFFFF;
-  border-radius: 24px;
-  padding: 12px 16px;
-  gap: 12px;
-  height: 48px;
-  width: 100%;
-}
-
-.searchIconLeft {
-  width: 20px;
-  height: 20px;
+.searchButton {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+}
+
+.searchButton:hover {
+  background: rgba(81, 104, 255, 0.1);
+  border-color: var(--color-primary);
+}
+
+.searchButton:active {
+  transform: scale(0.95);
 }
 
 .searchIcon {
   width: 100%;
   height: 100%;
-}
-
-.searchInput {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-family: var(--font-primary);
-  font-size: 16px;
-  font-weight: var(--font-weight-regular);
-  color: rgba(17, 24, 39, 1);
-  background: transparent;
-  padding: 0;
-  height: auto;
-}
-
-.searchInput::placeholder {
   color: rgba(156, 163, 175, 1);
+}
+
+.searchButton:hover .searchIcon {
+  color: var(--color-primary);
 }
 
 .searchRightContent {
@@ -748,7 +732,7 @@
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .topSection {
-    gap: 16px;
+    gap: 12px;
     padding: 16px 20px;
   }
 
@@ -756,30 +740,25 @@
     font-size: clamp(18px, 2.5vw, 24px);
   }
 
-  .searchContainer {
-    max-width: 400px;
-  }
-
-  .searchInput {
-    font-size: 14px;
-  }
-
-  .searchInput::placeholder {
-    font-size: 14px;
-  }
-
   .linksContainer {
-    gap: 8px;
+    gap: 4px;
   }
 
   .navButton {
-    padding: 0 12px;
-    height: 44px;
+    padding: 0 10px;
+    height: 38px;
+    gap: 4px;
   }
 
   .buttonLabel,
   .buttonLabelActive {
-    font-size: 14px;
+    font-size: 13px;
+  }
+
+  .homeIcon,
+  .questIcon {
+    width: 18px;
+    height: 18px;
   }
 
   .shardsCounter {
@@ -798,8 +777,8 @@
   }
 
   .topSection {
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
     padding: 12px 16px;
     min-height: auto;
   }
@@ -818,18 +797,13 @@
 
   .searchContainer {
     order: 3;
-    width: 100%;
-    max-width: 100%;
+    width: auto;
     margin: 0;
   }
 
-  .searchInputWrapper {
-    height: 44px;
-    padding: 10px 14px;
-  }
-
-  .searchInput {
-    font-size: 14px;
+  .searchButton {
+    width: 40px;
+    height: 40px;
   }
 
   .rightContent {
@@ -888,13 +862,9 @@
     font-size: 18px;
   }
 
-  .searchInputWrapper {
-    height: 40px;
-    padding: 8px 12px;
-  }
-
-  .searchInput {
-    font-size: 13px;
+  .searchButton {
+    width: 36px;
+    height: 36px;
   }
 
   .rightIcons {

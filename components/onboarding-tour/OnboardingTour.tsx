@@ -77,8 +77,18 @@ const injectAzuraDialogue = (tooltip: HTMLElement, message: string, emotion: Azu
     </div>
   `;
 
-  // Insert before the original content
-  const originalContent = contentDiv.innerHTML;
+  // Clear and append new container, checking for existing container first
+  const existingContainer = contentDiv.querySelector('.azura-dialogue-container');
+  if (existingContainer && existingContainer.parentNode) {
+    try {
+      existingContainer.parentNode.removeChild(existingContainer);
+    } catch (e) {
+      // Element may have already been removed, ignore error
+      console.warn('Could not remove existing container:', e);
+    }
+  }
+  
+  // Clear content and append new container
   contentDiv.innerHTML = '';
   contentDiv.appendChild(azuraContainer);
 };
