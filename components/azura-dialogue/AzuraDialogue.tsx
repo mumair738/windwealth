@@ -109,7 +109,7 @@ const AzuraDialogue: React.FC<AzuraDialogueProps> = ({
         timeoutRef.current = null;
       }
     };
-  }, [message, autoStart, speed]);
+  }, [message, autoStart, speed, onComplete]);
 
   const handleSkip = () => {
     if (timeoutRef.current) {

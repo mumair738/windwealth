@@ -59,7 +59,9 @@ export async function POST(request: Request) {
       const body = await request.json();
       if (body?.walletAddress && typeof body.walletAddress === 'string') {
         walletAddress = body.walletAddress;
-        console.log('Wallet signup - Got wallet address from request body:', walletAddress.substring(0, 10) + '...');
+        if (walletAddress) {
+          console.log('Wallet signup - Got wallet address from request body:', walletAddress.substring(0, 10) + '...');
+        }
       }
     } catch (parseError) {
       // Request body might be empty or not JSON - fallback to header
