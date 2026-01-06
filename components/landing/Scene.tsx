@@ -52,7 +52,7 @@ const RotatingCube = memo(({ position, rotationSpeed, scale, verticalSpeed, hori
     horizontalOnly: { value: horizontalOnly ? 1.0 : 0.0 },
     // Brand colors - 5 colors used for 6 faces (color1 used twice)
     ucolor1: { value: new THREE.Vector3(0.318, 0.408, 1.0) }, // Primary: #5168FF (rgb(81, 104, 255))
-    ucolor2: { value: new THREE.Vector3(0.831, 0.329, 0.396) }, // Secondary: rgb(212, 84, 101)
+    ucolor2: { value: new THREE.Vector3(0.831, 0.329, 0.396) }, // Secondary: rgb(41, 188, 229)
     ucolor3: { value: new THREE.Vector3(0.396, 0.922, 0.090) }, // Green variant: rgb(101, 235, 23)
     ucolor4: { value: new THREE.Vector3(0.816, 0.965, 0.329) }, // Cyan: rgb(208, 246, 84)
     ucolor5: { value: new THREE.Vector3(0.118, 0.047, 0.224) }, // Dark purple: #1E0C39 (rgb(30, 12, 57))

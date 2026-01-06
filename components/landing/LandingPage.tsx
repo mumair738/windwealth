@@ -198,7 +198,7 @@ const LandingPage: React.FC = () => {
           </div>
           <div className={styles.promoContent}>
             <div className={styles.promoText}>
-              <h2 className={styles.promoTitle}>THE WORLDS FIRST AGENTIC LEARNING ECOSYSTEM</h2>
+              <h2 className={styles.promoTitle}>AGENTIC LEARNING ECOSYSTEM FOR NEXT GEN CREATORS</h2>
               <p className={styles.promoDescription}>
                 An agentic research-driven LMS workshop exploring cyber-psychology, and testing pragmatic parasocial governance systems.
               </p>

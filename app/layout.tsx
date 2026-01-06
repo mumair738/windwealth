@@ -88,13 +88,18 @@ export default function RootLayout({
                       allErrorText.includes('InvariantError: Session state change subscription returned no data') ||
                       allErrorText.includes('InvariantError: Master key config not initialised') ||
                       allErrorText.includes('Session state change subscription returned no data') ||
-                      allErrorText.includes('Cannot read properties of undefined (reading') && allErrorText.includes('role') ||
+                      allErrorText.includes('Master key config not initialised') ||
+                      (allErrorText.includes('Cannot read properties of undefined (reading') && allErrorText.includes('role')) ||
                       (allErrorText.includes('InvariantError') && (allErrorText.includes('family') || allErrorText.includes('607-'))) ||
+                      // Catch any error from Family wallet's script files
+                      (allErrorText.includes('InvariantError') && allErrorText.includes('607-749c0992edc06302.js')) ||
+                      (allErrorText.includes('CombinedError') && allErrorText.includes('GraphQL') && allErrorText.includes('role')) ||
                       // 401/Unauthorized errors
                       (allErrorText.includes('family.co') && (allErrorText.includes('401') || allErrorText.includes('Unauthorized'))) ||
-                      // Check error name/type
+                      // Check error name/type - catch ALL InvariantError from Family wallet
                       errorName === 'InvariantError' ||
-                      (errorName === 'Error' && allErrorText.includes('JSON sent is not a valid Request'));
+                      (allErrorText.includes('InvariantError') && (allErrorText.includes('607-') || allErrorText.includes('family'))) ||
+                    (errorName === 'Error' && allErrorText.includes('JSON sent is not a valid Request'));
                     
                     // WalletConnect errors (Proposal expired, etc.)
                     const isWalletConnectError = 
@@ -190,14 +195,18 @@ export default function RootLayout({
                     allConsoleErrorText.includes('api.app.family.co') ||
                     allConsoleErrorText.includes('app.family.co') ||
                     allConsoleErrorText.includes('InvariantError: Session state change') ||
+                    allConsoleErrorText.includes('InvariantError: Master key config') ||
                     allConsoleErrorText.includes('Session state change subscription returned no data') ||
+                    allConsoleErrorText.includes('Master key config not initialised') ||
                     (allConsoleErrorText.includes('Cannot read properties of undefined (reading') && allConsoleErrorText.includes('role')) ||
+                    (allConsoleErrorText.includes('CombinedError') && allConsoleErrorText.includes('GraphQL') && allConsoleErrorText.includes('role')) ||
                     (allConsoleErrorText.includes('family.co') && (allConsoleErrorText.includes('401') || allConsoleErrorText.includes('Unauthorized'))) ||
                     allConsoleErrorText.includes('family/lib/index') ||
                     allConsoleErrorText.includes('family-accounts-connector') ||
                     allConsoleErrorText.includes('607-749c0992edc06302.js') ||
                     allConsoleErrorText.includes('index-Cs-onntv.js') ||
-                    allConsoleErrorText.includes('family-accounts-connector-JRsEYbpv.js');
+                    allConsoleErrorText.includes('family-accounts-connector-JRsEYbpv.js') ||
+                    (allConsoleErrorText.includes('InvariantError') && allConsoleErrorText.includes('607-'));
                   
                   if (isFamilyWalletConsoleError) {
                     // Suppress - these are already handled by unhandledrejection handler

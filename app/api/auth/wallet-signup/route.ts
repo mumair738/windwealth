@@ -32,16 +32,52 @@ export async function POST(request: Request) {
       }
     }
 
-    // Get wallet address from Authorization header
-    const headersList = await headers();
-    const authHeader = headersList.get('authorization');
-    console.log('Wallet signup request - Authorization header:', authHeader ? `${authHeader.substring(0, 20)}...` : 'missing');
+    // Explicitly ensure password_hash is nullable for wallet signups
+    // This migration is critical and must run before inserting wallet accounts
+    try {
+      await sqlQuery(`
+        ALTER TABLE users 
+        ALTER COLUMN password_hash DROP NOT NULL
+      `);
+      console.log('Wallet signup - Successfully ensured password_hash is nullable');
+    } catch (migrationError: any) {
+      const errorMessage = migrationError?.message || String(migrationError || '');
+      // If column is already nullable, that's fine - continue
+      if (!errorMessage.includes('does not exist') && 
+          !errorMessage.includes('cannot be cast') &&
+          !errorMessage.includes('constraint') && 
+          !errorMessage.includes('does not exist')) {
+        console.warn('Wallet signup - Could not make password_hash nullable (may already be nullable):', errorMessage);
+      }
+      // Continue anyway - if migration fails, we'll get a clear error on INSERT
+    }
+
+    // Get wallet address from request body first, then fallback to Authorization header
+    let walletAddress: string | null = null;
     
-    const walletAddress = await getWalletAddressFromRequest();
-    console.log('Wallet signup - Extracted wallet address:', walletAddress ? `${walletAddress.substring(0, 10)}...` : 'null');
+    try {
+      const body = await request.json();
+      if (body?.walletAddress && typeof body.walletAddress === 'string') {
+        walletAddress = body.walletAddress;
+        console.log('Wallet signup - Got wallet address from request body:', walletAddress.substring(0, 10) + '...');
+      }
+    } catch (parseError) {
+      // Request body might be empty or not JSON - fallback to header
+      console.log('Wallet signup - No wallet address in request body, will try Authorization header');
+    }
+    
+    // Fallback to Authorization header if not in body
+    if (!walletAddress) {
+      const headersList = await headers();
+      const authHeader = headersList.get('authorization');
+      console.log('Wallet signup request - Authorization header:', authHeader ? `${authHeader.substring(0, 20)}...` : 'missing');
+      
+      walletAddress = await getWalletAddressFromRequest();
+      console.log('Wallet signup - Extracted wallet address from header:', walletAddress ? `${walletAddress.substring(0, 10)}...` : 'null');
+    }
     
     if (!walletAddress) {
-      console.error('Wallet signup failed: No wallet address found in request');
+      console.error('Wallet signup failed: No wallet address found in request body or Authorization header');
       return NextResponse.json(
         { error: 'Wallet address is required. Please ensure your wallet is connected.' },
         { status: 400 }

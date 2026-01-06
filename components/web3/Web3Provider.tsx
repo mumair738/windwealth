@@ -34,6 +34,8 @@ function getWagmiConfig() {
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '742bad7153998ca0c2f5f449aedc3eea',
 
     // Required App Info
+    // Note: WalletConnect metadata URL warning about mentalwealthacademy.world vs www.mentalwealthacademy.world
+    // This is configured in WalletConnect Cloud Dashboard and should match the appUrl here
     appName: "Mental Wealth Academy",
     appDescription: "Mental Wealth Academy is a virtual learning platform for the next generation.",
     appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.mentalwealthacademy.world",

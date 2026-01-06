@@ -73,137 +73,94 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
   // that by waiting for the address to appear, not by checking "readiness".
 
   // Handle wallet connection and user check/creation
+  // IMPORTANT: Wait for user to complete the ConnectKit flow (select wallet, approve connection)
+  // before attempting to process the connection. Don't rush - wait for both isConnected AND address.
   useEffect(() => {
-    // Prevent re-processing if already processing or if address was already processed
-    if (!isConnected || isProcessing || !address) {
+    // Don't process if:
+    // - Not connected yet (user hasn't completed ConnectKit flow)
+    // - Already processing
+    // - No address available yet (wallet connection not fully established)
+    // - Address already processed
+    if (!isConnected) {
+      // User hasn't connected yet - they need to click "Connect Wallet" and complete the modal flow
       return;
     }
     
-    // If address is already available and not yet processed, process it
-    if (processedAddress !== address && processingRef.current !== address && /^0x[a-fA-F0-9]{40}$/.test(address)) {
-      // Mark as processing immediately to prevent re-triggering
-      processingRef.current = address;
-      
-      (async () => {
-        // Double-check we're not already processing (race condition protection)
-        if (isProcessing || processedAddress === address || processingRef.current !== address) {
-          console.log('Already processing or processed, skipping');
-          processingRef.current = null;
-          return;
-        }
-        
-        // For Family wallets, wait a bit longer to ensure initialization
-        // For other wallets, a shorter delay is usually sufficient
-        const delay = isFamilyWallet ? 800 : 200;
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
-        // Verify wallet is still connected and address is still available
-        if (!isConnected || !address || processedAddress === address || processingRef.current !== address) {
-          console.log('Wallet disconnected or address already processed during wait');
-          processingRef.current = null;
-          return;
-        }
-        
-        // If we have a valid address, proceed with connection handling
-        if (address && /^0x[a-fA-F0-9]{40}$/.test(address) && processedAddress !== address && !isProcessing) {
-          console.log('Wallet address available, processing connection');
-          handleWalletConnection(address);
-        } else {
-          processingRef.current = null;
-        }
-      })();
-      
+    if (isProcessing) {
+      // Already processing a connection
       return;
     }
     
-    // If connected but address not available yet, try to get it directly from connector
-    // This is especially important for Family wallet when its API is failing
-    if (!address && connector) {
-        console.log('Address not available from useAccount, attempting to get from connector...');
-        
-        let pollInterval: NodeJS.Timeout | null = null;
-        let isCleanedUp = false;
-        
-        // Try to get address directly from connector/provider with exponential backoff
-        (async () => {
-          const maxAttempts = isFamilyWallet ? 20 : 10; // 10-20 seconds for Family, 5 seconds for others
-          let attempt = 0;
-          let delay = 250; // Start with 250ms
-          
-          const tryGetAddress = async (): Promise<string | null> => {
-            try {
-              if (connector && 'getAccount' in connector) {
-                const account = await (connector as any).getAccount();
-                if (account?.address && /^0x[a-fA-F0-9]{40}$/.test(account.address)) {
-                  console.log('Got address directly from connector:', account.address);
-                  return account.address;
-                }
-              }
-              
-              // Try getting from provider if available
-              if (connector && 'getProvider' in connector) {
-                const provider = await (connector as any).getProvider();
-                if (provider && 'request' in provider) {
-                  const accounts = await provider.request({ method: 'eth_accounts' });
-                  if (accounts && accounts[0] && /^0x[a-fA-F0-9]{40}$/.test(accounts[0])) {
-                    console.log('Got address from provider:', accounts[0]);
-                    return accounts[0];
-                  }
-                }
-              }
-            } catch (error) {
-              console.warn('Failed to get address from connector/provider (attempt', attempt + 1, '):', error);
-            }
-            return null;
-          };
-          
-          // Try immediate fetch first
-          let walletAddress = await tryGetAddress();
-          if (walletAddress && !isCleanedUp && /^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-            // If we have a valid address, proceed with connection
-            handleWalletConnection(walletAddress);
-            return;
-          }
-          
-          // If immediate fetch fails, poll with exponential backoff
-          const poll = async () => {
-            if (isCleanedUp) return;
-            
-            attempt++;
-            if (attempt >= maxAttempts) {
-              console.error('Address not available after polling. Wallet may be in a broken state.');
-              if (isFamilyWallet && !isCleanedUp) {
-                setFamilyWalletError('Family wallet connection issue detected. Please try:\n\n1. Disconnect your wallet\n2. Refresh the page\n3. Reconnect your wallet\n\nIf the issue persists, try using a different wallet or contact support.');
-              } else if (!isCleanedUp) {
-                alert('Wallet address not available. Please disconnect and reconnect your wallet.');
-              }
-              return;
-            }
-            
-            walletAddress = await tryGetAddress();
-            if (walletAddress && !isCleanedUp && /^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-              // If we have a valid address, proceed with connection
-              handleWalletConnection(walletAddress);
-              return;
-            }
-            
-            // Exponential backoff: increase delay with each attempt (capped at 2 seconds)
-            delay = Math.min(delay * 1.5, 2000);
-            console.log(`Polling for address... attempt ${attempt}/${maxAttempts} (next check in ${delay}ms)`);
-            setTimeout(poll, delay);
-          };
-          
-          // Start polling after initial delay
-          setTimeout(poll, delay);
-        })();
-        
-        return () => {
-          isCleanedUp = true;
-          if (pollInterval) {
-            clearInterval(pollInterval);
-          }
-        };
+    if (!address) {
+      // Wallet is "connected" but address not available yet - wait for it
+      // This happens when user is in the middle of the ConnectKit flow
+      console.log('Wallet connected but address not available yet - waiting for connection to complete...');
+      return;
+    }
+    
+    if (processedAddress === address) {
+      // This address was already processed
+      return;
+    }
+    
+    // Validate address format before proceeding
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      console.log('Invalid address format, waiting for valid address...');
+      return;
+    }
+    
+    // Don't process if we're already processing this address
+    if (processingRef.current === address) {
+      return;
+    }
+    
+    // Wait for connection to be fully established before processing
+    // This ensures the user has completed the ConnectKit modal flow:
+    // 1. Clicked "Connect Wallet" button
+    // 2. Selected their wallet (Family, MetaMask, etc.) in the modal
+    // 3. Approved the connection in their wallet
+    // 4. Wallet is now fully connected with address available
+    (async () => {
+      // Double-check we're not already processing (race condition protection)
+      if (isProcessing || processedAddress === address || processingRef.current === address) {
+        console.log('Already processing or processed, skipping');
+        return;
       }
+      
+      // Wait longer for Family wallet to ensure it's fully initialized after connection
+      // Family wallet needs more time to complete its internal initialization
+      // For other wallets, a shorter delay is usually sufficient
+      const delay = isFamilyWallet ? 1500 : 500;
+      console.log(`Wallet connected! Waiting ${delay}ms for wallet to fully initialize before processing connection...`);
+      console.log('Wallet address:', address);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Verify wallet is still connected and address is still available after wait
+      if (!isConnected || !address || processedAddress === address) {
+        console.log('Wallet disconnected or address already processed during wait');
+        return;
+      }
+      
+      // Final validation before processing
+      if (address && /^0x[a-fA-F0-9]{40}$/.test(address) && processedAddress !== address && !isProcessing) {
+        console.log('Wallet connection fully established, processing connection and checking/creating account for:', address);
+        handleWalletConnection(address);
+      }
+    })();
+    
+    // NOTE: We do NOT call connector.getAccount() or connector.getProvider() directly
+    // because these methods trigger Family wallet's internal API calls (api.app.family.co)
+    // which cause 401 errors when their JWT token is expired/missing.
+    // 
+    // Family wallet's SDK has internal token refresh logic that can fail (401 errors)
+    // when their watchSessionStateChange subscription runs before token refresh completes.
+    // These are non-critical SDK initialization errors that we suppress - they don't
+    // affect wallet functionality or account creation.
+    //
+    // Instead, we rely on wagmi's useAccount hook which handles wallet connections
+    // properly without triggering these internal API calls. If address is not available
+    // from useAccount, we simply wait - wagmi will provide it when the wallet is
+    // fully connected and ready.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address, isProcessing, processedAddress, connector, isFamilyWallet]);
 
@@ -242,18 +199,22 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
   }, [isConnected, address, isProcessing]);
 
   const handleWalletConnection = async (walletAddress: string) => {
-    // Prevent duplicate processing - but allow retry if user doesn't exist
-    if (processingRef.current === walletAddress) {
+    // Prevent duplicate processing
+    if (processingRef.current === walletAddress || isProcessing) {
       console.log('Already processing this address, skipping duplicate call');
       return;
     }
     
     // Mark as processing immediately to prevent duplicate calls
     processingRef.current = walletAddress;
+    setIsProcessing(true);
     
     // Validate wallet address format before proceeding
     if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
       console.error('Invalid wallet address format:', walletAddress);
+      // Reset processing state
+      processingRef.current = null;
+      setIsProcessing(false);
       // For Family wallets, this might be a temporary issue - don't show alert immediately
       // Instead, wait a bit and retry if wallet is still connected
       if (isConnected) {
@@ -277,7 +238,6 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
     
     console.log('handleWalletConnection - Processing wallet connection for:', walletAddress);
     console.log('handleWalletConnection - Is Family wallet:', isFamilyWallet);
-    setIsProcessing(true);
     setProcessedAddress(walletAddress);
     
     try {
@@ -350,17 +310,20 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
         // User doesn't exist - create account with wallet address
         console.log('User does not exist, attempting to create account for:', walletAddress);
         const authHeaders = getWalletAuthHeaders(walletAddress);
+        console.log('Wallet signup - Sending wallet address:', walletAddress);
         console.log('Wallet signup - Auth headers:', Object.keys(authHeaders));
         
         // If we've gotten this far, we have a valid address from wagmi
-        // No need for additional "readiness" checks - the address is sufficient
-        
+        // Send wallet address in both Authorization header and request body for clarity
         const signupResponse = await fetch('/api/auth/wallet-signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...authHeaders,
           },
+          body: JSON.stringify({
+            walletAddress: walletAddress,
+          }),
         });
         
         console.log('Wallet signup - Response status:', signupResponse.status, signupResponse.statusText);

@@ -79,8 +79,8 @@ export async function ensureForumSchema() {
     CREATE TABLE IF NOT EXISTS users (
       id CHAR(36) PRIMARY KEY,
       username VARCHAR(32) NOT NULL UNIQUE,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      password_hash VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NULL UNIQUE,
+      password_hash VARCHAR(255) NULL,
       selected_avatar_id VARCHAR(50) NULL,
       avatar_url VARCHAR(1024) NULL,
       privy_user_id VARCHAR(255) NULL UNIQUE,
@@ -138,6 +138,30 @@ export async function ensureForumSchema() {
     // Column might already exist, ignore error
     if (!err?.message?.includes('already exists') && !err?.message?.includes('duplicate')) {
       console.warn('Error adding password_hash column:', err);
+    }
+  }
+
+  // Make password_hash nullable for wallet-based signups (if not already nullable)
+  // This is critical - wallet signups don't have passwords
+  try {
+    const result = await sqlQuery(`
+      ALTER TABLE users 
+      ALTER COLUMN password_hash DROP NOT NULL
+    `);
+    console.log('Successfully made password_hash nullable');
+  } catch (err: any) {
+    // Check if error is because column is already nullable or doesn't exist
+    const errorMessage = err?.message || String(err || '');
+    if (errorMessage.includes('does not exist') || 
+        errorMessage.includes('cannot be cast') ||
+        errorMessage.includes('already') ||
+        errorMessage.includes('constraint') && errorMessage.includes('does not exist')) {
+      // Column might already be nullable or doesn't exist, which is fine
+      console.log('password_hash column is already nullable or constraint already dropped');
+    } else {
+      // Log other errors so we can see what's happening
+      console.warn('Error making password_hash nullable:', errorMessage);
+      console.warn('Full error:', err);
     }
   }
 
