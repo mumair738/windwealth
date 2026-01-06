@@ -7,8 +7,8 @@ const AzuraFaucet: React.FC = () => {
     <div className={styles.azuraFaucet} data-intro="azurafaucet">
       <div className={styles.content}>
         <div className={styles.textSection}>
-          <h2 className={styles.title}>Daily Shards</h2>
-          <p className={styles.subtitle}>Get shards for daily check-ins.</p>
+          <h2 className={styles.title}>Daily Daemon</h2>
+          <p className={styles.subtitle}>Get Daemon for daily check-ins.</p>
         </div>
         <button className={styles.actionButton}>
           <span className={styles.buttonText}>Daily Faucet</span>

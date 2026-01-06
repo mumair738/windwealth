@@ -23,7 +23,6 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
   const [processedAddress, setProcessedAddress] = useState<string | null>(null);
   const [hasTriggeredOnboarding, setHasTriggeredOnboarding] = useState(false);
   const [hasAccount, setHasAccount] = useState<boolean | null>(null); // null = checking, true/false = known
-  const [showAccountMessage, setShowAccountMessage] = useState(false);
   const processingRef = useRef<string | null>(null); // Track which address is currently being processed
 
   // If we have a valid address from wagmi's useAccount hook, that's sufficient.
@@ -119,7 +118,6 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
         });
         const data = await response.json().catch(() => ({ user: null }));
         setHasAccount(!!data.user);
-        setShowAccountMessage(false); // Hide message if account is found
       } catch (error) {
         console.error('Failed to check account:', error);
         setHasAccount(false);
@@ -267,18 +265,10 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
           console.warn('Failed to fetch profile:', profileResponse.status, profileResponse.statusText);
         }
         
-        if (hasCompleteProfile) {
-          // User has complete profile - redirect to home
-          console.log('Profile complete, redirecting to home');
-          window.location.replace('/home');
-        } else {
-          // User exists but needs profile details - trigger onboarding
-          console.log('User exists but profile incomplete, triggering onboarding');
-          if (onWalletConnected && !hasTriggeredOnboarding) {
-            setHasTriggeredOnboarding(true);
-            onWalletConnected(walletAddress);
-          }
-        }
+        // User exists - redirect to home page
+        // Home page will check if profile is complete and show onboarding/avatar modals as needed
+        console.log('User exists, redirecting to home');
+        window.location.replace('/home');
       } else {
         // User doesn't exist - create account with wallet address
         console.log('User does not exist, attempting to create account for:', walletAddress);
@@ -315,11 +305,9 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
           const verifyData = await verifyResponse.json().catch(() => ({ user: null }));
           
           if (verifyData.user) {
-            console.log('Account verified in database, triggering onboarding');
-            if (onWalletConnected && !hasTriggeredOnboarding) {
-              setHasTriggeredOnboarding(true);
-              onWalletConnected(walletAddress);
-            }
+            console.log('Account verified in database, redirecting to home');
+            // Redirect to home page - it will check if profile is complete and show onboarding/avatar modals
+            window.location.replace('/home');
           } else {
             console.error('Account creation reported success but user not found in database');
             // Reset state to allow retry
@@ -380,27 +368,12 @@ export function WalletConnectionHandler({ onWalletConnected }: WalletConnectionH
       return;
     }
 
-    // If user doesn't have an account, show message instead of opening wallet modal
-    if (!hasAccount) {
-      setShowAccountMessage(true);
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        setShowAccountMessage(false);
-      }, 5000);
-      return;
-    }
-
-    // User has account, allow wallet connection
+    // Open wallet connection modal
     setOpen(true);
   };
 
   return (
     <div>
-      {showAccountMessage && (
-        <div className={styles.accountMessage}>
-          You need to create an account first before connecting a wallet.
-        </div>
-      )}
       <button
         type="button"
         className={styles.connectWallet}

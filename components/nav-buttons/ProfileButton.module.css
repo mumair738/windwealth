@@ -21,6 +21,13 @@
   -moz-appearance: none;
 }
 
+.iconRight {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
 .profileButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);

@@ -23,14 +23,14 @@ const ProfileButton: React.FC = () => {
         onClick={() => setIsModalOpen(true)}
         type="button"
       >
+        <span className={styles.buttonText}>Your impact</span>
         <Image 
-          src="/icons/ethlogo.svg" 
-          alt="Your Accounts" 
-          width={24}
-          height={24}
-          className={styles.profileIcon}
+          src="/icons/Teleport.svg" 
+          alt="Impact" 
+          width={20}
+          height={20}
+          className={styles.iconRight}
         />
-        <span className={styles.buttonText}>Your Accounts</span>
       </button>
 
       {isModalOpen && (

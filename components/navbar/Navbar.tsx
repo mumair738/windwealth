@@ -181,7 +181,7 @@ const Navbar: React.FC = () => {
             {/* Quests Button */}
             <Link href="/quests" className={`${styles.navButton} ${isActive('/quests') ? styles.navButtonActive : ''}`}>
               <Image
-                src="/icons/Teleport.svg"
+                src="/icons/Survey.svg"
                 alt="Quests"
                 width={20}
                 height={20}
@@ -190,16 +190,16 @@ const Navbar: React.FC = () => {
               <span className={isActive('/quests') ? styles.buttonLabelActive : styles.buttonLabel}>Quests</span>
             </Link>
 
-            {/* Games Button */}
-            <Link href="/games" className={`${styles.navButton} ${isActive('/games') ? styles.navButtonActive : ''}`}>
+            {/* Voting Button */}
+            <Link href="/voting" className={`${styles.navButton} ${isActive('/voting') ? styles.navButtonActive : ''}`}>
               <Image
                 src="/icons/Venetian carnival.svg"
-                alt="Games"
+                alt="Voting"
                 width={20}
                 height={20}
                 className={styles.questIcon}
               />
-              <span className={isActive('/games') ? styles.buttonLabelActive : styles.buttonLabel}>Games</span>
+              <span className={isActive('/voting') ? styles.buttonLabelActive : styles.buttonLabel}>Voting</span>
             </Link>
 
             {/* Library Button - Disabled */}
@@ -225,13 +225,13 @@ const Navbar: React.FC = () => {
             </Link>
             <div className={styles.shardsCounter}>
               <Image
-                src="/icons/shard.svg"
-                alt="Shards"
+                src="/icons/Coin Poly.svg"
+                alt="Daemon"
                 width={20}
                 height={20}
                 className={styles.shardIcon}
               />
-              <span className={styles.shardsLabel}>Shards:</span>
+              <span className={styles.shardsLabel}>Daemon:</span>
               <span className={styles.shardsValue}>
                 {shardCount !== null ? String(shardCount).padStart(3, '0') : '000'}
               </span>
@@ -372,7 +372,7 @@ const Navbar: React.FC = () => {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <Image
-              src="/icons/Teleport.svg"
+              src="/icons/Survey.svg"
               alt="Quests"
               width={20}
               height={20}
@@ -381,18 +381,18 @@ const Navbar: React.FC = () => {
             <span>Quests</span>
           </Link>
           <Link 
-            href="/games" 
-            className={`${styles.mobileNavButton} ${isActive('/games') ? styles.mobileNavButtonActive : ''}`}
+            href="/voting" 
+            className={`${styles.mobileNavButton} ${isActive('/voting') ? styles.mobileNavButtonActive : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <Image
               src="/icons/Venetian carnival.svg"
-              alt="Games"
+              alt="Voting"
               width={20}
               height={20}
               className={styles.questIcon}
             />
-            <span>Games</span>
+            <span>Voting</span>
           </Link>
           <div 
             className={`${styles.mobileNavButton} ${styles.mobileNavButtonDisabled}`}

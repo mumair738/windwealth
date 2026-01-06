@@ -350,9 +350,16 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, isWa
         window.dispatchEvent(new Event('profileUpdated'));
         // Close modal first
         onClose();
-        // Use window.location.replace for reliable redirect (ensures full page reload with new session)
-        // This ensures cookies are properly sent and session is recognized
-        window.location.replace('/home');
+        // If we're already on the home page, just refresh user data
+        // Otherwise redirect to home
+        if (window.location.pathname === '/home') {
+          // Already on home page - profileUpdated event will trigger avatar modal if needed
+          // No need to redirect
+        } else {
+          // Use window.location.replace for reliable redirect (ensures full page reload with new session)
+          // This ensures cookies are properly sent and session is recognized
+          window.location.replace('/home');
+        }
       } else {
         // Log detailed error for debugging
         console.error('Profile creation failed:', {

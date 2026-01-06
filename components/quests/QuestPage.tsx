@@ -5,12 +5,12 @@ import Image from 'next/image';
 import styles from './QuestPage.module.css';
 import QuestDetailSidebar from './QuestDetailSidebar';
 
-// Shard Icon Component
-const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
+// Daemon Icon Component
+const DaemonIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
   return (
     <Image
-      src="/icons/shard.svg"
-      alt="Shard"
+      src="/icons/Coin Poly.svg"
+      alt="Daemon"
       width={size}
       height={size}
       className={styles.usdcIcon}
@@ -79,11 +79,11 @@ const QuestCard: React.FC<QuestCardProps> = ({
           <div className={styles.questInfo}>
             <div className={styles.questName}>{questName}</div>
             <div className={styles.usdcBonded}>
-              <ShardIcon />
+              <DaemonIcon />
               <span>{usdcBonded}</span>
             </div>
             <div className={styles.usdcReward}>
-              <ShardIcon />
+              <DaemonIcon />
               <span>{usdcReward}</span>
             </div>
           </div>
@@ -174,7 +174,7 @@ const QuestPage: React.FC = () => {
         usdcReward: '10',
         status: 'active',
         questType: 'twitter-follow',
-        description: 'Connect your X (Twitter) account and follow @MentalWealthDAO to earn your first shards!',
+        description: 'Connect your X (Twitter) account and follow @MentalWealthDAO to earn your first Daemon!',
       },
     ];
 
@@ -196,13 +196,13 @@ const QuestPage: React.FC = () => {
     <div className={styles.questPageContainer}>
       <div className={styles.hero}>
         <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>Earn shards by completing quests</h1>
+          <h1 className={styles.heroTitle}>Earn Daemon by completing quests</h1>
           <p className={styles.heroSubtitle}>
-            Quests are singular or collaborative tasks for users to complete, and shards are the rewarded currency that unlocks what comes next.
+            Quests are singular or collaborative tasks for users to complete, and Daemon are the rewarded currency that unlocks what comes next.
           </p>
           <div className={styles.heroActions}>
             <button className={styles.primaryCta} type="button">
-              <ShardIcon size={12} />
+              <DaemonIcon size={12} />
               <span>Get Started</span>
             </button>
             <button className={styles.secondaryCta} type="button">More Info</button>

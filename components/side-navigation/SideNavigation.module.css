@@ -22,14 +22,11 @@
 
 .membershipImage {
   width: 100%;
-  height: 254.23px;
   position: relative;
   overflow: hidden;
   border-radius: 14.26px;
   background: #F3F3F3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 448 / 254;
 }
 
 .membershipImg {

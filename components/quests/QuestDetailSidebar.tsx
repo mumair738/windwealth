@@ -10,12 +10,12 @@ import { ConfettiCelebration } from './ConfettiCelebration';
 import { ShardAnimation } from './ShardAnimation';
 import { XConnectingModal } from '../x-connecting/XConnectingModal';
 
-// Shard Icon Component
-const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
+// Daemon Icon Component
+const DaemonIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
   return (
     <Image
-      src="/icons/shard.svg"
-      alt="Shard"
+      src="/icons/Coin Poly.svg"
+      alt="Daemon"
       width={size}
       height={size}
       className={styles.shardIcon}
@@ -372,9 +372,9 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                 <span className={styles.detailValue}>Academy Oracle</span>
               </div>
               <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Shard Pool Total</span>
+                <span className={styles.detailLabel}>Daemon Pool Total</span>
                 <span className={styles.detailValue}>
-                  <ShardIcon size={16} />
+                  <DaemonIcon size={16} />
                   {quest.usdcBonded}
                 </span>
               </div>
@@ -383,9 +383,9 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                 <span className={styles.detailValue}>1</span>
               </div>
               <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Minimum Shards Received</span>
+                <span className={styles.detailLabel}>Minimum Daemon Received</span>
                 <span className={styles.detailValue}>
-                  <ShardIcon size={16} />
+                  <DaemonIcon size={16} />
                   {quest.usdcReward}
                 </span>
               </div>
@@ -404,7 +404,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                 <p className={styles.sectionDescription}>{quest.description}</p>
                 <div className={styles.questBannerImage}>
                   <Image
-                    src="https://i.imgur.com/l44U7ak.png"
+                    src="https://i.imgur.com/JEvcVXO.jpeg"
                     alt="Quest Banner"
                     width={600}
                     height={300}
@@ -478,7 +478,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
               <>
                 <h3 className={styles.sectionTitle}>Complete Quest</h3>
                 <p className={styles.sectionDescription}>
-                  Register for the event on the homepage. After registering, click the button below to complete the quest and claim your {quest.usdcReward} shards.
+                  Register for the event on the homepage. After registering, click the button below to complete the quest and claim your {quest.usdcReward} Daemon.
                 </p>
 
                 <div className={styles.actionBox}>
@@ -500,7 +500,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                     onClick={handleCompleteQuest}
                     disabled={isCompleting}
                   >
-                    {isCompleting ? 'Completing...' : `Complete Quest & Claim ${quest.usdcReward} Shards`}
+                    {isCompleting ? 'Completing...' : `Complete Quest & Claim ${quest.usdcReward} Daemon`}
                   </button>
                   
                   <button 
@@ -535,7 +535,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
               <>
                 <h3 className={styles.sectionTitle}>Complete Quest</h3>
                 <p className={styles.sectionDescription}>
-                  Connect your X (Twitter) account and follow @MentalWealthDAO to earn shards!
+                  Connect your X (Twitter) account and follow @MentalWealthDAO to earn Daemon!
                 </p>
 
                 <div className={styles.requirementsList}>
@@ -614,7 +614,7 @@ const QuestDetailSidebar: React.FC<QuestDetailSidebarProps> = ({ isOpen, onClose
                     onClick={handleCompleteQuest}
                     disabled={isCompleting}
                   >
-                    {isCompleting ? 'Completing...' : 'Complete Quest & Claim Shards'}
+                    {isCompleting ? 'Completing...' : 'Complete Quest & Claim Daemon'}
                   </button>
                 )}
 

@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import SignInButton from '@/components/nav-buttons/SignInButton';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { WalletConnectionHandler } from './WalletAdvancedDemo';
+import { HelpTooltip } from '@/components/help-tooltip/HelpTooltip';
 import styles from './LandingPage.module.css';
 
 // Dynamically import Scene with aggressive lazy loading
@@ -280,14 +281,7 @@ const LandingPage: React.FC = () => {
   };
 
   // Load Scene after page is fully interactive - don't block initial render
-  // Don't load Scene on mobile devices
   useEffect(() => {
-    // Check if device is mobile (screen width <= 768px)
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      return; // Don't load Scene on mobile
-    }
-
     // Wait for page to be interactive, then load Scene in background
     const loadScene = () => {
       // Use requestIdleCallback if available, otherwise wait for load event
@@ -339,7 +333,7 @@ const LandingPage: React.FC = () => {
           </div>
           <div className={styles.promoContent}>
             <div className={styles.promoText}>
-              <h2 className={styles.promoTitle}>NEXT GEN CYBER-PSYCHOLOGY ENDOWMENT FOR MENTAL HEALTH</h2>
+              <h2 className={styles.promoTitle}>ACADEMIC DESCI ENDOWMENT FOR MENTAL HEALTH</h2>
               <p className={styles.promoDescription}>
                 A community owned fund driving mental health changes in cyber-culture, through pragmatic parasocial governance systems.
               </p>
@@ -349,6 +343,12 @@ const LandingPage: React.FC = () => {
 
         {/* Login Card */}
         <div className={styles.loginCard}>
+          <div className={styles.helpTooltipWrapper}>
+            <HelpTooltip 
+              content="Welcome to Mental Wealth Academy! This is a virtual learning platform where you can take classes, complete quests, earn rewards, and learn together. We use blockchain and cryptocurrency to make learning more engaging and rewarding. If you need assistance, please contact our support team."
+              position="top-right"
+            />
+          </div>
           <div className={styles.cardContent}>
             <div className={styles.loginHeader}>
               <div className={styles.logoContainer}>

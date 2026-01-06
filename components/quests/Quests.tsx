@@ -6,12 +6,12 @@ import Image from 'next/image';
 import styles from './Quests.module.css';
 import QuestDetailSidebar from './QuestDetailSidebar';
 
-// Shard Icon Component
-const ShardIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
+// Daemon Icon Component
+const DaemonIcon: React.FC<{ size?: number }> = ({ size = 18.83 }) => {
   return (
     <Image
-      src="/icons/shard.svg"
-      alt="Shard"
+      src="/icons/Coin Poly.svg"
+      alt="Daemon"
       width={size}
       height={size}
       className={styles.usdcIcon}
@@ -72,11 +72,11 @@ const QuestCard: React.FC<QuestCardProps> = ({
           <div className={styles.questInfo}>
             <div className={styles.questName}>{questName}</div>
             <div className={styles.usdcBonded}>
-              <ShardIcon />
+              <DaemonIcon />
               <span>{usdcBonded}</span>
             </div>
             <div className={styles.usdcReward}>
-              <ShardIcon />
+              <DaemonIcon />
               <span>{usdcReward}</span>
             </div>
           </div>

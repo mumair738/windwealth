@@ -224,8 +224,8 @@ export function DaemonTerminal() {
                   disabled={loading}
                 >
                   <Image
-                    src="/icons/shard.svg"
-                    alt="Shard"
+                    src="/icons/Coin Poly.svg"
+                    alt="Daemon"
                     width={16}
                     height={16}
                     className={styles.shardIcon}
